@@ -1,4 +1,4 @@
 # Ordnance Mod
-## By: FloppyDisk
+**By: FloppyDisk**
 
 Workshop mod for the game "Teardown."
