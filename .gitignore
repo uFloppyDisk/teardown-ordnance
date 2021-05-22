@@ -2,6 +2,7 @@ snd/*/
 
 _*
 
+*.wav
 *.psd
 *.jpg
 *.jpeg
