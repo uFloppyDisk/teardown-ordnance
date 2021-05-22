@@ -1,0 +1,4 @@
+name = Ordnance
+author = FloppyDisk
+description = Launch artillery (155mm HE howitzer shells) at will.
+tags = Tool
