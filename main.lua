@@ -2,7 +2,7 @@
 
 -- #region Constants
 
-G_DEV = true
+G_DEV = GetBool("savegame.mod.debug_mode")
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 -- G_VEC_GRAVITY = Vec(0, 0, 0)
 

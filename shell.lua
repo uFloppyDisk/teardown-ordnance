@@ -94,8 +94,7 @@ end
 
 function Shell:fire()
     print("Firing shell...")
-    local y = 1000 + math.random(25)
-    self.position = VecAdd(self.destination, Vec(0, y, 0))
+    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
 
     self:draw(self.position)
     self.in_flight = true

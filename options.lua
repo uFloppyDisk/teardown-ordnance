@@ -151,6 +151,15 @@ function init()
     OPTIONS = {
         OPTION:new({
             type = "textbutton",
+            variable = "savegame.mod.debug_mode",
+            name = "Debug Mode",
+
+            value_type = "boolean",
+            value_default = false,
+            value = nil
+        }),
+        OPTION:new({
+            type = "textbutton",
             variable = "savegame.mod.simulate_dud",
             name = "Simulate Dud Rate (2%)",
 
