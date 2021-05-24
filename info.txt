@@ -1,4 +1,4 @@
 name = Ordnance [FD]
 author = FloppyDisk
-description = Launch artillery (155mm HE howitzer shells) at will.
+description = [noupload] Launch artillery (155mm HE howitzer shells) at will.
 tags = Tool
