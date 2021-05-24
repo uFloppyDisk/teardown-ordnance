@@ -72,6 +72,7 @@ function init()
     SND_MENU["cancel"]              = LoadSound("MOD/snd/menu_cancel.ogg")
 
     SND_SHELL = {}
+    SND_SHELL["salvo_mark"]         = LoadSound("MOD/snd/salvo_mark.ogg")
     SND_SHELL["60mm_fire"]          = LoadSound("MOD/snd/fire_60mm.ogg")
     SND_SHELL["155mm_fire_close"]   = LoadSound("MOD/snd/fire_155mm_close.ogg")
     SND_SHELL["155mm_fire_far"]     = LoadSound("MOD/snd/fire_155mm_far.ogg")
@@ -127,6 +128,22 @@ function tick(delta)
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
 
+        -- if InputPressed("rmb") then
+        --     STATES.quick_salvo = not STATES.quick_salvo
+        --     PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
+        -- end
+
+        -- if InputPressed("C") and getTableLength(QUICK_SALVO) then
+        --     QUICK_SALVO = {}
+
+        --     PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+        -- end
+
+        -- if InputPressed("X") and STATES.quick_salvo then
+        --     fire_shell(table.remove(QUICK_SALVO, 1))
+        --     STATES.quick_salvo = false
+		-- end
+
         if InputPressed("C") and STATES.quick_salvo then
             QUICK_SALVO = {}
 			PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
@@ -166,6 +183,7 @@ function tick(delta)
             shell:setDest(destination)
 
             if STATES.quick_salvo then
+                PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
                 shell.queued = true
                 table.insert(QUICK_SALVO, shell)
             else
@@ -209,11 +227,11 @@ function draw()
                 UiColor(1, 1, 1)
                 UiText("<Right Mouse> - Quick Salvo mode: OFF", true)
                 
-                UiColor(1, 0.2, 0)
+                UiColor(1, 0.3, 0.3)
                 UiText("<Left Mouse> - Fire 155mm shell", true)
             else
                 if getTableLength(QUICK_SALVO) > 0 then
-                    UiColor(1, 0.2, 0)
+                    UiColor(1, 0.3, 0.3)
                     UiText("<Right Mouse> - Quick Salvo mode: Launch "..getTableLength(QUICK_SALVO).." shells", true)
 
                     UiColor(1, 1, 1)
