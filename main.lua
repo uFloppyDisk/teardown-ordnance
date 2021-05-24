@@ -2,26 +2,22 @@
 
 -- #region Constants
 
-G_DEV = false
+G_DEV = GetBool("savegame.mod.debug_mode")
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 -- G_VEC_GRAVITY = Vec(0, 0, 0)
 
 G_MAX_SHELLS = 100
+G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
 
 -- #endregion Constants
 
 -- #region Main
-
-shells = {}
+SHELLS = {}
+QUICK_SALVO = {}
 
 function clamp(value, minimum, maximum)
-	if value < minimum then 
-        value = minimum 
-    end
-
-	if value > maximum then 
-        value = maximum
-    end
+	if value < minimum then value = minimum end
+	if value > maximum then value = maximum end
 
 	return value
 end
@@ -49,26 +45,40 @@ function watch(name, variable)
     DebugWatch(name, variable)
 end
 
+function fire_shell(shell)
+    shell:fire()
+    table.insert(SHELLS, shell)
+end
+
 function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
-    g_tool_enabled = false
-    g_state_fire = false
+    STATES = {
+        enabled = false,
+        fire = false,
+        quick_salvo = false
+    }
 
-    img_sprites = {}
-    img_sprites["155mm_he"] = LoadSprite("MOD/img/155mm_he.png")
+    DELAYS = {
+        quick_salvo = G_QUICK_SALVO_DELAY
+    }
 
-    snd_menu = {}
-    snd_menu["select"] = LoadSound("MOD/snd/select.ogg")
+    IMG_SPRITES = {}
+    IMG_SPRITES["155mm_he"]         = LoadSprite("MOD/img/155mm_he.png")
 
-    snd_shell = {}
-    snd_shell["60mm_fire"]          = LoadSound("MOD/snd/fire_60mm.ogg")
-    snd_shell["155mm_fire_close"]   = LoadSound("MOD/snd/fire_155mm_close.ogg")
-    snd_shell["155mm_fire_far"]     = LoadSound("MOD/snd/fire_155mm_far.ogg")
+    SND_MENU = {}
+    SND_MENU["select"]              = LoadSound("MOD/snd/menu_select.ogg")
+    SND_MENU["cancel"]              = LoadSound("MOD/snd/menu_cancel.ogg")
+
+    SND_SHELL = {}
+    SND_SHELL["salvo_mark"]         = LoadSound("MOD/snd/salvo_mark.ogg")
+    SND_SHELL["60mm_fire"]          = LoadSound("MOD/snd/fire_60mm.ogg")
+    SND_SHELL["155mm_fire_close"]   = LoadSound("MOD/snd/fire_155mm_close.ogg")
+    SND_SHELL["155mm_fire_far"]     = LoadSound("MOD/snd/fire_155mm_far.ogg")
 end
 
-function GetAimPos()
+function getAimPos()
 	local camera_transform = GetCameraTransform()
 	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
 
@@ -87,12 +97,27 @@ function GetAimPos()
 end
 
 function tick(delta)
-    for i, shell in ipairs(shells) do
+    watch("state(ENABLED)", STATES.enabled)
+    watch("state(FIRE)", STATES.fire)
+    watch("state(QUICK SALVO)", STATES.quick_salvo)
+    watch("Shells", getTableLength(SHELLS))
+    watch("Salvo", getTableLength(QUICK_SALVO))
+    watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
+
+    local queue_length = getTableLength(QUICK_SALVO)
+    if queue_length > 0 then
+        for i=1, queue_length do
+            shell = QUICK_SALVO[i]
+            DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
+        end
+    end
+
+    for i, shell in ipairs(SHELLS) do
         shell:tick(delta)
 
         if shell.detonated then
             print("Shell "..i.." detonated. Removing...")
-            table.remove(shells, i)
+            table.remove(SHELLS, i)
         end
 	end
 
@@ -101,50 +126,91 @@ function tick(delta)
     end
 
 	if GetString("game.player.tool") == "ordnance" then
-        g_tool_enabled = true
+        STATES.enabled = true
 
-        if InputPressed("C") then
-			PlaySound(snd_menu["select"], GetPlayerPos(), 0.4)
+        -- if InputPressed("rmb") then
+        --     STATES.quick_salvo = not STATES.quick_salvo
+        --     PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
+        -- end
+
+        -- if InputPressed("C") and getTableLength(QUICK_SALVO) then
+        --     QUICK_SALVO = {}
+
+        --     PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+        -- end
+
+        -- if InputPressed("X") and STATES.quick_salvo then
+        --     fire_shell(table.remove(QUICK_SALVO, 1))
+        --     STATES.quick_salvo = false
+		-- end
+
+        if InputPressed("C") and STATES.quick_salvo then
+            QUICK_SALVO = {}
+			PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+
+            STATES.quick_salvo = false
 		end
 
-        g_state_fire = InputPressed("lmb")
+        if InputPressed("rmb") then
+            STATES.quick_salvo = not STATES.quick_salvo
+            PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
 
-        if g_state_fire then
-            print("Firing shell...")
+            if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+                fire_shell(table.remove(QUICK_SALVO, 1))
+            end
+        end
 
+        if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+            DELAYS.quick_salvo = DELAYS.quick_salvo - delta
+            
+            if DELAYS.quick_salvo < 0 then
+                local salvo_shell = table.remove(QUICK_SALVO, 1)
+                fire_shell(salvo_shell)
+                DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+            end
+        end
+
+        STATES.fire = InputPressed("lmb")
+
+        if STATES.fire then
             local rand = math.random(3)
             local rand_snd = "155mm_whistle_"..tostring(rand)
             watch("Whistle", rand_snd)
-            local shell = Shell:new(nil, nil, img_sprites["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
-            destination = GetAimPos()
+
+            local shell = Shell:new(nil, nil, IMG_SPRITES["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
+
+            local destination = getAimPos()
             shell:setDest(destination)
 
-            PlaySound(snd_shell["155mm_fire_far"], VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
-            shell:fire()
-            table.insert(shells, shell)
+            if STATES.quick_salvo then
+                PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
+                shell.queued = true
+                table.insert(QUICK_SALVO, shell)
+            else
+                fire_shell(shell)
+            end
         end
 	else
-        g_tool_enabled = false
+        STATES.enabled = false
 	end
 end
 
 
 function update()
-    local shells_length = getTableLength(shells)
-    watch("Shells", shells_length)
+    local shells_length = getTableLength(SHELLS)
     if shells_length > G_MAX_SHELLS then
         local trim_amount = shells_length - G_MAX_SHELLS
         print("Removing "..trim_amount.." shells from table...")
 
         for i=1, trim_amount do
-            table.remove(shells, 1)
+            table.remove(SHELLS, 1)
         end
     end
 end
 
 
 function draw()
-    if not(g_tool_enabled) or GetPlayerVehicle() ~= 0 then
+    if not(STATES.enabled) or GetPlayerVehicle() ~= 0 then
         return
     end
 
@@ -157,9 +223,31 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("Left Mouse: Fire 155mm shell")
-            -- UiTranslate(0, 30)
-            -- UiText("Right-Click: Plane-view")
+            if not(STATES.quick_salvo) then
+                UiColor(1, 1, 1)
+                UiText("<Right Mouse> - Quick Salvo mode: OFF", true)
+                
+                UiColor(1, 0.3, 0.3)
+                UiText("<Left Mouse> - Fire 155mm shell", true)
+            else
+                if getTableLength(QUICK_SALVO) > 0 then
+                    UiColor(1, 0.3, 0.3)
+                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..getTableLength(QUICK_SALVO).." shells", true)
+
+                    UiColor(1, 1, 1)
+                    UiText("<Left Mouse> - Mark location for salvo", true)
+
+                    UiColor(1, 1, 0.1)
+                    UiText("C - Cancel salvo", true)
+                else
+                    UiColor(1, 1, 0.1)
+                    UiText("<Right Mouse> - Quick Salvo mode: ON", true)
+
+                    UiColor(1, 1, 1)
+                    UiText("<Left Mouse> - Mark location for salvo", true)
+                end
+            end
+            UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
 end

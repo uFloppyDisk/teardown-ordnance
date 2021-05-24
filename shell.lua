@@ -1,13 +1,14 @@
 Shell = {}
 
 function Shell:new(type, flight_time, sprite, snd_whistle, position, vel_initial, vel_current, vel_direction)
-    object = {
+    local object = {
         active = false,
+        queued = false,
         in_flight = false,
         detonated = false,
 
         type = type or 1,
-        flight_time = flight_time or 5.0,
+        flight_time = flight_time or (1.0001 * GetFloat("savegame.mod.flight_time")),
 
         sprite = sprite,
         snd_whistle = snd_whistle,
@@ -36,6 +37,7 @@ function Shell:draw(pos)
 end
 
 function Shell:tick(delta)
+    watch("Flight Time", self.flight_time)
     if self.in_flight then
         self.flight_time = self.flight_time - delta
 
@@ -49,6 +51,13 @@ function Shell:tick(delta)
         self.distance_ground = VecLength(VecSub(self.position, self.destination))
         local distance_player = VecLength(VecSub(self.position, GetPlayerPos()))
         watch("Distance to Ground", self.distance_ground)
+
+        if (self.distance_ground > 2000) then
+            self.detonated = true
+            self.active = false
+            return
+        end
+
         if (self.distance_ground < 500) then
             local volume = clamp(150 - (clamp(distance_player, 0, 500) / 5), 0, 100)
             watch("Volume", volume)
@@ -84,10 +93,11 @@ function Shell:tick(delta)
 end
 
 function Shell:fire()
-    local y = 1000 + math.random(25)
-    self.position = VecAdd(self.destination, Vec(0, y, 0))
+    print("Firing shell...")
+    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
 
     self:draw(self.position)
-
     self.in_flight = true
+
+    PlaySound(SND_SHELL["155mm_fire_far"], VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
 end
