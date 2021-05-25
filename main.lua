@@ -12,6 +12,8 @@ G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
 -- #endregion Constants
 
 -- #region Main
+
+SHELLS_prev_length = 0
 SHELLS = {}
 QUICK_SALVO = {}
 
@@ -46,7 +48,7 @@ function watch(name, variable)
 end
 
 function fire_shell(shell)
-    shell:fire()
+    Shell_fire(shell)
     table.insert(SHELLS, shell)
 end
 
@@ -104,6 +106,11 @@ function tick(delta)
     watch("Salvo", getTableLength(QUICK_SALVO))
     watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
 
+    if (SHELLS_prev_length ~= getTableLength(SHELLS)) then
+        print("Shell Object: "..table.concat(Shell, ", "))
+        SHELLS_prev_length = getTableLength(SHELLS)
+    end
+
     local queue_length = getTableLength(QUICK_SALVO)
     if queue_length > 0 then
         for i=1, queue_length do
@@ -113,7 +120,7 @@ function tick(delta)
     end
 
     for i, shell in ipairs(SHELLS) do
-        shell:tick(delta)
+        Shell_tick(shell, delta)
 
         if shell.detonated then
             print("Shell "..i.." detonated. Removing...")
@@ -127,22 +134,6 @@ function tick(delta)
 
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
-
-        -- if InputPressed("rmb") then
-        --     STATES.quick_salvo = not STATES.quick_salvo
-        --     PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
-        -- end
-
-        -- if InputPressed("C") and getTableLength(QUICK_SALVO) then
-        --     QUICK_SALVO = {}
-
-        --     PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
-        -- end
-
-        -- if InputPressed("X") and STATES.quick_salvo then
-        --     fire_shell(table.remove(QUICK_SALVO, 1))
-        --     STATES.quick_salvo = false
-		-- end
 
         if InputPressed("C") and STATES.quick_salvo then
             QUICK_SALVO = {}
@@ -177,10 +168,13 @@ function tick(delta)
             local rand_snd = "155mm_whistle_"..tostring(rand)
             watch("Whistle", rand_snd)
 
-            local shell = Shell:new(nil, nil, IMG_SPRITES["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
+            -- local shell = Shell.new(nil, nil, IMG_SPRITES["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
+            local shell = Shell_new({
+                sprite = IMG_SPRITES["155mm_he"],
+                snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
+            })
 
-            local destination = getAimPos()
-            shell:setDest(destination)
+            shell.destination = getAimPos()
 
             if STATES.quick_salvo then
                 PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
