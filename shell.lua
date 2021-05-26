@@ -73,7 +73,7 @@ function Shell:tick(delta)
             self.detonated = true
             self.active = false
 
-            if math.random(100) <= 2 then
+            if GetBool("savegame.mod.simulate_dud") and math.random(100) <= 2 then
                 MakeHole(position_hit, 5, 2, 1)
                 return
             end
