@@ -1,4 +1,4 @@
-Shell = {
+DEFAULT_SHELL = {
     active = false,
     queued = false,
     in_flight = false,
@@ -17,16 +17,28 @@ Shell = {
     vel_direction = nil
 }
 
-function Shell_new(object)
-    setmetatable(object, Shell)
-    Shell.__index = Shell
+function Shell_new(new)
+    local base = Shell_copy(DEFAULT_SHELL)
+    for key, value in pairs(new) do
+        base[key] = value
+    end
 
-    return object
+    return base
 end
 
--- function Shell:setDest(pos)
---     self.destination = pos
--- end
+function Shell_copy(object)
+    local copy
+    if type(object) == 'table' then
+        copy = {}
+        for key, value in pairs(object) do
+            copy[Shell_copy(key)] = Shell_copy(value)
+        end
+        setmetatable(copy, Shell_copy(getmetatable(object)))
+    else
+        copy = object
+    end
+    return copy
+end
 
 function Shell_draw(self, pos)
     local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))

@@ -24,13 +24,6 @@ function clamp(value, minimum, maximum)
 	return value
 end
 
-function getTableLength(t)
-    local count = 0
-
-    for _ in pairs(t) do count = count + 1 end
-    return count
-end
-
 function print(msg)
     if not G_DEV then
         return
@@ -102,16 +95,15 @@ function tick(delta)
     watch("state(ENABLED)", STATES.enabled)
     watch("state(FIRE)", STATES.fire)
     watch("state(QUICK SALVO)", STATES.quick_salvo)
-    watch("Shells", getTableLength(SHELLS))
-    watch("Salvo", getTableLength(QUICK_SALVO))
+    watch("Shells", #SHELLS)
+    watch("Salvo", #QUICK_SALVO)
     watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
 
-    if (SHELLS_prev_length ~= getTableLength(SHELLS)) then
-        print("Shell Object: "..table.concat(Shell, ", "))
-        SHELLS_prev_length = getTableLength(SHELLS)
+    if (SHELLS_prev_length ~= #SHELLS) then
+        SHELLS_prev_length = #SHELLS
     end
 
-    local queue_length = getTableLength(QUICK_SALVO)
+    local queue_length = #QUICK_SALVO
     if queue_length > 0 then
         for i=1, queue_length do
             shell = QUICK_SALVO[i]
@@ -146,12 +138,12 @@ function tick(delta)
             STATES.quick_salvo = not STATES.quick_salvo
             PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
 
-            if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+            if not STATES.quick_salvo and #QUICK_SALVO > 0 then
                 fire_shell(table.remove(QUICK_SALVO, 1))
             end
         end
 
-        if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+        if not STATES.quick_salvo and #QUICK_SALVO > 0 then
             DELAYS.quick_salvo = DELAYS.quick_salvo - delta
             
             if DELAYS.quick_salvo < 0 then
@@ -168,7 +160,6 @@ function tick(delta)
             local rand_snd = "155mm_whistle_"..tostring(rand)
             watch("Whistle", rand_snd)
 
-            -- local shell = Shell.new(nil, nil, IMG_SPRITES["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
             local shell = Shell_new({
                 sprite = IMG_SPRITES["155mm_he"],
                 snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
@@ -191,7 +182,7 @@ end
 
 
 function update()
-    local shells_length = getTableLength(SHELLS)
+    local shells_length = #SHELLS
     if shells_length > G_MAX_SHELLS then
         local trim_amount = shells_length - G_MAX_SHELLS
         print("Removing "..trim_amount.." shells from table...")
@@ -224,9 +215,9 @@ function draw()
                 UiColor(1, 0.3, 0.3)
                 UiText("<Left Mouse> - Fire 155mm shell", true)
             else
-                if getTableLength(QUICK_SALVO) > 0 then
+                if #QUICK_SALVO > 0 then
                     UiColor(1, 0.3, 0.3)
-                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..getTableLength(QUICK_SALVO).." shells", true)
+                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
 
                     UiColor(1, 1, 1)
                     UiText("<Left Mouse> - Mark location for salvo", true)
