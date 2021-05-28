@@ -243,7 +243,7 @@ function draw()
                 UiFont("bold.ttf", 26)
                 UiColor(0.3, 1, 0.3)
                 UiText("", true)
-                UiText("NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for patience.", true)
+                UiText("NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for your patience.", true)
                 UiText("NOTICE: Press 'K' to dismiss and never show this message again.", true)
             end
 
