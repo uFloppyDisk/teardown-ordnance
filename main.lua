@@ -9,12 +9,11 @@ G_VEC_GRAVITY = Vec(0, -39.2, 0)
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
 
--- Temporary global to handle error warning message
-G_FIRED_SHELL = false
-
 -- #endregion Constants
 
 -- #region Main
+
+SHELLS_prev_length = 0
 SHELLS = {}
 QUICK_SALVO = {}
 
@@ -23,13 +22,6 @@ function clamp(value, minimum, maximum)
 	if value > maximum then value = maximum end
 
 	return value
-end
-
-function getTableLength(t)
-    local count = 0
-
-    for _ in pairs(t) do count = count + 1 end
-    return count
 end
 
 function print(msg)
@@ -49,11 +41,7 @@ function watch(name, variable)
 end
 
 function fire_shell(shell)
-    if not G_FIRED_SHELL then
-        G_FIRED_SHELL = true
-    end
-
-    shell:fire()
+    Shell_fire(shell)
     table.insert(SHELLS, shell)
 end
 
@@ -107,11 +95,15 @@ function tick(delta)
     watch("state(ENABLED)", STATES.enabled)
     watch("state(FIRE)", STATES.fire)
     watch("state(QUICK SALVO)", STATES.quick_salvo)
-    watch("Shells", getTableLength(SHELLS))
-    watch("Salvo", getTableLength(QUICK_SALVO))
+    watch("Shells", #SHELLS)
+    watch("Salvo", #QUICK_SALVO)
     watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
 
-    local queue_length = getTableLength(QUICK_SALVO)
+    if (SHELLS_prev_length ~= #SHELLS) then
+        SHELLS_prev_length = #SHELLS
+    end
+
+    local queue_length = #QUICK_SALVO
     if queue_length > 0 then
         for i=1, queue_length do
             shell = QUICK_SALVO[i]
@@ -120,7 +112,7 @@ function tick(delta)
     end
 
     for i, shell in ipairs(SHELLS) do
-        shell:tick(delta)
+        Shell_tick(shell, delta)
 
         if shell.detonated then
             print("Shell "..i.." detonated. Removing...")
@@ -136,7 +128,7 @@ function tick(delta)
         STATES.enabled = true
 
         if InputPressed("K") then
-            SetBool("savegame.mod.crash_disclaimer", true)
+            ClearKey("savegame.mod.crash_disclaimer")
         end
 
         if InputPressed("C") and STATES.quick_salvo then
@@ -150,12 +142,12 @@ function tick(delta)
             STATES.quick_salvo = not STATES.quick_salvo
             PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
 
-            if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+            if not STATES.quick_salvo and #QUICK_SALVO > 0 then
                 fire_shell(table.remove(QUICK_SALVO, 1))
             end
         end
 
-        if not STATES.quick_salvo and getTableLength(QUICK_SALVO) > 0 then
+        if not STATES.quick_salvo and #QUICK_SALVO > 0 then
             DELAYS.quick_salvo = DELAYS.quick_salvo - delta
             
             if DELAYS.quick_salvo < 0 then
@@ -163,6 +155,8 @@ function tick(delta)
                 fire_shell(salvo_shell)
                 DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
             end
+        else
+            DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
 
         STATES.fire = InputPressed("lmb")
@@ -172,10 +166,12 @@ function tick(delta)
             local rand_snd = "155mm_whistle_"..tostring(rand)
             watch("Whistle", rand_snd)
 
-            local shell = Shell:new(nil, nil, IMG_SPRITES["155mm_he"], LoadLoop("MOD/snd/"..rand_snd..".ogg"))
+            local shell = Shell_new({
+                sprite = IMG_SPRITES["155mm_he"],
+                snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
+            })
 
-            local destination = getAimPos()
-            shell:setDest(destination)
+            shell.destination = getAimPos()
 
             if STATES.quick_salvo then
                 PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
@@ -192,7 +188,7 @@ end
 
 
 function update()
-    local shells_length = getTableLength(SHELLS)
+    local shells_length = #SHELLS
     if shells_length > G_MAX_SHELLS then
         local trim_amount = shells_length - G_MAX_SHELLS
         print("Removing "..trim_amount.." shells from table...")
@@ -225,9 +221,9 @@ function draw()
                 UiColor(1, 0.3, 0.3)
                 UiText("<Left Mouse> - Fire 155mm shell", true)
             else
-                if getTableLength(QUICK_SALVO) > 0 then
+                if #QUICK_SALVO > 0 then
                     UiColor(1, 0.3, 0.3)
-                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..getTableLength(QUICK_SALVO).." shells", true)
+                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
 
                     UiColor(1, 1, 1)
                     UiText("<Left Mouse> - Mark location for salvo", true)
@@ -243,13 +239,12 @@ function draw()
                 end
             end
 
-            if G_FIRED_SHELL and not GetBool("savegame.mod.crash_disclaimer") then
+            if HasKey("savegame.mod.crash_disclaimer") then
                 UiFont("bold.ttf", 26)
-                UiColor(1, 0.3, 0.3)
+                UiColor(0.3, 1, 0.3)
                 UiText("", true)
-                UiText("WARNING: You have fired a shell.", true)
-                UiText("WARNING: To avoid crashing to desktop, please do not quicksave until you have restarted the level.", true)
-                UiText("WARNING: Press 'K' to dismiss and never show this message again.", true)
+                UiText("NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for patience.", true)
+                UiText("NOTICE: Press 'K' to dismiss and never show this message again.", true)
             end
 
             UiColor(0.4, 0.4, 0.4)
