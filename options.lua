@@ -13,6 +13,7 @@ OPTION = {
 
     value_type = "boolean",
     value_unit = nil,
+    value_digits = 1,
     value_default = nil,
     value_min = 0,
     value_max = 1,
@@ -74,7 +75,7 @@ function wrapSlider(option)
 
         UiAlign("left")
         UiTranslate(option.width + (MENU.spacing_option * 2), 0);
-        UiText(value.." second(s)");
+        UiText(value.." "..option.value_unit);
     UiPop()
 end
 
@@ -89,11 +90,11 @@ function drawSlider(option)
         UiTranslate(MENU.offset_option_slider[1], MENU.offset_option_slider[2])
 
         value = UiSlider("ui/common/dot.png", "x", value * option.width, 0.0, option.width) / option.width
-    if option.value_type == "float" then
-        value = round((value * (option.value_max - option.value_min) + option.value_min), 1)
-    elseif option.value_type == "int" then
-        value = math.floor(value * (option.value_max - option.value_min) + option.value_min)
-    end
+        if option.value_type == "float" then
+            value = round((value * (option.value_max - option.value_min) + option.value_min), option.value_digits)
+        elseif option.value_type == "int" then
+            value = math.floor(value * (option.value_max - option.value_min) + option.value_min)
+        end
 
     UiPop()
 
@@ -174,7 +175,7 @@ function init()
 
             value_type = "float",
             value_unit = "second(s)",
-            value_default = 5.0,
+            value_default = 0.0,
             value = nil,
 
             value_min = 0,
@@ -186,7 +187,8 @@ function init()
             name = "Delay between shells (Quick Salvo)",
 
             value_type = "float",
-            value_unit = "seconds(s)",
+            value_unit = "second(s)",
+            value_digits = 2,
             value_default = 0.5,
             value = nil,
 
@@ -197,6 +199,13 @@ function init()
 end
 
 function draw()
+    if InputDown("shift") and InputPressed("C") then
+        ClearKey("savegame.mod.crash_disclaimer")
+        for i, option in ipairs(OPTIONS) do
+            ClearKey(option.variable)
+        end
+    end
+
 	UiTranslate(UiCenter(), 250)
 	UiAlign("center middle")
 
@@ -206,8 +215,13 @@ function draw()
 
     -- Options
     UiFont("regular.ttf", 28)
-    -- wrapSlider("savegame.mod.flight_time", "Flight Time", GetInt, SetInt, 5, 0, 25)
+    
     for i, option in ipairs(OPTIONS) do
+        if not HasKey(option.variable) then
+            option.value = option.value_default
+            option:setRegValue(option.value_default)
+        end
+
         if option.type == "textbutton" then
             wrapButton(option)
         end
