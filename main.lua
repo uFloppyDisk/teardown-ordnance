@@ -127,6 +127,10 @@ function tick(delta)
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
 
+        if InputPressed("K") then
+            ClearKey("savegame.mod.crash_disclaimer")
+        end
+
         if InputPressed("C") and STATES.quick_salvo then
             QUICK_SALVO = {}
 			PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
@@ -151,6 +155,8 @@ function tick(delta)
                 fire_shell(salvo_shell)
                 DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
             end
+        else
+            DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
 
         STATES.fire = InputPressed("lmb")
@@ -232,6 +238,15 @@ function draw()
                     UiText("<Left Mouse> - Mark location for salvo", true)
                 end
             end
+
+            if HasKey("savegame.mod.crash_disclaimer") then
+                UiFont("bold.ttf", 26)
+                UiColor(0.3, 1, 0.3)
+                UiText("", true)
+                UiText("NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for patience.", true)
+                UiText("NOTICE: Press 'K' to dismiss and never show this message again.", true)
+            end
+
             UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
