@@ -200,7 +200,6 @@ end
 
 function draw()
     if InputDown("shift") and InputPressed("C") then
-        ClearKey("savegame.mod.crash_disclaimer")
         for i, option in ipairs(OPTIONS) do
             ClearKey(option.variable)
         end

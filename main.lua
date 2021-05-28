@@ -9,9 +9,6 @@ G_VEC_GRAVITY = Vec(0, -39.2, 0)
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
 
--- Temporary global to handle error warning message
-G_FIRED_SHELL = false
-
 -- #endregion Constants
 
 -- #region Main
@@ -49,10 +46,6 @@ function watch(name, variable)
 end
 
 function fire_shell(shell)
-    if not G_FIRED_SHELL then
-        G_FIRED_SHELL = true
-    end
-
     shell:fire()
     table.insert(SHELLS, shell)
 end
@@ -135,9 +128,21 @@ function tick(delta)
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
 
-        if InputPressed("K") then
-            SetBool("savegame.mod.crash_disclaimer", true)
-        end
+        -- if InputPressed("rmb") then
+        --     STATES.quick_salvo = not STATES.quick_salvo
+        --     PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
+        -- end
+
+        -- if InputPressed("C") and getTableLength(QUICK_SALVO) then
+        --     QUICK_SALVO = {}
+
+        --     PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+        -- end
+
+        -- if InputPressed("X") and STATES.quick_salvo then
+        --     fire_shell(table.remove(QUICK_SALVO, 1))
+        --     STATES.quick_salvo = false
+		-- end
 
         if InputPressed("C") and STATES.quick_salvo then
             QUICK_SALVO = {}
@@ -242,16 +247,6 @@ function draw()
                     UiText("<Left Mouse> - Mark location for salvo", true)
                 end
             end
-
-            if G_FIRED_SHELL and not GetBool("savegame.mod.crash_disclaimer") then
-                UiFont("bold.ttf", 26)
-                UiColor(1, 0.3, 0.3)
-                UiText("", true)
-                UiText("WARNING: You have fired a shell.", true)
-                UiText("WARNING: To avoid crashing to desktop, please do not quicksave until you have restarted the level.", true)
-                UiText("WARNING: Press 'K' to dismiss and never show this message again.", true)
-            end
-
             UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
