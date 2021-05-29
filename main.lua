@@ -52,25 +52,18 @@ function init()
     STATES = {
         enabled = false,
         fire = false,
-        quick_salvo = false
+        quick_salvo = false,
+        selected_shell = 1
     }
 
     DELAYS = {
         quick_salvo = G_QUICK_SALVO_DELAY
     }
 
-    IMG_SPRITES = {}
-    IMG_SPRITES["155mm_he"]         = LoadSprite("MOD/img/155mm_he.png")
-
-    SND_MENU = {}
-    SND_MENU["select"]              = LoadSound("MOD/snd/menu_select.ogg")
-    SND_MENU["cancel"]              = LoadSound("MOD/snd/menu_cancel.ogg")
-
-    SND_SHELL = {}
-    SND_SHELL["salvo_mark"]         = LoadSound("MOD/snd/salvo_mark.ogg")
-    SND_SHELL["60mm_fire"]          = LoadSound("MOD/snd/fire_60mm.ogg")
-    SND_SHELL["155mm_fire_close"]   = LoadSound("MOD/snd/fire_155mm_close.ogg")
-    SND_SHELL["155mm_fire_far"]     = LoadSound("MOD/snd/fire_155mm_far.ogg")
+    SND_UI = {}
+    SND_UI["select"]                = LoadSound("MOD/snd/menu_select.ogg")
+    SND_UI["cancel"]                = LoadSound("MOD/snd/menu_cancel.ogg")
+    SND_UI["salvo_mark"]            = LoadSound("MOD/snd/salvo_mark.ogg")
 end
 
 function getAimPos()
@@ -95,6 +88,7 @@ function tick(delta)
     watch("state(ENABLED)", STATES.enabled)
     watch("state(FIRE)", STATES.fire)
     watch("state(QUICK SALVO)", STATES.quick_salvo)
+    watch("state(SELECTED SHELL)", STATES.selected_shell)
     watch("Shells", #SHELLS)
     watch("Salvo", #QUICK_SALVO)
     watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
@@ -131,16 +125,21 @@ function tick(delta)
             ClearKey("savegame.mod.crash_disclaimer")
         end
 
+        if InputPressed("B") then
+            STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
+            PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
+        end
+
         if InputPressed("C") and STATES.quick_salvo then
             QUICK_SALVO = {}
-			PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+			PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
 
             STATES.quick_salvo = false
 		end
 
         if InputPressed("rmb") then
             STATES.quick_salvo = not STATES.quick_salvo
-            PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
+            PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
 
             if not STATES.quick_salvo and #QUICK_SALVO > 0 then
                 fire_shell(table.remove(QUICK_SALVO, 1))
@@ -162,21 +161,31 @@ function tick(delta)
         STATES.fire = InputPressed("lmb")
 
         if STATES.fire then
-            local rand = math.random(3)
-            local rand_snd = "155mm_whistle_"..tostring(rand)
-            watch("Whistle", rand_snd)
+            local values = SHELL_VALUES[STATES.selected_shell]
+
+            local shell_whistle = nil;
+            if type(values.sounds.whistle) == "table" then
+                local rand = math.random(#values.sounds.whistle)
+                shell_whistle = values.sounds.whistle[rand]
+            else
+                shell_whistle = values.sounds.whistle
+            end
+
+            watch("Whistle", shell_whistle)
 
             local shell = Shell_new({
-                sprite = IMG_SPRITES["155mm_he"],
-                snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
+                type = STATES.selected_shell,
+                sprite = LoadSprite("MOD/img/"..values.sprite.img..".png"),
+                snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
             })
 
             shell.destination = getAimPos()
 
             if STATES.quick_salvo then
-                PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
                 shell.queued = true
                 table.insert(QUICK_SALVO, shell)
+
+                PlaySound(SND_UI["salvo_mark"], GetPlayerPos(), 0.4)
             else
                 fire_shell(shell)
             end
@@ -206,7 +215,7 @@ function draw()
     end
 
     UiPush()
-        UiTranslate(80, UiMiddle()+UiMiddle()/2)
+        UiTranslate(80, UiMiddle() + UiMiddle() / 2)
         UiColor(0.4, 0.4, 0.4)
         UiAlign("left")
         UiFont("regular.ttf", 26)

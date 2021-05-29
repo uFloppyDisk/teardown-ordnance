@@ -1,10 +1,55 @@
+SHELL_VALUES = {
+    [1] = {
+        name = "155mm Howitzer",
+        caliber = "155mm",
+        types = {
+            HE = {
+                size_explosion = 4,
+                size_makehole = {50, 20, 5}
+            }
+        },
+        sprite = {
+            img = "155mm_HE",
+            scaling_factor = 5.33,
+            width = 0.155 * 2
+        },
+        sounds = {
+            whistle = {
+                "155mm_whistle_1",
+                "155mm_whistle_2",
+                "155mm_whistle_3"
+            },
+            fire = "155mm_fire"
+        }
+    },
+    [2] = {
+        name = "60mm Mortar",
+        caliber = "60mm",
+        types = {
+            HE = {
+                size_explosion = 1.5,
+                size_makehole = {35, 15, 3}
+            }
+        },
+        sprite = {
+            img = "60mm_HE",
+            scaling_factor = 4.08,
+            width = 0.06 * 2
+        },
+        sounds = {
+            whistle = "60mm_whistle",
+            fire = "60mm_fire"
+        }
+    }
+}
+
 DEFAULT_SHELL = {
     active = false,
     queued = false,
     in_flight = false,
     detonated = false,
 
-    type = "155mm",
+    type = 1,
     flight_time = GetFloat("savegame.mod.flight_time"),
 
     sprite = nil,
@@ -41,13 +86,21 @@ function Shell_copy(object)
 end
 
 function Shell_draw(self, pos)
+    local values = SHELL_VALUES[self.type]
     local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
     local transform_pos = Transform(pos, rotation)
-    DrawSprite(self.sprite, transform_pos, 0.3, 1.59, 0.4, 0.4, 0.4, 1, true, false)
+
+    local width = values.sprite.width
+    local height = values.sprite.width * values.sprite.scaling_factor
+
+    DrawSprite(self.sprite, transform_pos, width, height, 0.4, 0.4, 0.4, 1, true, false)
 end
 
 function Shell_tick(self, delta)
     watch("Flight Time", self.flight_time)
+
+    local values = SHELL_VALUES[self.type]
+
     if self.in_flight then
         self.flight_time = self.flight_time - delta
 
@@ -88,14 +141,15 @@ function Shell_tick(self, delta)
                 return
             end
 
-            MakeHole(position_hit, 50, 20, 5)
-            Explosion(position_hit, 4)
+            local hole = values.types.HE.size_makehole
+            MakeHole(position_hit, hole[1], hole[2], hole[3])
+            Explosion(position_hit, values.types.HE.size_explosion)
         end
 
         ParticleReset()
         ParticleRadius(0.2)
         ParticleStretch(1.0)
-        SpawnParticle(VecAdd(self.position, Vec(0, -0.79, 0)), Vec(0, -1, 0), 0.1)
+        SpawnParticle(VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
 
         Shell_draw(self, self.position)
         self.position = position_new
@@ -103,11 +157,15 @@ function Shell_tick(self, delta)
 end
 
 function Shell_fire(self)
-    print("Firing shell...")
-    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
+    local values = SHELL_VALUES[self.type]
 
-    Shell_draw(self, self.position)
+    print("Firing shell ("..values.name..")")
+    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
+    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
+
+    -- Shell_draw(self, self.position)
     self.in_flight = true
 
-    PlaySound(SND_SHELL["155mm_fire_far"], VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
+    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
+    PlaySound(snd_fire, VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
 end
