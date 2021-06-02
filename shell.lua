@@ -6,6 +6,7 @@ DEFAULT_SHELL = {
 
     type = "155mm",
     flight_time = GetFloat("savegame.mod.flight_time"),
+    inaccuracy = GetFloat("savegame.mod.shell_inaccuracy"),
 
     sprite = nil,
     snd_whistle = 1,
@@ -104,6 +105,16 @@ end
 
 function Shell_fire(self)
     print("Firing shell...")
+
+    if self.inaccuracy > 0 then
+        local original = VecCopy(self.destination)
+        local rotation = QuatEuler(0, 360 * math.random(), 0)
+        local distance = Vec(self.inaccuracy * math.random(), 0, 0)
+
+        local transform = Transform(original, rotation)
+        self.destination = TransformToParentPoint(transform, distance)
+    end
+
     self.position = VecAdd(self.destination, Vec(0, 1000, 0))
 
     Shell_draw(self, self.position)
