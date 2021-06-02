@@ -106,17 +106,16 @@ end
 function Shell_fire(self)
     print("Firing shell...")
 
-    local pos_x = 0
-    local pos_z = 0
-
     if self.inaccuracy > 0 then
-        local magnitude = self.inaccuracy
-        pos_x = magnitude * math.random() * (math.random() >= 0.5 and 1 or -1)
-        pos_z = magnitude * math.random() * (math.random() >= 0.5 and 1 or -1)
-        print("Shell inaccuracy is greater than 0. Sending shell to coord offset X "..pos_x.." Z "..pos_z)
+        local original = VecCopy(self.destination)
+        local rotation = QuatEuler(0, 360 * math.random(), 0)
+        local distance = Vec(self.inaccuracy * math.random(), 0, 0)
+
+        local transform = Transform(original, rotation)
+        self.destination = TransformToParentPoint(transform, distance)
     end
 
-    self.position = VecAdd(self.destination, Vec(pos_x, 1000, pos_z))
+    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
     -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
 
     Shell_draw(self, self.position)

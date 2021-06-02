@@ -132,7 +132,7 @@ function tick(delta)
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
 
-        draw_circle(getAimPos(), STATES.shell_inaccuracy, 32)
+        draw_circle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
 
         if InputDown("Z") then
             SetBool("game.input.locktool", true)
@@ -233,7 +233,7 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("Hold <Z> + Scroll | Change shell inaccuracy", true)
+            UiText("Hold <Z> + <Scroll> | Change shell inaccuracy", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
