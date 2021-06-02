@@ -1,3 +1,4 @@
+#include "utils.lua"
 #include "shell.lua"
 
 -- #region Constants
@@ -52,7 +53,9 @@ function init()
     STATES = {
         enabled = false,
         fire = false,
-        quick_salvo = false
+        quick_salvo = false,
+
+        shell_inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
     }
 
     DELAYS = {
@@ -95,9 +98,10 @@ function tick(delta)
     watch("state(ENABLED)", STATES.enabled)
     watch("state(FIRE)", STATES.fire)
     watch("state(QUICK SALVO)", STATES.quick_salvo)
+    watch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
+    watch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     watch("Shells", #SHELLS)
     watch("Salvo", #QUICK_SALVO)
-    watch("shell_default(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
 
     if (SHELLS_prev_length ~= #SHELLS) then
         SHELLS_prev_length = #SHELLS
@@ -108,6 +112,7 @@ function tick(delta)
         for i=1, queue_length do
             shell = QUICK_SALVO[i]
             DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
+            draw_circle(shell.destination, shell.inaccuracy, 32)
         end
     end
 
@@ -126,6 +131,19 @@ function tick(delta)
 
 	if GetString("game.player.tool") == "ordnance" then
         STATES.enabled = true
+
+        draw_circle(getAimPos(), STATES.shell_inaccuracy, 32)
+
+        if InputDown("Z") then
+            SetBool("game.input.locktool", true)
+
+            if InputValue("mousewheel") ~= 0 then
+                local offset = 0.5 * InputValue("mousewheel")
+                STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 100)
+            end
+        else
+            SetBool("game.input.locktool", false)
+        end
 
         if InputPressed("K") then
             ClearKey("savegame.mod.crash_disclaimer")
@@ -167,6 +185,7 @@ function tick(delta)
             watch("Whistle", rand_snd)
 
             local shell = Shell_new({
+                inaccuracy = STATES.shell_inaccuracy,
                 sprite = IMG_SPRITES["155mm_he"],
                 snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
             })

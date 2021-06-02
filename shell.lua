@@ -6,6 +6,7 @@ DEFAULT_SHELL = {
 
     type = "155mm",
     flight_time = GetFloat("savegame.mod.flight_time"),
+    inaccuracy = GetFloat("savegame.mod.shell_inaccuracy"),
 
     sprite = nil,
     snd_whistle = 1,
@@ -104,7 +105,19 @@ end
 
 function Shell_fire(self)
     print("Firing shell...")
-    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
+
+    local pos_x = 0
+    local pos_z = 0
+
+    if self.inaccuracy > 0 then
+        local magnitude = self.inaccuracy
+        pos_x = magnitude * math.random() * (math.random() >= 0.5 and 1 or -1)
+        pos_z = magnitude * math.random() * (math.random() >= 0.5 and 1 or -1)
+        print("Shell inaccuracy is greater than 0. Sending shell to coord offset X "..pos_x.." Z "..pos_z)
+    end
+
+    self.position = VecAdd(self.destination, Vec(pos_x, 1000, pos_z))
+    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
 
     Shell_draw(self, self.position)
     self.in_flight = true
