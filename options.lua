@@ -189,7 +189,7 @@ function init()
             value_type = "float",
             value_unit = "meter(s)",
             value_digits = 1,
-            value_default = 0.0,
+            value_default = 5.0,
             value = nil,
 
             value_min = 0,

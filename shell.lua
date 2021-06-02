@@ -116,7 +116,6 @@ function Shell_fire(self)
     end
 
     self.position = VecAdd(self.destination, Vec(0, 1000, 0))
-    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
 
     Shell_draw(self, self.position)
     self.in_flight = true

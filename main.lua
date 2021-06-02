@@ -5,7 +5,6 @@
 
 G_DEV = GetBool("savegame.mod.debug_mode")
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
--- G_VEC_GRAVITY = Vec(0, 0, 0)
 
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
@@ -233,7 +232,7 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("Hold <Z> + <Scroll> | Change shell inaccuracy", true)
+            UiText("Hold <Z> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
