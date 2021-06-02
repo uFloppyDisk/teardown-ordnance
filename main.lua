@@ -139,7 +139,7 @@ function tick(delta)
 
             if InputValue("mousewheel") ~= 0 then
                 local offset = 0.5 * InputValue("mousewheel")
-                STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 100)
+                STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
             end
         else
             SetBool("game.input.locktool", false)
@@ -233,28 +233,30 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
+            UiText("Hold <Z> + Scroll | Change shell inaccuracy", true)
+
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
-                UiText("<Right Mouse> - Quick Salvo mode: OFF", true)
+                UiText("<Right Mouse> | Quick Salvo mode: OFF", true)
                 
                 UiColor(1, 0.3, 0.3)
-                UiText("<Left Mouse> - Fire 155mm shell", true)
+                UiText("<Left Mouse> | Fire 155mm shell", true)
             else
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 0.3, 0.3)
-                    UiText("<Right Mouse> - Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
+                    UiText("<Right Mouse> | Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
 
                     UiColor(1, 1, 1)
-                    UiText("<Left Mouse> - Mark location for salvo", true)
+                    UiText("<Left Mouse> | Mark location for salvo", true)
 
                     UiColor(1, 1, 0.1)
-                    UiText("C - Cancel salvo", true)
+                    UiText("<C> | Cancel salvo", true)
                 else
                     UiColor(1, 1, 0.1)
-                    UiText("<Right Mouse> - Quick Salvo mode: ON", true)
+                    UiText("<Right Mouse> | Quick Salvo mode: ON", true)
 
                     UiColor(1, 1, 1)
-                    UiText("<Left Mouse> - Mark location for salvo", true)
+                    UiText("<Left Mouse> | Mark location for salvo", true)
                 end
             end
 

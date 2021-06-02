@@ -14,7 +14,6 @@ function draw_circle(position, radius, points)
 
     repeat
         theta = theta + step
-        DebugCross(Vec(point_x, point_y, point_z))
 
         local new_point_x = position[1] + radius * math.cos(theta)
         local new_point_z = position[3] - radius * math.sin(theta)
