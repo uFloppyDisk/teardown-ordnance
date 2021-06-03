@@ -183,6 +183,20 @@ function init()
         }),
         OPTION:new({
             type = "slider",
+            variable = "savegame.mod.shell_inaccuracy",
+            name = "Shell Inaccuracy",
+
+            value_type = "float",
+            value_unit = "meter(s)",
+            value_digits = 1,
+            value_default = 5.0,
+            value = nil,
+
+            value_min = 0,
+            value_max = 50
+        }),
+        OPTION:new({
+            type = "slider",
             variable = "savegame.mod.quick_salvo_delay",
             name = "Delay between shells (Quick Salvo)",
 
