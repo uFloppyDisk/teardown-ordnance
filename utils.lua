@@ -1,3 +1,44 @@
+function clamp(value, minimum, maximum)
+	if value < minimum then value = minimum end
+	if value > maximum then value = maximum end
+
+	return value
+end
+
+function print(msg)
+    if not G_DEV then
+        return
+    end
+
+    DebugPrint(msg)
+end
+
+function watch(name, variable)
+    if not G_DEV then
+        return
+    end
+
+    DebugWatch(name, variable)
+end
+
+function getAimPos()
+	local camera_transform = GetCameraTransform()
+	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
+
+    local direction = VecSub(camera_center, camera_transform.pos)
+    local distance = VecLength(direction)
+	local direction = VecNormalize(direction)
+
+	local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, distance)
+
+	if hit then
+		camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -hit_distance))
+		distance = hit_distance
+	end
+
+	return camera_center, hit, distance
+end
+
 function draw_circle(position, radius, points, colour)
     if not(radius > 0) then
         return
