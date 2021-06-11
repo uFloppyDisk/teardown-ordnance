@@ -122,7 +122,7 @@ function tick(delta)
 
     if InputPressed("B") then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
-        
+
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
             STATES.selected_variant = 1
         end
@@ -157,7 +157,7 @@ function tick(delta)
 
     if not STATES.quick_salvo and #QUICK_SALVO > 0 then
         DELAYS.quick_salvo = DELAYS.quick_salvo - delta
-        
+
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
             fire_shell(salvo_shell)
