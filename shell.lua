@@ -220,6 +220,7 @@ DEFAULT_SHELL = {
 
     secondary = false,
     secondary_timer = 0,
+    secondary_particle_spread = Vec(0, 0, 0),
 
     hit_once = false,
 
@@ -330,6 +331,20 @@ function Shell_tick(self, delta)
                 end
 
                 PointLight(self.position, 1, 1, 1, intensity)
+
+                if math.random() > 0.5 then
+                    ParticleReset()
+                    ParticleRadius(0.3 * math.random())
+                    ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.5)
+                    ParticleStretch(0)
+
+                    local particle_origin = VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0))
+                    self.secondary_particle_spread[1] = clamp(self.secondary_particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
+                    self.secondary_particle_spread[3] = clamp(self.secondary_particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
+
+                    SpawnParticle(VecAdd(particle_origin, self.secondary_particle_spread), Vec(-0.15, 0, 0.05), 20)
+                end
+
                 self.secondary_timer = self.secondary_timer - delta
             else
                 self.detonated = true
@@ -356,8 +371,21 @@ function Shell_tick(self, delta)
         if (variant["secondary"] ~= nil) then
             if variant["secondary"]["trigger_height"] ~= nil then
                 if self.distance_ground < variant.secondary.trigger_height then
-                    self.secondary = true
-                    self.vel_current = Vec(0, -1, 0)
+                    if self.secondary == false then
+                        self.secondary = true
+                        self.vel_current = Vec(0, -1, 0)
+                        local sound = LoadSound("MOD/snd/60mm_shell_parachuted_flare_secondary_pop_distant.ogg")
+                        PlaySound(sound, self.position, 90)
+
+                        ParticleReset()
+                        ParticleRadius(2)
+                        ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
+                        ParticleStretch(0)
+
+                        local particle_origin = VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0))
+
+                        SpawnParticle(particle_origin, Vec(-0.1, 0, 0.02), 20)
+                    end
                 end
             end
         end
@@ -471,12 +499,12 @@ function Shell_tick(self, delta)
             return
         end
 
-        ParticleReset()
-        ParticleRadius(0.2)
-        ParticleStretch(1.0)
-        SpawnParticle(VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
-
         if not self.secondary then
+            ParticleReset()
+            ParticleRadius(0.2)
+            ParticleStretch(1.0)
+            SpawnParticle(VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
+
             Shell_draw(self, self.position)
         end
 
