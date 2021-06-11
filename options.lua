@@ -156,8 +156,15 @@ function init()
             name = "Debug Mode",
 
             value_type = "boolean",
-            value_default = false,
-            value = nil
+            value_default = false
+        }),
+        OPTION:new({
+            type = "textbutton",
+            variable = "savegame.mod.simulate_ballistics",
+            name = "Simulate Ballistics [BETA]",
+
+            value_type = "boolean",
+            value_default = true
         }),
         OPTION:new({
             type = "textbutton",
@@ -165,8 +172,7 @@ function init()
             name = "Simulate Dud Rate (2%)",
 
             value_type = "boolean",
-            value_default = false,
-            value = nil
+            value_default = false
         }),
         OPTION:new({
             type = "slider",
@@ -176,7 +182,6 @@ function init()
             value_type = "float",
             value_unit = "second(s)",
             value_default = 0.0,
-            value = nil,
 
             value_min = 0,
             value_max = 25
@@ -190,7 +195,6 @@ function init()
             value_unit = "meter(s)",
             value_digits = 1,
             value_default = 5.0,
-            value = nil,
 
             value_min = 0,
             value_max = 50
@@ -204,9 +208,8 @@ function init()
             value_unit = "second(s)",
             value_digits = 2,
             value_default = 0.5,
-            value = nil,
 
-            value_min = 0.2,
+            value_min = 0.1,
             value_max = 5
         })
     }

@@ -1,44 +1,15 @@
+#include "constants.lua"
 #include "utils.lua"
 #include "shell.lua"
-
--- #region Constants
-
-G_DEV = GetBool("savegame.mod.debug_mode")
-G_VEC_GRAVITY = Vec(0, -39.2, 0)
-
-G_MAX_SHELLS = 100
-G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
-
--- #endregion Constants
-
--- #region Main
 
 SHELLS_prev_length = 0
 SHELLS = {}
 QUICK_SALVO = {}
 
-function clamp(value, minimum, maximum)
-	if value < minimum then value = minimum end
-	if value > maximum then value = maximum end
+DEBUG_LINES = {}
+DEBUG_POSITIONS = {}
 
-	return value
-end
-
-function print(msg)
-    if not G_DEV then
-        return
-    end
-
-    DebugPrint(msg)
-end
-
-function watch(name, variable)
-    if not G_DEV then
-        return
-    end
-
-    DebugWatch(name, variable)
-end
+-- #region Main
 
 function fire_shell(shell)
     Shell_fire(shell)
@@ -53,6 +24,8 @@ function init()
         enabled = false,
         fire = false,
         quick_salvo = false,
+        selected_shell = 1,
+        selected_variant = 1,
 
         shell_inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
     }
@@ -61,42 +34,18 @@ function init()
         quick_salvo = G_QUICK_SALVO_DELAY
     }
 
-    IMG_SPRITES = {}
-    IMG_SPRITES["155mm_he"]         = LoadSprite("MOD/img/155mm_he.png")
-
-    SND_MENU = {}
-    SND_MENU["select"]              = LoadSound("MOD/snd/menu_select.ogg")
-    SND_MENU["cancel"]              = LoadSound("MOD/snd/menu_cancel.ogg")
-
-    SND_SHELL = {}
-    SND_SHELL["salvo_mark"]         = LoadSound("MOD/snd/salvo_mark.ogg")
-    SND_SHELL["60mm_fire"]          = LoadSound("MOD/snd/fire_60mm.ogg")
-    SND_SHELL["155mm_fire_close"]   = LoadSound("MOD/snd/fire_155mm_close.ogg")
-    SND_SHELL["155mm_fire_far"]     = LoadSound("MOD/snd/fire_155mm_far.ogg")
-end
-
-function getAimPos()
-	local camera_transform = GetCameraTransform()
-	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
-
-    local direction = VecSub(camera_center, camera_transform.pos)
-    local distance = VecLength(direction)
-	local direction = VecNormalize(direction)
-
-	local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, distance)
-
-	if hit then
-		camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -hit_distance))
-		distance = hit_distance
-	end
-
-	return camera_center, hit, distance
+    SND_UI = {}
+    SND_UI["select"]                = LoadSound("MOD/snd/menu_select.ogg")
+    SND_UI["cancel"]                = LoadSound("MOD/snd/menu_cancel.ogg")
+    SND_UI["salvo_mark"]            = LoadSound("MOD/snd/salvo_mark.ogg")
 end
 
 function tick(delta)
     watch("state(ENABLED)", STATES.enabled)
     watch("state(FIRE)", STATES.fire)
     watch("state(QUICK SALVO)", STATES.quick_salvo)
+    watch("state(SELECTED SHELL)", STATES.selected_shell)
+    watch("state(SELECTED VARIANT)", STATES.selected_variant)
     watch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
     watch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     watch("Shells", #SHELLS)
@@ -109,7 +58,7 @@ function tick(delta)
     local queue_length = #QUICK_SALVO
     if queue_length > 0 then
         for i=1, queue_length do
-            shell = QUICK_SALVO[i]
+            local shell = QUICK_SALVO[i]
             DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
             draw_circle(shell.destination, shell.inaccuracy, 32)
         end
@@ -124,84 +73,140 @@ function tick(delta)
         end
 	end
 
+    if G_DEV then
+        if #DEBUG_POSITIONS > 0 then
+            for i, item in pairs(DEBUG_POSITIONS) do
+                DebugCross(item[1], item[2][1], item[2][2], item[2][3], 1)
+            end
+        end
+
+        if #DEBUG_LINES > 0 then
+            for i, item in pairs(DEBUG_LINES) do
+                DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], 1)
+            end
+        end
+    end
+
     if GetPlayerVehicle() ~= 0 then
+        STATES.enabled = false
         return
     end
 
-	if GetString("game.player.tool") == "ordnance" then
-        STATES.enabled = true
+    if not(GetString("game.player.tool") == "ordnance") then
+        STATES.enabled = false
+        return
+    end
 
-        draw_circle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
+    -- -------------------------------
+    -- Tool is active and ready to use
+    -- -------------------------------
 
-        if InputDown("Z") then
-            SetBool("game.input.locktool", true)
+    STATES.enabled = true
 
-            if InputValue("mousewheel") ~= 0 then
-                local offset = 0.5 * InputValue("mousewheel")
-                STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
-            end
+    draw_circle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
+
+    if InputDown("Z") then
+        SetBool("game.input.locktool", true)
+
+        if InputValue("mousewheel") ~= 0 then
+            local offset = 0.5 * InputValue("mousewheel")
+            STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
+        end
+    else
+        SetBool("game.input.locktool", false)
+    end
+
+    if InputPressed("K") then
+        ClearKey("savegame.mod.crash_disclaimer")
+    end
+
+    if InputPressed("B") then
+        STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
+
+        if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
+            STATES.selected_variant = 1
+        end
+
+        PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
+    end
+
+    if InputPressed("N") then
+        if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
+            PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
         else
-            SetBool("game.input.locktool", false)
+            STATES.selected_variant = (STATES.selected_variant % #SHELL_VALUES[STATES.selected_shell].variants) + 1
+            PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
         end
+    end
 
-        if InputPressed("K") then
-            ClearKey("savegame.mod.crash_disclaimer")
-        end
+    if InputPressed("C") and STATES.quick_salvo then
+        QUICK_SALVO = {}
+        PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
 
-        if InputPressed("C") and STATES.quick_salvo then
-            QUICK_SALVO = {}
-			PlaySound(SND_MENU["cancel"], GetPlayerPos(), 0.4)
+        STATES.quick_salvo = false
+    end
 
-            STATES.quick_salvo = false
-		end
-
-        if InputPressed("rmb") then
-            STATES.quick_salvo = not STATES.quick_salvo
-            PlaySound(SND_MENU["select"], GetPlayerPos(), 0.6)
-
-            if not STATES.quick_salvo and #QUICK_SALVO > 0 then
-                fire_shell(table.remove(QUICK_SALVO, 1))
-            end
-        end
+    if InputPressed("rmb") then
+        STATES.quick_salvo = not STATES.quick_salvo
+        PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
 
         if not STATES.quick_salvo and #QUICK_SALVO > 0 then
-            DELAYS.quick_salvo = DELAYS.quick_salvo - delta
-            
-            if DELAYS.quick_salvo < 0 then
-                local salvo_shell = table.remove(QUICK_SALVO, 1)
-                fire_shell(salvo_shell)
-                DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
-            end
-        else
+            fire_shell(table.remove(QUICK_SALVO, 1))
+        end
+    end
+
+    if not STATES.quick_salvo and #QUICK_SALVO > 0 then
+        DELAYS.quick_salvo = DELAYS.quick_salvo - delta
+
+        if DELAYS.quick_salvo < 0 then
+            local salvo_shell = table.remove(QUICK_SALVO, 1)
+            fire_shell(salvo_shell)
             DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
+    else
+        DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+    end
 
-        STATES.fire = InputPressed("lmb")
+    STATES.fire = InputPressed("lmb")
 
-        if STATES.fire then
-            local rand = math.random(3)
-            local rand_snd = "155mm_whistle_"..tostring(rand)
-            watch("Whistle", rand_snd)
+    if STATES.fire then
+        local values = SHELL_VALUES[STATES.selected_shell]
+        local variant = values.variants[STATES.selected_variant]
 
-            local shell = Shell_new({
-                inaccuracy = STATES.shell_inaccuracy,
-                sprite = IMG_SPRITES["155mm_he"],
-                snd_whistle = LoadLoop("MOD/snd/"..rand_snd..".ogg")
-            })
-
-            shell.destination = getAimPos()
-
-            if STATES.quick_salvo then
-                PlaySound(SND_SHELL["salvo_mark"], GetPlayerPos(), 0.4)
-                shell.queued = true
-                table.insert(QUICK_SALVO, shell)
-            else
-                fire_shell(shell)
-            end
+        local shell_whistle = nil;
+        if type(values.sounds.whistle) == "table" then
+            local rand = math.random(#values.sounds.whistle)
+            shell_whistle = values.sounds.whistle[rand]
+        else
+            shell_whistle = values.sounds.whistle
         end
-	else
-        STATES.enabled = false
-	end
+
+        watch("Whistle", shell_whistle)
+
+        local shell_sprite = values.sprite
+        if variant["sprite"] ~= nil then
+            shell_sprite = variant.sprite
+        end
+
+        local shell = Shell_new({
+            type = STATES.selected_shell,
+            variant = STATES.selected_variant,
+            inaccuracy = STATES.shell_inaccuracy,
+            sprite = shell_sprite,
+            snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
+        })
+
+        shell.destination = getAimPos()
+
+        if STATES.quick_salvo then
+            shell.queued = true
+            table.insert(QUICK_SALVO, shell)
+
+            PlaySound(SND_UI["salvo_mark"], GetPlayerPos(), 0.4)
+        else
+            fire_shell(shell)
+        end
+    end
 end
 
 
@@ -223,39 +228,42 @@ function draw()
         return
     end
 
+    local values = SHELL_VALUES[STATES.selected_shell]
+
     UiPush()
-        UiTranslate(80, UiMiddle()+UiMiddle()/2)
+        UiTranslate(80, UiMiddle() + UiMiddle() / 2)
         UiColor(0.4, 0.4, 0.4)
         UiAlign("left")
         UiFont("regular.ttf", 26)
-        UiTextOutline(0,0,0,1,0.2)
+        UiTextShadow(0, 0, 0, 1, 1, 1)
 
         UiPush()
             UiColor(1, 1, 1)
+            UiText("<B> | Cycle shells ["..values.name.."]", true)
+            UiText("<N> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
             UiText("Hold <Z> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
                 UiText("<Right Mouse> | Quick Salvo mode: OFF", true)
-                
-                UiColor(1, 0.3, 0.3)
-                UiText("<Left Mouse> | Fire 155mm shell", true)
+
+                UiColor(1, 0.2, 0.2)
+                UiText("<Left Mouse> | Fire "..values.name, true)
             else
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 0.3, 0.3)
                     UiText("<Right Mouse> | Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
-
-                    UiColor(1, 1, 1)
-                    UiText("<Left Mouse> | Mark location for salvo", true)
-
-                    UiColor(1, 1, 0.1)
-                    UiText("<C> | Cancel salvo", true)
                 else
                     UiColor(1, 1, 0.1)
                     UiText("<Right Mouse> | Quick Salvo mode: ON", true)
+                end
 
-                    UiColor(1, 1, 1)
-                    UiText("<Left Mouse> | Mark location for salvo", true)
+                UiColor(1, 1, 1)
+                UiText("<Left Mouse> | Mark location for salvo", true)
+
+                if #QUICK_SALVO > 0 then
+                    UiColor(1, 1, 0.1)
+                    UiText("<C> | Cancel salvo", true)
                 end
             end
 
