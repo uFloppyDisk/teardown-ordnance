@@ -50,6 +50,11 @@ SHELL_VALUES = {
             {
                 id = "PF",
                 name = "Parachuted Flare",
+                sprite = {
+                    img = "60mm_ILL",
+                    scaling_factor = 5.25,
+                    width = 0.06 * 2
+                },
                 silent = true,
                 size_explosion = 0,
                 size_makehole = {0.1, 0, 0},
@@ -220,6 +225,7 @@ DEFAULT_SHELL = {
 
     secondary = false,
     secondary_timer = 0,
+    secondary_intensity = 1000,
     secondary_particle_spread = Vec(0, 0, 0),
 
     hit_once = false,
@@ -279,6 +285,8 @@ function Shell_new(new)
         base[key] = value
     end
 
+    base.sprite_img = LoadSprite("MOD/img/"..new.sprite.img..".png")
+
     return base
 end
 
@@ -301,10 +309,10 @@ function Shell_draw(self, pos)
     local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
     local transform_pos = Transform(pos, rotation)
 
-    local width = values.sprite.width
-    local height = values.sprite.width * values.sprite.scaling_factor
+    local width = self.sprite.width
+    local height = self.sprite.width * self.sprite.scaling_factor
 
-    DrawSprite(self.sprite, transform_pos, width, height, 0.4, 0.4, 0.4, 1, true, false)
+    DrawSprite(self.sprite_img, transform_pos, width, height, 0.4, 0.4, 0.4, 1, true, false)
 end
 
 function Shell_tick(self, delta)
@@ -324,13 +332,15 @@ function Shell_tick(self, delta)
 
     if self.secondary then
         if variant.id == "PF" then
-            if self.secondary_timer > 0 then
-                local intensity = 1000
+            if self.secondary_timer >= 0 then
+                self.secondary_intensity = clamp((self.secondary_intensity + (5 * math.random(-1, 1))), 950, 1050)
                 if (self.secondary_timer / variant.secondary.timer) <= 0.15 then
-                    intensity = intensity * ((self.secondary_timer / variant.secondary.timer) / 0.15)
+                    self.secondary_intensity = self.secondary_intensity * ((self.secondary_timer / variant.secondary.timer) / 0.15)
                 end
 
-                PointLight(self.position, 1, 1, 1, intensity)
+                watch("shell(SECONDARY_INTENSITY)", self.secondary_intensity)
+
+                PointLight(self.position, 1, 1, 1, self.secondary_intensity)
 
                 if math.random() > 0.5 then
                     ParticleReset()
@@ -338,7 +348,7 @@ function Shell_tick(self, delta)
                     ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.5)
                     ParticleStretch(0)
 
-                    local particle_origin = VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0))
+                    local particle_origin = VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0))
                     self.secondary_particle_spread[1] = clamp(self.secondary_particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
                     self.secondary_particle_spread[3] = clamp(self.secondary_particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
 
@@ -357,7 +367,7 @@ function Shell_tick(self, delta)
     if self.active then
         local trigger_detonation = false
         local position_detonation = nil
-        local shell_radius = values.sprite.width / 2
+        local shell_radius = self.sprite.width / 2
 
         self.distance_ground = VecLength(VecSub(self.position, self.destination))
         watch("Distance to Ground", self.distance_ground)
@@ -373,7 +383,7 @@ function Shell_tick(self, delta)
                 if self.distance_ground < variant.secondary.trigger_height then
                     if self.secondary == false then
                         self.secondary = true
-                        self.vel_current = Vec(0, -1, 0)
+                        self.vel_current = Vec(-0.1, -1, 0.02)
                         local sound = LoadSound("MOD/snd/60mm_shell_parachuted_flare_secondary_pop_distant.ogg")
                         PlaySound(sound, self.position, 90)
 
@@ -382,7 +392,7 @@ function Shell_tick(self, delta)
                         ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
                         ParticleStretch(0)
 
-                        local particle_origin = VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0))
+                        local particle_origin = VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0))
 
                         SpawnParticle(particle_origin, Vec(-0.1, 0, 0.02), 20)
                     end
@@ -503,7 +513,7 @@ function Shell_tick(self, delta)
             ParticleReset()
             ParticleRadius(0.2)
             ParticleStretch(1.0)
-            SpawnParticle(VecAdd(self.position, Vec(0, values.sprite.width * values.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
+            SpawnParticle(VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
 
             Shell_draw(self, self.position)
         end
@@ -520,6 +530,8 @@ function Shell_detonate(self, pos)
     self.detonated = true
     self.active = false
 
+    table.insert(DEBUG_POSITIONS, {pos, {1, 0.2, 0.2}})
+
     if GetBool("savegame.mod.simulate_dud") and math.random(100) <= 2 then
         MakeHole(pos, 5, 2, 1, false)
         return
@@ -530,7 +542,6 @@ function Shell_detonate(self, pos)
     if variant.size_explosion > 0 then
         Explosion(pos, variant.size_explosion)
     end
-    table.insert(DEBUG_POSITIONS, {pos, {1, 0.2, 0.2}})
 end
 
 function Shell_fire(self)

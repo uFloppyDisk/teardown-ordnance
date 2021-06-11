@@ -171,6 +171,7 @@ function tick(delta)
 
     if STATES.fire then
         local values = SHELL_VALUES[STATES.selected_shell]
+        local variant = values.variants[STATES.selected_variant]
 
         local shell_whistle = nil;
         if type(values.sounds.whistle) == "table" then
@@ -182,11 +183,16 @@ function tick(delta)
 
         watch("Whistle", shell_whistle)
 
+        local shell_sprite = values.sprite
+        if variant["sprite"] ~= nil then
+            shell_sprite = variant.sprite
+        end
+
         local shell = Shell_new({
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
             inaccuracy = STATES.shell_inaccuracy,
-            sprite = LoadSprite("MOD/img/"..values.sprite.img..".png"),
+            sprite = shell_sprite,
             snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
         })
 
