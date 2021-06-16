@@ -5,7 +5,25 @@ function clamp(value, minimum, maximum)
 	return value
 end
 
-function print(msg)
+function assertTableKeys(root, ...)
+    for i, key in ipairs(arg) do
+        if root[key] == nil then return false end
+
+        root = root[key]
+    end
+
+    return true
+end
+
+function addToDebugTable(target, value)
+    if not G_DEV then
+        return
+    end
+
+    table.insert(target, value)
+end
+
+function dPrint(msg)
     if not G_DEV then
         return
     end
@@ -13,7 +31,7 @@ function print(msg)
     DebugPrint(msg)
 end
 
-function watch(name, variable)
+function dWatch(name, variable)
     if not G_DEV then
         return
     end
@@ -27,7 +45,7 @@ function getAimPos()
 
     local direction = VecSub(camera_center, camera_transform.pos)
     local distance = VecLength(direction)
-	local direction = VecNormalize(direction)
+	direction = VecNormalize(direction)
 
 	local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, distance)
 
@@ -39,8 +57,8 @@ function getAimPos()
 	return camera_center, hit, distance
 end
 
-function draw_circle(position, radius, points, colour)
-    if not(radius > 0) then
+function drawCircle(position, radius, points, colour)
+    if not (radius > 0) then
         return
     end
 
@@ -66,4 +84,34 @@ function draw_circle(position, radius, points, colour)
         point_z = new_point_z
 
     until (theta > math.pi * 2)
+end
+
+function getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
+    if depth < 0 or depth == nil then
+        dPrint("Max depth reached.")
+        return materials, hit_pos, true
+    end
+
+    for index, shape in pairs(shapes) do
+        QueryRejectShape(shape)
+    end
+
+    QueryRequire('large')
+    QueryRequire("physical")
+    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos), shell_radius))
+    if not hit then
+        return materials, hit_pos, false
+    end
+
+    table.insert(shapes, shape)
+
+    local position_hit = VecAdd(pos, VecScale(VecNormalize(VecSub(pos_new, pos)), distance))
+    addToDebugTable(DEBUG_POSITIONS, {position_hit, {1, 1, 1}})
+    local material = GetShapeMaterialAtPosition(shape, (position_hit))
+
+    table.insert(materials, material)
+    table.insert(hit_pos, VecCopy(position_hit))
+
+    dPrint("Hit shape with material '"..material.."'")
+    return getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end

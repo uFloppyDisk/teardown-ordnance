@@ -12,7 +12,7 @@ DEBUG_POSITIONS = {}
 -- #region Main
 
 function fire_shell(shell)
-    Shell_fire(shell)
+    shellFire(shell)
     table.insert(SHELLS, shell)
 end
 
@@ -41,15 +41,15 @@ function init()
 end
 
 function tick(delta)
-    watch("state(ENABLED)", STATES.enabled)
-    watch("state(FIRE)", STATES.fire)
-    watch("state(QUICK SALVO)", STATES.quick_salvo)
-    watch("state(SELECTED SHELL)", STATES.selected_shell)
-    watch("state(SELECTED VARIANT)", STATES.selected_variant)
-    watch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
-    watch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
-    watch("Shells", #SHELLS)
-    watch("Salvo", #QUICK_SALVO)
+    dWatch("state(ENABLED)", STATES.enabled)
+    dWatch("state(FIRE)", STATES.fire)
+    dWatch("state(QUICK SALVO)", STATES.quick_salvo)
+    dWatch("state(SELECTED SHELL)", STATES.selected_shell)
+    dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
+    dWatch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
+    dWatch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
+    dWatch("Shells", #SHELLS)
+    dWatch("Salvo", #QUICK_SALVO)
 
     if (SHELLS_prev_length ~= #SHELLS) then
         SHELLS_prev_length = #SHELLS
@@ -60,15 +60,15 @@ function tick(delta)
         for i=1, queue_length do
             local shell = QUICK_SALVO[i]
             DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
-            draw_circle(shell.destination, shell.inaccuracy, 32)
+            drawCircle(shell.destination, shell.inaccuracy, 32)
         end
     end
 
     for i, shell in ipairs(SHELLS) do
-        Shell_tick(shell, delta)
+        shellTick(shell, delta)
 
-        if shell.detonated then
-            print("Shell "..i.." detonated. Removing...")
+        if shell.state == SHELL_STATES.detonated then
+            dPrint("Shell "..i.." detonated. Removing...")
             table.remove(SHELLS, i)
         end
 	end
@@ -103,7 +103,7 @@ function tick(delta)
 
     STATES.enabled = true
 
-    draw_circle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
+    drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
 
     if InputDown("Z") then
         SetBool("game.input.locktool", true)
@@ -173,22 +173,20 @@ function tick(delta)
         local values = SHELL_VALUES[STATES.selected_shell]
         local variant = values.variants[STATES.selected_variant]
 
-        local shell_whistle = nil;
+        local shell_whistle = values.sounds.whistle;
         if type(values.sounds.whistle) == "table" then
             local rand = math.random(#values.sounds.whistle)
             shell_whistle = values.sounds.whistle[rand]
-        else
-            shell_whistle = values.sounds.whistle
         end
 
-        watch("Whistle", shell_whistle)
+        dWatch("Whistle", shell_whistle)
 
         local shell_sprite = values.sprite
-        if variant["sprite"] ~= nil then
+        if assertTableKeys(variant, "sprite") then
             shell_sprite = variant.sprite
         end
 
-        local shell = Shell_new({
+        local shell = shellNew({
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
             inaccuracy = STATES.shell_inaccuracy,
@@ -198,14 +196,16 @@ function tick(delta)
 
         shell.destination = getAimPos()
 
-        if STATES.quick_salvo then
-            shell.queued = true
-            table.insert(QUICK_SALVO, shell)
-
-            PlaySound(SND_UI["salvo_mark"], GetPlayerPos(), 0.4)
-        else
+        if not STATES.quick_salvo then
             fire_shell(shell)
+
+            return
         end
+
+        shell.state = SHELL_STATES.queued
+        table.insert(QUICK_SALVO, shell)
+
+        PlaySound(SND_UI["salvo_mark"], GetPlayerPos(), 0.4)
     end
 end
 
@@ -214,7 +214,7 @@ function update()
     local shells_length = #SHELLS
     if shells_length > G_MAX_SHELLS then
         local trim_amount = shells_length - G_MAX_SHELLS
-        print("Removing "..trim_amount.." shells from table...")
+        dPrint("Removing "..trim_amount.." shells from table...")
 
         for i=1, trim_amount do
             table.remove(SHELLS, 1)
@@ -224,7 +224,7 @@ end
 
 
 function draw()
-    if not(STATES.enabled) or GetPlayerVehicle() ~= 0 then
+    if not STATES.enabled or GetPlayerVehicle() ~= 0 then
         return
     end
 
