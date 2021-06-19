@@ -28,10 +28,14 @@ function shellDraw(self, pos)
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
-function shellTriggerSecondary(self, parameters)
+function shellTriggerSecondary(self, parameters, detonate)
+    local isDetonated = true
+
     if assertTableKeys(parameters, "trigger_height") then
+        if not detonate then isDetonated = false end
+
         if parameters.trigger_height < self.distance_ground then
-            return
+            return isDetonated
         end
 
         self.secondary.active = true
@@ -48,6 +52,17 @@ function shellTriggerSecondary(self, parameters)
 
         SpawnParticle(particle_origin, Vec(-0.1, 0, 0.02), 20)
     end
+
+    if assertTableKeys(parameters, "trigger_detonate") then
+        isDetonated = false
+
+        if detonate then
+            self.secondary.active = true
+            self.vel_current = Vec(0, 0, 0)
+        end
+    end
+
+    return isDetonated
 end
 
 function shellTick(self, delta)
@@ -65,38 +80,54 @@ function shellTick(self, delta)
     end
 
     if self.secondary.active then
+        if self.secondary.timer < 0 then
+            self.state = SHELL_STATES.detonated
+            self.secondary.active = false
+            return
+        end
+
         if variant.id == "PF" then
-            if self.secondary.timer >= 0 then
-                self.secondary.intensity = clamp((self.secondary.intensity + (5 * math.random(-1, 1))), 950, 1050)
+            self.secondary.intensity = clamp((self.secondary.intensity + (5 * math.random(-1, 1))), 950, 1050)
 
-                local timer_ratio = self.secondary.timer / variant.secondary.timer
-                if (timer_ratio) <= 0.15 then
-                    self.secondary.intensity = self.secondary.intensity * ((timer_ratio) / 0.15)
-                end
+            local timer_ratio = self.secondary.timer / variant.secondary.timer
+            if timer_ratio <= 0.15 then
+                self.secondary.intensity = self.secondary.intensity * ((timer_ratio) / 0.15)
+            end
 
-                dWatch("shell(SECONDARY_INTENSITY)", self.secondary.intensity)
+            dWatch("shell(SECONDARY_INTENSITY)", self.secondary.intensity)
 
-                PointLight(self.position, 1, 1, 1, self.secondary.intensity)
+            PointLight(self.position, 1, 1, 1, self.secondary.intensity)
 
-                if math.random() > 0.5 then
-                    ParticleReset()
-                    ParticleRadius(0.3 * math.random())
-                    ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.5)
-                    ParticleStretch(0)
+            if math.random() > 0.5 then
+                ParticleReset()
+                ParticleRadius(0.3 * math.random())
+                ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.5)
+                ParticleStretch(0)
 
-                    local particle_origin = VecAdd(self.position, Vec(0, (self.sprite.width * self.sprite.scaling_factor), 0))
-                    self.secondary.particle_spread[1] = clamp(self.secondary.particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
-                    self.secondary.particle_spread[3] = clamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
+                local particle_origin = VecAdd(self.position, Vec(0, (self.sprite.width * self.sprite.scaling_factor), 0))
+                self.secondary.particle_spread[1] = clamp(self.secondary.particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
+                self.secondary.particle_spread[3] = clamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
 
-                    SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0, 0.05), 20)
-                end
-
-                self.secondary.timer = self.secondary.timer - delta
-            else
-                self.state = SHELL_STATES.detonated
-                self.secondary.active = false
+                SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0, 0.05), 20)
             end
         end
+
+        if variant.id == "SM" then
+            local timer_ratio = self.secondary.timer / variant.secondary.timer
+
+            ParticleReset()
+            ParticleType('plain')
+            ParticleTile(5)
+            ParticleRadius(0.3, 0.5, "easein", 0.02, 0.95)
+            ParticleAlpha(1, 0, "smooth", 0, 0.95)
+            ParticleGravity(0, 0.1, "linear", 0, 1)
+            ParticleStretch(1)
+            ParticleCollide(0, 1, "easein", 0.1, 1)
+
+            SpawnParticle(self.position, Vec(0, 0, 0), 30)
+        end
+
+        self.secondary.timer = self.secondary.timer - delta
     end
 
     if self.state == SHELL_STATES.active then
@@ -256,7 +287,11 @@ function shellDetonate(self, pos)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
-    self.state = SHELL_STATES.detonated
+    self.position = VecCopy(pos)
+
+    if shellTriggerSecondary(self, variant.secondary, true) then
+        self.state = SHELL_STATES.detonated
+    end
 
     addToDebugTable(DEBUG_POSITIONS, {pos, {1, 0.2, 0.2}})
 
