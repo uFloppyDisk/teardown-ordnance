@@ -86,10 +86,11 @@ function shellTick(self, delta)
             return
         end
 
+        local timer_ratio = self.secondary.timer / variant.secondary.timer
+
         if variant.id == "PF" then
             self.secondary.intensity = clamp((self.secondary.intensity + (5 * math.random(-1, 1))), 950, 1050)
 
-            local timer_ratio = self.secondary.timer / variant.secondary.timer
             if timer_ratio <= 0.15 then
                 self.secondary.intensity = self.secondary.intensity * ((timer_ratio) / 0.15)
             end
@@ -113,18 +114,100 @@ function shellTick(self, delta)
         end
 
         if variant.id == "SM" then
-            local timer_ratio = self.secondary.timer / variant.secondary.timer
+            local radius = variant.secondary.radius
+            -- local radius_master = clamp(radius - (radius * (1 - timer_ratio)), radius - (radius / 3), radius)
 
-            ParticleReset()
-            ParticleType('plain')
-            ParticleTile(5)
-            ParticleRadius(0.3, 0.5, "easein", 0.02, 0.95)
-            ParticleAlpha(1, 0, "smooth", 0, 0.95)
-            ParticleGravity(0, 0.1, "linear", 0, 1)
-            ParticleStretch(1)
-            ParticleCollide(0, 1, "easein", 0.1, 1)
+            local radius_master = radius
+            if timer_ratio < 0.3 then
+                radius_master = radius_master - (radius_master * (1 - (timer_ratio / 0.3)))
+            end
 
-            SpawnParticle(self.position, Vec(0, 0, 0), 30)
+            -- Smoke plume
+            if (timer_ratio > 0.2 and timer_ratio < 0.99) and math.random() > 0.8 then
+                ParticleReset()
+                ParticleType('plain')
+                ParticleAlpha(1, 0, "smooth", 0, 0.95)
+                ParticleStretch(1)
+                ParticleCollide(0, 1, "easein", 0.1, 1)
+
+                local segments = 8;
+                for i = 0, 360, (360 / segments) do
+                    if math.random() > 0.9 then
+                        break
+                    end
+
+                    local particle_radius1 = math.random() * 0.5
+                    local particle_radius2 = (math.random() * 0.2) + particle_radius1
+                    ParticleRadius(particle_radius1, particle_radius2, "easein", 0.02, 0.95)
+
+                    local rand_gravity = math.random() * 0.05
+                    ParticleGravity(0, rand_gravity, "linear", 0, 1)
+
+                    local rotation = QuatEuler(0, (i + (math.random() * (360 / segments))), 0)
+                    local transform = Transform(self.position, rotation)
+
+                    local vel_rand = math.random() * 0.2
+                    local vel = Vec(vel_rand, 0, 0)
+                    vel = TransformToParentVec(transform, vel)
+
+                    local position_spawn = TransformToParentPoint(transform, Vec(radius_master * clamp(1 + math.random(), 1, 1.3), 0, 0))
+
+                    SpawnParticle(position_spawn, vel, variant.secondary.timer)
+                end
+            end
+
+            -- Smoke Body
+            if timer_ratio == 1 or math.random() > 0.8 then
+                local rotation = QuatEuler(0, 360 * math.random(), 0)
+                local distance = Vec((radius_master * 0.8) * math.random(), 0, 0)
+                local transform = Transform(VecCopy(self.position), rotation)
+                local position_spawn = TransformToParentPoint(transform, distance)
+
+                ParticleReset()
+                ParticleType('plain')
+                ParticleRadius(radius_master * clamp(math.random(), 0.3, 0.7))
+                ParticleAlpha(1, 0, "smooth", 0, 0.8)
+                ParticleGravity(0.01)
+                -- ParticleStretch(1)
+                -- ParticleCollide(0, 1, "easein", 0.1, 1)
+                ParticleCollide(0)
+
+                SpawnParticle(position_spawn, Vec(0, 0.02, 0), variant.secondary.timer - (variant.secondary.timer / 4))
+
+                -- High Smoke
+                if math.random() > 0.5 then
+                    rotation = QuatEuler(0, 360 * math.random(), 0)
+                    distance = Vec((radius_master * 0.2) * math.random(), 0, 0)
+                    transform = Transform(VecCopy(self.position), rotation)
+                    position_spawn = TransformToParentPoint(transform, distance)
+
+                    ParticleRadius(radius_master * clamp(math.random(), 0.3, 0.5))
+                    ParticleCollide(0.2)
+                    SpawnParticle(position_spawn, Vec(0, 0.02, 0), variant.secondary.timer - (variant.secondary.timer / 4))
+                end
+            end
+
+            -- Smoke Mushroom
+            if timer_ratio < 1 and math.random() > 0.9 then
+                -- local particle_radius = clamp(radius - (radius * timer_ratio), radius / 2, (radius - (radius / 2.4)))
+                local particle_radius = radius - (math.random() * (radius * 0.25))
+
+                ParticleReset()
+                ParticleType('plain')
+                -- ParticleRadius(particle_radius - (math.random() * (radius / 3)))
+                ParticleRadius(particle_radius * 0.9, particle_radius, "easeout", 0.001, 0.99)
+                ParticleAlpha(1, 0, "smooth", 0, 0.8)
+                ParticleGravity(-0.07)
+                ParticleStretch(1)
+                -- ParticleCollide(0, 1, "easein", 0.1, 1)
+                ParticleCollide(0)
+
+                SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.2, 0), variant.secondary.timer * 0.75)
+
+                -- Smoke Volume Assist
+                -- ParticleRadius(radius * 0.2)
+                -- SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.02, 0), variant.secondary.timer)
+            end
         end
 
         self.secondary.timer = self.secondary.timer - delta
@@ -289,7 +372,7 @@ function shellDetonate(self, pos)
 
     self.position = VecCopy(pos)
 
-    if shellTriggerSecondary(self, variant.secondary, true) then
+    if not (assertTableKeys(variant, "secondary")) or shellTriggerSecondary(self, variant.secondary, true) then
         self.state = SHELL_STATES.detonated
     end
 

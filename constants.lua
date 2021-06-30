@@ -186,6 +186,7 @@ SHELL_VALUES = {
                 size_makehole = {10, 5, 0.5},
                 secondary = {
                     timer = 30,
+                    radius = 6,
                     trigger_detonate = true
                 }
             }
