@@ -7,6 +7,15 @@ function shellNew(new)
     return base
 end
 
+function submunitionNew(new)
+    local base = shellCopy(DEFAULT_SUBMUNITION)
+    for key, value in pairs(new) do
+        base[key] = value
+    end
+
+    return base
+end
+
 function shellCopy(object)
     local copy
     if type(object) == 'table' then
@@ -89,6 +98,59 @@ function shellTick(self, delta)
                     self.secondary.particle_spread[3] = clamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
 
                     SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0, 0.05), 20)
+                end
+
+                self.secondary.timer = self.secondary.timer - delta
+            else
+                self.state = SHELL_STATES.detonated
+                self.secondary.active = false
+            end
+        end
+
+        if variant.id == "CL" then
+            if self.secondary.timer >= 0 then
+                if not assertTableKeys(self, "secondary", "submunitions") then
+                    self.secondary.submunitions = {}
+
+                    for i = 1, 50, 1 do
+                        local rotation = QuatEuler(0, math.random() * 360, 0)
+                        local transform = Transform(self.position, rotation)
+
+                        local submunition = submunitionNew({
+                            transform = TransformCopy(transform),
+                            velocity = Vec(math.random() * 10, math.random() * -10, 0)
+                            -- velocity = Vec(5, 0, 0)
+                        })
+
+                        table.insert(self.secondary.submunitions, submunition)
+                    end
+                end
+
+                for index, sub in ipairs(self.secondary.submunitions) do
+                    local transform_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
+                    sub.velocity = VecAdd(sub.velocity, VecScale(G_VEC_GRAVITY, delta))
+                    -- sub.velocity = VecAdd(sub.velocity, VecScale(VecScale(G_VEC_GRAVITY, delta), transform_down))
+
+                    dWatch("SUBMUNITION(velocity)", sub.velocity)
+
+                    local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
+                    -- position_new = VecAdd(position_new, VecScale(G_VEC_GRAVITY, delta))
+                    local transform_new = Transform(position_new, sub.transform.rot)
+
+                    addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.2, 0.2}})
+
+                    local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
+
+                    if hit then
+                        local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
+
+                        Explosion(position_hit, 1.2)
+                        MakeHole(position_hit, 3, 1.3, 0.5, false)
+
+                        table.remove(self.secondary.submunitions, index)
+                    else
+                        sub.transform = transform_new
+                    end
                 end
 
                 self.secondary.timer = self.secondary.timer - delta
