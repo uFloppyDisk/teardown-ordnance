@@ -49,7 +49,13 @@ function shellTriggerSecondary(self, parameters)
         PlaySound(sound, self.position, 90)
 
         ParticleReset()
-        ParticleRadius(2)
+
+        if assertTableKeys(parameters, "particle_radius") then
+            ParticleRadius(parameters.particle_radius)
+        else
+            ParticleRadius(2)
+        end
+
         ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
         ParticleStretch(0)
 
@@ -112,29 +118,31 @@ function shellTick(self, delta)
                 if not assertTableKeys(self, "secondary", "submunitions") then
                     self.secondary.submunitions = {}
 
-                    for i = 1, 50, 1 do
-                        local rotation = QuatEuler(0, math.random() * 360, 0)
+                    for i = 1, 100, 1 do
+                        local rotation = QuatEuler(0, math.random() * 360, math.random() * -80)
                         local transform = Transform(self.position, rotation)
 
-                        local submunition = submunitionNew({
+                        local sub = submunitionNew({
                             transform = TransformCopy(transform),
-                            velocity = Vec(math.random() * 10, math.random() * -10, 0)
-                            -- velocity = Vec(5, 0, 0)
+                            velocity = Vec(math.random() * 7 + 5, 0, 0)
                         })
 
-                        table.insert(self.secondary.submunitions, submunition)
+                        table.insert(self.secondary.submunitions, sub)
                     end
                 end
 
-                for index, sub in ipairs(self.secondary.submunitions) do
-                    local transform_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
-                    sub.velocity = VecAdd(sub.velocity, VecScale(G_VEC_GRAVITY, delta))
-                    -- sub.velocity = VecAdd(sub.velocity, VecScale(VecScale(G_VEC_GRAVITY, delta), transform_down))
+                if #self.secondary.submunitions == 0 then
+                    self.state = SHELL_STATES.detonated
+                    self.secondary.active = false
+                end
 
-                    dWatch("SUBMUNITION(velocity)", sub.velocity)
+                for index, sub in ipairs(self.secondary.submunitions) do
+                    local gravity = math.abs(G_VEC_GRAVITY[2])
+                    local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
+
+                    sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
 
                     local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
-                    -- position_new = VecAdd(position_new, VecScale(G_VEC_GRAVITY, delta))
                     local transform_new = Transform(position_new, sub.transform.rot)
 
                     addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.2, 0.2}})
@@ -149,6 +157,11 @@ function shellTick(self, delta)
 
                         table.remove(self.secondary.submunitions, index)
                     else
+                        local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
+                        local draw_pos = Transform(sub.transform.pos, look_rotation)
+                        local sprite = LoadSprite("MOD/img/".."bomblet"..".png")
+                        DrawSprite(sprite, draw_pos, 0.0635, 0.168, 0.4, 0.4, 0.4, 1, true, false)
+
                         sub.transform = transform_new
                     end
                 end
@@ -189,7 +202,7 @@ function shellTick(self, delta)
         end
 
         -- Provide default behaviours until secondary is active
-        if not self.secondary.active then
+        if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
             self.vel_current = VecAdd(self.vel_current, (VecScale(G_VEC_GRAVITY, delta)))
 
             ParticleReset()

@@ -186,7 +186,8 @@ SHELL_VALUES = {
                 size_makehole = {0.1, 0, 0},
                 secondary = {
                     timer = 10,
-                    trigger_height = 150
+                    trigger_height = 150,
+                    particle_radius = 10
                 }
             }
         },
