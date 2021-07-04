@@ -230,6 +230,7 @@ SHELL_VALUES = {
                 size_makehole = {0.1, 0, 0},
                 secondary = {
                     timer = 30,
+                    trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
                     trigger_height = 75
                 }
             }

@@ -13,7 +13,7 @@ OPTION = {
 
     value_type = "boolean",
     value_unit = nil,
-    value_digits = 1,
+    value_digits = 0,
     value_default = nil,
     value_min = 0,
     value_max = 1,
@@ -81,7 +81,8 @@ end
 
 function drawSlider(option)
     local value = option:getRegValue()
-    value = (value - option.value_min) / (option.value_max - option.value_min)
+    local range = option.value_max - option.value_min
+    value = (value - option.value_min) / (range)
 
     UiPush()
         UiAlign("left")
@@ -90,11 +91,7 @@ function drawSlider(option)
         UiTranslate(MENU.offset_option_slider[1], MENU.offset_option_slider[2])
 
         value = UiSlider("ui/common/dot.png", "x", value * option.width, 0.0, option.width) / option.width
-        if option.value_type == "float" then
-            value = round((value * (option.value_max - option.value_min) + option.value_min), option.value_digits)
-        elseif option.value_type == "int" then
-            value = math.floor(value * (option.value_max - option.value_min) + option.value_min)
-        end
+        value = round((value * range + option.value_min), option.value_digits)
 
     UiPop()
 
@@ -144,8 +141,8 @@ function clamp(value, minimum, maximum)
 end
 
 function round(number, digits)
-    local power = 10^digits
-    return math.floor(number * power) / power
+    local power = 10^(digits or 0)
+    return math.floor((number * power) + 0.5) / power
 end
 
 function init()
@@ -211,7 +208,19 @@ function init()
 
             value_min = 0.1,
             value_max = 5
-        })
+        }),
+        OPTION:new({
+            type = "slider",
+            variable = "savegame.mod.shells.secondary.cluster_bomblet_amount",
+            name = "Bomblets per cluster shell",
+
+            value_type = "int",
+            value_unit = "bomblet(s)",
+            value_default = 50,
+
+            value_min = 5,
+            value_max = 100
+        }),
     }
 end
 
@@ -235,7 +244,7 @@ function draw()
     
     for i, option in ipairs(OPTIONS) do
         if not HasKey(option.variable) then
-            option.value = option.value_default
+            option.value = option.value_default or 0
             option:setRegValue(option.value_default)
         end
 

@@ -45,8 +45,10 @@ function shellTriggerSecondary(self, parameters)
 
         self.secondary.active = true
         self.vel_current = Vec(-0.1, -1, 0.02)
-        local sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg")
-        PlaySound(sound, self.position, 90)
+
+        if assertTableKeys(parameters, "trigger_sound") then
+            PlaySound(parameters.trigger_sound, self.position, 90)
+        end
 
         ParticleReset()
 
@@ -118,7 +120,8 @@ function shellTick(self, delta)
                 if not assertTableKeys(self, "secondary", "submunitions") then
                     self.secondary.submunitions = {}
 
-                    for i = 1, 100, 1 do
+                    local amount_submunitions = GetInt('savegame.mod.shells.secondary.cluster_bomblet_amount') or 50
+                    for i = 1, amount_submunitions, 1 do
                         local rotation = QuatEuler(0, math.random() * 360, math.random() * -80)
                         local transform = Transform(self.position, rotation)
 
@@ -129,6 +132,8 @@ function shellTick(self, delta)
 
                         table.insert(self.secondary.submunitions, sub)
                     end
+
+                    dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
                 end
 
                 if #self.secondary.submunitions == 0 then
@@ -136,6 +141,7 @@ function shellTick(self, delta)
                     self.secondary.active = false
                 end
 
+                local sprite = LoadSprite("MOD/img/".."bomblet"..".png")
                 for index, sub in ipairs(self.secondary.submunitions) do
                     local gravity = math.abs(G_VEC_GRAVITY[2])
                     local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
@@ -145,22 +151,34 @@ function shellTick(self, delta)
                     local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
                     local transform_new = Transform(position_new, sub.transform.rot)
 
-                    addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.2, 0.2}})
+                    addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.6, 0.2}})
 
                     local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
 
                     if hit then
                         local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
-                        Explosion(position_hit, 1.2)
-                        MakeHole(position_hit, 3, 1.3, 0.5, false)
+                        if GetBool("savegame.mod.simulate_dud") and math.random(100) <= 2 then
+                            dPrint("Submunition at index "..index.." is a dud.")
+                            MakeHole(position_hit, 0.5, 0.1, 0, false)
+                        else
+                            Explosion(position_hit, 0.9)
+                            MakeHole(position_hit, 2, 1, 0.3, false)
+
+                            ParticleReset()
+                            ParticleRadius(1, 2.5, "smooth", 0, 0.2)
+                            ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
+                            ParticleStretch(0)
+                            ParticleCollide(0)
+
+                            SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 7 + 3)
+                        end
 
                         table.remove(self.secondary.submunitions, index)
                     else
                         local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
                         local draw_pos = Transform(sub.transform.pos, look_rotation)
-                        local sprite = LoadSprite("MOD/img/".."bomblet"..".png")
-                        DrawSprite(sprite, draw_pos, 0.0635, 0.168, 0.4, 0.4, 0.4, 1, true, false)
+                        DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
 
                         sub.transform = transform_new
                     end
