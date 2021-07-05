@@ -142,6 +142,12 @@ function shellTick(self, delta)
                 end
 
                 local sprite = LoadSprite("MOD/img/".."bomblet"..".png")
+
+                local sounds = {
+                    "155mm_shell_cluster_submunition_explode_01",
+                    "155mm_shell_cluster_submunition_explode_02",
+                }
+
                 for index, sub in ipairs(self.secondary.submunitions) do
                     local gravity = math.abs(G_VEC_GRAVITY[2])
                     local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
@@ -172,6 +178,11 @@ function shellTick(self, delta)
                             ParticleCollide(0)
 
                             SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 7 + 3)
+
+                            if math.random() > 0.7 then
+                                local sound = LoadSound("MOD/snd/"..sounds[math.random(#sounds)]..".ogg")
+                                PlaySound(sound, position_hit, math.random() * 2 + 8)
+                            end
                         end
 
                         table.remove(self.secondary.submunitions, index)
