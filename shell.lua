@@ -122,12 +122,12 @@ function shellTick(self, delta)
 
                     local amount_submunitions = GetInt('savegame.mod.shells.secondary.cluster_bomblet_amount') or 50
                     for i = 1, amount_submunitions, 1 do
-                        local rotation = QuatEuler(0, math.random() * 360, math.random() * -80)
+                        local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
                         local transform = Transform(self.position, rotation)
 
                         local sub = submunitionNew({
                             transform = TransformCopy(transform),
-                            velocity = Vec(math.random() * 7 + 5, 0, 0)
+                            velocity = Vec(math.random() * 5 + 5, 0, 0)
                         })
 
                         table.insert(self.secondary.submunitions, sub)
@@ -168,8 +168,8 @@ function shellTick(self, delta)
                             dPrint("Submunition at index "..index.." is a dud.")
                             MakeHole(position_hit, 0.5, 0.1, 0, false)
                         else
-                            Explosion(position_hit, 0.9)
-                            MakeHole(position_hit, 2, 1, 0.3, false)
+                            Explosion(position_hit, 1)
+                            MakeHole(position_hit, 3, 1.3, 0.5, false)
 
                             ParticleReset()
                             ParticleRadius(1, 2.5, "smooth", 0, 0.2)
@@ -179,10 +179,10 @@ function shellTick(self, delta)
 
                             SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 7 + 3)
 
-                            if math.random() > 0.7 then
-                                local sound = LoadSound("MOD/snd/"..sounds[math.random(#sounds)]..".ogg")
-                                PlaySound(sound, position_hit, math.random() * 2 + 8)
-                            end
+                            -- if math.random() > 0.7 then
+                            --     local sound = LoadSound("MOD/snd/"..sounds[math.random(#sounds)]..".ogg")
+                            --     PlaySound(sound, position_hit, math.random() * 2 + 8)
+                            -- end
                         end
 
                         table.remove(self.secondary.submunitions, index)
