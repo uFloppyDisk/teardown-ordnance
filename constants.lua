@@ -178,6 +178,19 @@ SHELL_VALUES = {
                 size_explosion = 4,
                 size_makehole = {50, 35, 20}
             },
+            {
+                id = "CL",
+                name = "Cluster",
+                silent = true,
+                size_explosion = 0,
+                size_makehole = {0.1, 0, 0},
+                secondary = {
+                    timer = 10,
+                    trigger_sound = LoadSound("MOD/snd/155mm_shell_cluster_secondary_trigger.ogg"),
+                    trigger_height = 150,
+                    particle_radius = 10
+                }
+            }
         },
         sprite = {
             img = LoadSprite("MOD/img/".."155mm_HE"..".png"),
@@ -218,6 +231,7 @@ SHELL_VALUES = {
                 size_makehole = {0.1, 0, 0},
                 secondary = {
                     timer = 30,
+                    trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
                     trigger_height = 75
                 }
             },
@@ -273,6 +287,11 @@ DEFAULT_SHELL = {
 
     sprite = nil,
     snd_whistle = nil,
+}
+
+DEFAULT_SUBMUNITION = {
+    transform = nil,
+    velocity = nil
 }
 
 -- #endregion
