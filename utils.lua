@@ -86,6 +86,29 @@ function drawCircle(position, radius, points, colour)
     until (theta > math.pi * 2)
 end
 
+function objectNew(new, base_object)
+    local base = objectCopy(base_object)
+    for key, value in pairs(new) do
+        base[key] = value
+    end
+
+    return base
+end
+
+function objectCopy(object)
+    local copy
+    if type(object) == 'table' then
+        copy = {}
+        for key, value in pairs(object) do
+            copy[objectCopy(key)] = objectCopy(value)
+        end
+        setmetatable(copy, objectCopy(getmetatable(object)))
+    else
+        copy = object
+    end
+    return copy
+end
+
 function getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
     if depth < 0 or depth == nil then
         dPrint("Max depth reached.")

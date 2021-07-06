@@ -186,13 +186,13 @@ function tick(delta)
             shell_sprite = variant.sprite
         end
 
-        local shell = shellNew({
+        local shell = objectNew({
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
             inaccuracy = STATES.shell_inaccuracy,
             sprite = shell_sprite,
             snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
-        })
+        }, DEFAULT_SHELL)
 
         shell.destination = getAimPos()
 

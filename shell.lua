@@ -1,35 +1,3 @@
-function shellNew(new)
-    local base = shellCopy(DEFAULT_SHELL)
-    for key, value in pairs(new) do
-        base[key] = value
-    end
-
-    return base
-end
-
-function submunitionNew(new)
-    local base = shellCopy(DEFAULT_SUBMUNITION)
-    for key, value in pairs(new) do
-        base[key] = value
-    end
-
-    return base
-end
-
-function shellCopy(object)
-    local copy
-    if type(object) == 'table' then
-        copy = {}
-        for key, value in pairs(object) do
-            copy[shellCopy(key)] = shellCopy(value)
-        end
-        setmetatable(copy, shellCopy(getmetatable(object)))
-    else
-        copy = object
-    end
-    return copy
-end
-
 function shellDraw(self, pos)
     local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
     local transform_pos = Transform(pos, rotation)
@@ -237,10 +205,10 @@ function shellTick(self, delta)
                         local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
                         local transform = Transform(self.position, rotation)
 
-                        local sub = submunitionNew({
+                        local sub = objectNew({
                             transform = TransformCopy(transform),
                             velocity = Vec(math.random() * 5 + 5, 0, 0)
-                        })
+                        }, DEFAULT_SUBMUNITION)
 
                         table.insert(self.secondary.submunitions, sub)
                     end
@@ -272,7 +240,6 @@ function shellTick(self, delta)
                     addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.6, 0.2}})
 
                     local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
-
                     if hit then
                         local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
