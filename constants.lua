@@ -178,18 +178,6 @@ SHELL_VALUES = {
                 size_explosion = 4,
                 size_makehole = {50, 35, 20}
             },
-            {
-                id = "SM",
-                name = "Smoke",
-                silent = false,
-                size_explosion = 0.1,
-                size_makehole = {10, 5, 0.5},
-                secondary = {
-                    timer = 30,
-                    radius = 6,
-                    trigger_detonate = true
-                }
-            }
         },
         sprite = {
             img = LoadSprite("MOD/img/".."155mm_HE"..".png"),
@@ -231,6 +219,18 @@ SHELL_VALUES = {
                 secondary = {
                     timer = 30,
                     trigger_height = 75
+                }
+            },
+            {
+                id = "SM",
+                name = "Smoke",
+                silent = false,
+                size_explosion = 0.1,
+                size_makehole = {10, 5, 0.5},
+                secondary = {
+                    timer = 30,
+                    radius = 6,
+                    trigger_detonate = true
                 }
             }
         },

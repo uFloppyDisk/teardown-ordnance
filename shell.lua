@@ -202,7 +202,7 @@ function shellTick(self, delta)
                 -- ParticleCollide(0, 1, "easein", 0.1, 1)
                 ParticleCollide(0)
 
-                SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.2, 0), variant.secondary.timer * 0.75)
+                SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.2, 0), variant.secondary.timer * 0.5)
 
                 -- Smoke Volume Assist
                 -- ParticleRadius(radius * 0.2)
