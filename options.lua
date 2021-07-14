@@ -227,6 +227,7 @@ function init()
     }
 
     OPTIONS = {}
+<<<<<<< HEAD
     for index, data in ipairs(CONFIG_OPTIONS) do
         local option = OPTION:new(data)
 
@@ -235,6 +236,9 @@ function init()
             option:setRegValue(option.value_default)
         end
 
+=======
+    for index, option in ipairs(CONFIG_OPTIONS) do
+>>>>>>> 0eefdfa523c7ad47d14f19bb57399c1b7138673e
         table.insert(OPTIONS, option)
     end
 end
