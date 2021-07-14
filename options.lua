@@ -166,14 +166,6 @@ function reset()
                 end
             UiPop()
 
-            -- UiAlign("center bottom")
-            -- UiTranslate(0, (box.height / 10) * -1)
-
-            -- UiFont("regular.ttf", 28)
-            -- UiColor(1, 1, 1)
-            -- UiWordWrap(box.width - 20)
-            -- UiText("Are you sure you want to RESET all settings to default values?", false)
-
             UiAlign("center top")
             UiTranslate(0, (box.height / 2) / 2)
 
@@ -215,10 +207,6 @@ function reset()
             UiPop()
         UiModalEnd()
     UiPop()
-
-    -- for i, option in ipairs(OPTIONS) do
-    --     option:setRegValue(option.value_default)
-    -- end
 end
 
 function clamp(value, minimum, maximum)
@@ -270,11 +258,6 @@ function draw()
         UiFont("regular.ttf", 28)
 
         for i, option in ipairs(OPTIONS) do
-            if not HasKey(option.variable) then
-                option.value = option.value_default or 0
-                option:setRegValue(option.value_default)
-            end
-
             if option.type == "textbutton" then
                 wrapButton(option)
             end
