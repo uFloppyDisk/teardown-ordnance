@@ -264,5 +264,9 @@
         "UiSlider",
         "UiGetScreen",
         "include"
+    ],
+    "Lua.diagnostics.disable": [
+        "lowercase-global",
+        "deprecated"
     ]
 }
