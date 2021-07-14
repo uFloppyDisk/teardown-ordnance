@@ -1,3 +1,5 @@
+#include "constants.lua"
+
 MENU = {
     spacing_option = 20,
     offset_rect_correction = -8,
@@ -189,6 +191,10 @@ function reset()
                         for i, option in ipairs(OPTIONS) do
                             ClearKey(option.variable)
                         end
+                        OPTIONS = {}
+
+                        Menu()
+                        return
                     end
 
                     for i, option in ipairs(OPTIONS) do
@@ -231,82 +237,18 @@ function init()
     STATES = {
         confirm_reset = 0
     }
-    OPTIONS = {
-        OPTION:new({
-            type = "textbutton",
-            variable = "savegame.mod.debug_mode",
-            name = "Debug Mode",
 
-            value_type = "boolean",
-            value_default = false
-        }),
-        OPTION:new({
-            type = "textbutton",
-            variable = "savegame.mod.simulate_ballistics",
-            name = "Simulate Ballistics [BETA]",
+    OPTIONS = {}
+    for index, data in ipairs(CONFIG_OPTIONS) do
+        local option = OPTION:new(data)
 
-            value_type = "boolean",
-            value_default = true
-        }),
-        OPTION:new({
-            type = "textbutton",
-            variable = "savegame.mod.simulate_dud",
-            name = "Simulate Dud Rate (2%)",
+        if not HasKey(option.variable) then
+            option.value = option.value_default or 0
+            option:setRegValue(option.value_default)
+        end
 
-            value_type = "boolean",
-            value_default = false
-        }),
-        OPTION:new({
-            type = "slider",
-            variable = "savegame.mod.flight_time",
-            name = "Flight Time",
-
-            value_type = "float",
-            value_unit = "second(s)",
-            value_default = 0.0,
-
-            value_min = 0,
-            value_max = 25
-        }),
-        OPTION:new({
-            type = "slider",
-            variable = "savegame.mod.shell_inaccuracy",
-            name = "Shell Inaccuracy",
-
-            value_type = "float",
-            value_unit = "meter(s)",
-            value_digits = 1,
-            value_default = 5.0,
-
-            value_min = 0,
-            value_max = 50
-        }),
-        OPTION:new({
-            type = "slider",
-            variable = "savegame.mod.quick_salvo_delay",
-            name = "Delay between shells (Quick Salvo)",
-
-            value_type = "float",
-            value_unit = "second(s)",
-            value_digits = 2,
-            value_default = 0.5,
-
-            value_min = 0.1,
-            value_max = 5
-        }),
-        OPTION:new({
-            type = "slider",
-            variable = "savegame.mod.shells.secondary.cluster_bomblet_amount",
-            name = "Bomblets per cluster shell",
-
-            value_type = "int",
-            value_unit = "bomblet(s)",
-            value_default = 50,
-
-            value_min = 5,
-            value_max = 100
-        }),
-    }
+        table.insert(OPTIONS, option)
+    end
 end
 
 function draw()
