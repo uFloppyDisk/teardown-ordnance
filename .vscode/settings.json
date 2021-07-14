@@ -266,6 +266,7 @@
         "include"
     ],
     "Lua.diagnostics.disable": [
-        "lowercase-global"
+        "lowercase-global",
+        "deprecated"
     ]
 }
