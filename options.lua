@@ -1,4 +1,5 @@
 #include "constants.lua"
+-- #include "Option.lua"
 
 MENU = {
     spacing_option = 20,
@@ -129,16 +130,24 @@ end
 
 -- #region Main
 
-function reset()
+function reset(force_reset)
     UiBlur(0.5)
     UiPush()
         margins = {}
         margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
 
-        box = {
-            width = (margins.x1 - margins.x0) / 5,
-            height = (margins.y1 - margins.y0) / 6
-        }
+        box = {}
+        if force_reset then
+            box = {
+                width = (margins.x1 - margins.x0) / 4,
+                height = (margins.y1 - margins.y0) / 5
+            }
+        else
+            box = {
+                width = (margins.x1 - margins.x0) / 5,
+                height = (margins.y1 - margins.y0) / 6
+            }
+        end
 
         UiModalBegin()
             UiAlign("center middle")
@@ -155,24 +164,26 @@ function reset()
                 UiTranslate(0, (box.height / 2 * -1) + box.height / 20)
                 UiFont("bold.ttf", 28)
                 UiColor(1, 1, 1)
-                UiText("CONFIRM RESET", true)
+                if force_reset then
+                    UiText("NOTICE", true)
 
-                UiFont("regular.ttf", 28)
-                UiWordWrap(box.width - 30)
-                if STATES.confirm_reset == 2 then
-                    UiText("Do you want to DELETE all 'Ordnance' mod registry keys?")
+                    UiFont("regular.ttf", 28)
+                    UiWordWrap(box.width - 30)
+
+                    UiText("This configuration is corrupted or incompatible with the current version.", true)
+                    UiText("All values will be reset.")
                 else
-                    UiText("Are you sure you want to RESET all settings to default values?")
+                    UiText("CONFIRM RESET", true)
+
+                    UiFont("regular.ttf", 28)
+                    UiWordWrap(box.width - 30)
+                    if STATES.confirm_reset == 2 then
+                        UiText("Do you want to DELETE all 'Ordnance' mod registry keys?")
+                    else
+                        UiText("Are you sure you want to RESET all settings to default values?")
+                    end
                 end
             UiPop()
-
-            -- UiAlign("center bottom")
-            -- UiTranslate(0, (box.height / 10) * -1)
-
-            -- UiFont("regular.ttf", 28)
-            -- UiColor(1, 1, 1)
-            -- UiWordWrap(box.width - 20)
-            -- UiText("Are you sure you want to RESET all settings to default values?", false)
 
             UiAlign("center top")
             UiTranslate(0, (box.height / 2) / 2)
@@ -180,13 +191,12 @@ function reset()
             UiFont("bold.ttf", 28)
             UiColor(1, 1, 1, 1)
             UiButtonHoverColor(1, 1, 0.5, 1)
-            UiPush()
-                UiAlign("right")
-                UiTranslate(((box.width / 2) / 5) * -1, 0)
 
-                UiButtonHoverColor(1, 0.1, 0.1, 1)
-                if UiTextButton("YES", ((box.width / 2) - 25), (box.height / 5)) then
-                    if STATES.confirm_reset == 2 then
+            if force_reset then
+                UiPush()
+                    UiAlign("center")
+
+                    if UiTextButton("OK", ((box.width / 2) - 25), (box.height / 5)) then
                         ClearKey("savegame.mod.crash_disclaimer")
                         for i, option in ipairs(OPTIONS) do
                             ClearKey(option.variable)
@@ -196,29 +206,46 @@ function reset()
                         Menu()
                         return
                     end
+                UiPop()
+            else
+                UiPush()
+                    UiAlign("right")
+                    UiTranslate(((box.width / 2) / 5) * -1, 0)
 
-                    for i, option in ipairs(OPTIONS) do
-                        option:setRegValue(option.value_default)
+                    UiButtonHoverColor(1, 0.1, 0.1, 1)
+                    if UiTextButton("YES", ((box.width / 2) - 25), (box.height / 5)) then
+                        if STATES.confirm_reset == 2 then
+                            ClearKey("savegame.mod.crash_disclaimer")
+                            for i, option in ipairs(OPTIONS) do
+                                ClearKey(option.variable)
+                            end
+                            OPTIONS = {}
+
+                            Menu()
+                            return
+                        end
+
+                        if STATES.confirm_reset == 1 then
+                            for i, option in ipairs(OPTIONS) do
+                                option:setRegValue(option.value_default)
+                            end
+                        end
+
+                        STATES.confirm_reset = 0
                     end
+                UiPop()
 
-                    STATES.confirm_reset = 0
-                end
-            UiPop()
+                UiPush()
+                    UiAlign("left")
+                    UiTranslate(((box.width / 2) / 5), 0)
 
-            UiPush()
-                UiAlign("left")
-                UiTranslate(((box.width / 2) / 5), 0)
-
-                if UiTextButton("NO", ((box.width / 2) - 25), (box.height / 5)) then
-                    STATES.confirm_reset = 0
-                end
-            UiPop()
+                    if UiTextButton("NO", ((box.width / 2) - 25), (box.height / 5)) then
+                        STATES.confirm_reset = 0
+                    end
+                UiPop()
+            end
         UiModalEnd()
     UiPop()
-
-    -- for i, option in ipairs(OPTIONS) do
-    --     option:setRegValue(option.value_default)
-    -- end
 end
 
 function clamp(value, minimum, maximum)
@@ -247,6 +274,19 @@ function init()
             option:setRegValue(option.value_default)
         end
 
+        option.value = option:getRegValue()
+
+        if option.value_type == "float" or option.value_type == "int" then
+            if option.value == nil then
+                STATES.confirm_reset = 3
+                break
+            end
+
+            if option.value > option.value_max or option.value < option.value_min then
+                STATES.confirm_reset = 3
+            end
+        end
+
         table.insert(OPTIONS, option)
     end
 end
@@ -270,11 +310,6 @@ function draw()
         UiFont("regular.ttf", 28)
 
         for i, option in ipairs(OPTIONS) do
-            if not HasKey(option.variable) then
-                option.value = option.value_default or 0
-                option:setRegValue(option.value_default)
-            end
-
             if option.type == "textbutton" then
                 wrapButton(option)
             end
@@ -309,7 +344,7 @@ function draw()
     UiPop()
 
     if STATES.confirm_reset > 0 then
-        reset()
+        if STATES.confirm_reset == 3 then reset(true) else reset() end
     end
 end
 
