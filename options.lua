@@ -112,7 +112,7 @@ function drawButton(option)
     UiPush()
         UiAlign("left")
         UiTranslate(MENU.spacing_option, 0)
-        UiButtonHoverColor(1, 1, 0)
+        UiButtonHoverColor(1, 1, 0.5)
         local value = option:getRegValue()
         if UiTextButton(value, option.width, option.height) then
             option.value = not value
@@ -128,9 +128,91 @@ end
 -- #region Main
 
 function reset()
-    for i, option in ipairs(OPTIONS) do
-        option:setRegValue(option.value_default)
-    end
+    UiBlur(0.5)
+    UiPush()
+        margins = {}
+        margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
+
+        box = {
+            width = (margins.x1 - margins.x0) / 5,
+            height = (margins.y1 - margins.y0) / 6
+        }
+
+        UiModalBegin()
+            UiAlign("center middle")
+            UiTranslate(UiCenter(), UiMiddle())
+
+            UiColor(1, 1, 1)
+            UiRect(box.width + 5, box.height + 5)
+
+            UiColor(0, 0, 0)
+            UiRect(box.width, box.height)
+
+            UiPush()
+                UiAlign("center top")
+                UiTranslate(0, (box.height / 2 * -1) + box.height / 20)
+                UiFont("bold.ttf", 28)
+                UiColor(1, 1, 1)
+                UiText("CONFIRM RESET", true)
+
+                UiFont("regular.ttf", 28)
+                UiWordWrap(box.width - 30)
+                if STATES.confirm_reset == 2 then
+                    UiText("Do you want to DELETE all 'Ordnance' mod registry keys?")
+                else
+                    UiText("Are you sure you want to RESET all settings to default values?")
+                end
+            UiPop()
+
+            -- UiAlign("center bottom")
+            -- UiTranslate(0, (box.height / 10) * -1)
+
+            -- UiFont("regular.ttf", 28)
+            -- UiColor(1, 1, 1)
+            -- UiWordWrap(box.width - 20)
+            -- UiText("Are you sure you want to RESET all settings to default values?", false)
+
+            UiAlign("center top")
+            UiTranslate(0, (box.height / 2) / 2)
+
+            UiFont("bold.ttf", 28)
+            UiColor(1, 1, 1, 1)
+            UiButtonHoverColor(1, 1, 0.5, 1)
+            UiPush()
+                UiAlign("right")
+                UiTranslate(((box.width / 2) / 5) * -1, 0)
+
+                UiButtonHoverColor(1, 0.1, 0.1, 1)
+                if UiTextButton("YES", ((box.width / 2) - 25), (box.height / 5)) then
+                    if STATES.confirm_reset == 2 then
+                        ClearKey("savegame.mod.crash_disclaimer")
+                        for i, option in ipairs(OPTIONS) do
+                            ClearKey(option.variable)
+                        end
+                    end
+
+                    for i, option in ipairs(OPTIONS) do
+                        option:setRegValue(option.value_default)
+                    end
+
+                    STATES.confirm_reset = 0
+                end
+            UiPop()
+
+            UiPush()
+                UiAlign("left")
+                UiTranslate(((box.width / 2) / 5), 0)
+
+                if UiTextButton("NO", ((box.width / 2) - 25), (box.height / 5)) then
+                    STATES.confirm_reset = 0
+                end
+            UiPop()
+        UiModalEnd()
+    UiPop()
+
+    -- for i, option in ipairs(OPTIONS) do
+    --     option:setRegValue(option.value_default)
+    -- end
 end
 
 function clamp(value, minimum, maximum)
@@ -146,6 +228,9 @@ function round(number, digits)
 end
 
 function init()
+    STATES = {
+        confirm_reset = 0
+    }
     OPTIONS = {
         OPTION:new({
             type = "textbutton",
@@ -226,42 +311,62 @@ end
 
 function draw()
     if InputDown("shift") and InputPressed("C") then
-        ClearKey("savegame.mod.crash_disclaimer")
+        STATES.confirm_reset = 2
+    end
+
+    UiPush()
+        margins = {}
+        margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
+        UiTranslate(UiCenter(), 250)
+        UiAlign("center middle")
+
+        -- Title
+        UiFont("bold.ttf", 48)
+        UiText("Ordnance Options", true)
+
+        -- Options
+        UiFont("regular.ttf", 28)
+
         for i, option in ipairs(OPTIONS) do
-            ClearKey(option.variable)
+            if not HasKey(option.variable) then
+                option.value = option.value_default or 0
+                option:setRegValue(option.value_default)
+            end
+
+            if option.type == "textbutton" then
+                wrapButton(option)
+            end
+
+            if option.type == "slider" then
+                wrapSlider(option)
+            end
+
+            UiTranslate(0, option.height + 20)
         end
-    end
+        UiTranslate(0, 30)
 
-	UiTranslate(UiCenter(), 250)
-	UiAlign("center middle")
+        UiFont("bold.ttf", 28)
 
-	-- Title
-	UiFont("bold.ttf", 48)
-	UiText("Ordnance Options", true)
+        UiPush()
+            UiTranslate(-20, 0)
+            UiAlign("right")
+            UiButtonHoverColor(1, 0.3, 0)
+            if UiTextButton("RESET", 100, 50) then
+                STATES.confirm_reset = 1
+            end
+        UiPop()
 
-    -- Options
-    UiFont("regular.ttf", 28)
-    
-    for i, option in ipairs(OPTIONS) do
-        if not HasKey(option.variable) then
-            option.value = option.value_default or 0
-            option:setRegValue(option.value_default)
-        end
+        UiPush()
+            UiTranslate(15, 0)
+            UiAlign("left")
+            UiButtonHoverColor(1, 1, 0.5, 1)
+            if UiTextButton("BACK", 100, 50) then
+                Menu()
+            end
+        UiPop()
+    UiPop()
 
-        if option.type == "textbutton" then
-            wrapButton(option)
-        end
-
-        if option.type == "slider" then
-            wrapSlider(option)
-        end
-
-        UiTranslate(0, option.height + 20)
-    end
-    UiTranslate(0, 30)
-
-    UiButtonHoverColor(1, 0.3, 0)
-    if UiTextButton("Reset", 100, 50) then
+    if STATES.confirm_reset > 0 then
         reset()
     end
 end
