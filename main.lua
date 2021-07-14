@@ -20,6 +20,37 @@ function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
+    for index, option in ipairs(CONFIG_OPTIONS) do
+        if not HasKey(option.variable) then
+            local func = nil
+
+            local default = false
+            if option.value_type == "boolean" then
+                func = SetBool
+            end
+            if option.value_type == "int" then
+                func = SetInt
+                default = 0
+            end
+            if option.value_type == "float" then
+                func = SetFloat
+                default = 0.0
+            end
+            if option.value_type == "string" then
+                func = SetString
+                default = ""
+            end
+
+            option.value = option.value_default or default
+            func(option.variable, option.value)
+        end
+    end
+
+    G_DEV = GetBool("savegame.mod.debug_mode")
+    G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay")
+    DEFAULT_SHELL.flight_time = GetFloat("savegame.mod.flight_time")
+    DEFAULT_SHELL.inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
+
     STATES = {
         enabled = false,
         fire = false,
