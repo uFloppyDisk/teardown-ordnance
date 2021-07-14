@@ -1,5 +1,3 @@
-#include "constants.lua"
-
 MENU = {
     spacing_option = 20,
     offset_rect_correction = -8,
@@ -183,10 +181,6 @@ function reset()
                         for i, option in ipairs(OPTIONS) do
                             ClearKey(option.variable)
                         end
-                        OPTIONS = {}
-
-                        Menu()
-                        return
                     end
 
                     for i, option in ipairs(OPTIONS) do
@@ -226,8 +220,8 @@ function init()
         confirm_reset = 0
     }
 
+
     OPTIONS = {}
-<<<<<<< HEAD
     for index, data in ipairs(CONFIG_OPTIONS) do
         local option = OPTION:new(data)
 
@@ -236,9 +230,6 @@ function init()
             option:setRegValue(option.value_default)
         end
 
-=======
-    for index, option in ipairs(CONFIG_OPTIONS) do
->>>>>>> 0eefdfa523c7ad47d14f19bb57399c1b7138673e
         table.insert(OPTIONS, option)
     end
 end
