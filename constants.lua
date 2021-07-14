@@ -1,8 +1,8 @@
-G_DEV = GetBool("savegame.mod.debug_mode")
+G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 
 G_MAX_SHELLS = 100
-G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay") or 0.5
+G_QUICK_SALVO_DELAY = 0
 
 SHELL_STATES = {
     queued = 0,
@@ -10,6 +10,87 @@ SHELL_STATES = {
     active = 2,
     detonated = 3
 }
+
+-- #region Options
+
+CONFIG_OPTIONS = {
+    {
+        type = "textbutton",
+        variable = "savegame.mod.debug_mode",
+        name = "Debug Mode",
+
+        value_type = "boolean",
+        value_default = false
+    },
+    {
+        type = "textbutton",
+        variable = "savegame.mod.simulate_ballistics",
+        name = "Simulate Ballistics [BETA]",
+
+        value_type = "boolean",
+        value_default = true
+    },
+    {
+        type = "textbutton",
+        variable = "savegame.mod.simulate_dud",
+        name = "Simulate Dud Rate (2%)",
+
+        value_type = "boolean",
+        value_default = false
+    },
+    {
+        type = "slider",
+        variable = "savegame.mod.flight_time",
+        name = "Flight Time",
+
+        value_type = "float",
+        value_unit = "second(s)",
+        value_default = 0.0,
+
+        value_min = 0,
+        value_max = 25
+    },
+    {
+        type = "slider",
+        variable = "savegame.mod.shell_inaccuracy",
+        name = "Shell Inaccuracy",
+
+        value_type = "float",
+        value_unit = "meter(s)",
+        value_digits = 1,
+        value_default = 5.0,
+
+        value_min = 0,
+        value_max = 50
+    },
+    {
+        type = "slider",
+        variable = "savegame.mod.quick_salvo_delay",
+        name = "Delay between shells (Quick Salvo)",
+
+        value_type = "float",
+        value_unit = "second(s)",
+        value_digits = 2,
+        value_default = 0.5,
+
+        value_min = 0.1,
+        value_max = 5
+    },
+    {
+        type = "slider",
+        variable = "savegame.mod.shells.secondary.cluster_bomblet_amount",
+        name = "Bomblets per cluster shell",
+
+        value_type = "int",
+        value_unit = "bomblet(s)",
+        value_default = 50,
+
+        value_min = 5,
+        value_max = 100
+    },
+}
+
+-- #endregion
 
 -- #region Ballistics
 
@@ -272,8 +353,8 @@ DEFAULT_SHELL = {
 
     type = 1,
     variant = 1,
-    flight_time = GetFloat("savegame.mod.flight_time"),
-    inaccuracy = GetFloat("savegame.mod.shell_inaccuracy"),
+    flight_time = 0,
+    inaccuracy = 0,
 
     destination = nil,
     position = nil,
