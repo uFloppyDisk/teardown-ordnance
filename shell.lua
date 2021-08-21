@@ -200,7 +200,7 @@ function shellTick(self, delta)
                 if not assertTableKeys(self, "secondary", "submunitions") then
                     self.secondary.submunitions = {}
 
-                    local amount_submunitions = GetInt('savegame.mod.shells.secondary.cluster_bomblet_amount') or 50
+                    local amount_submunitions = CONFIG:getConfValue(CONFIG_VARIABLES["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"]) or 50
                     for i = 1, amount_submunitions, 1 do
                         local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
                         local transform = Transform(self.position, rotation)
@@ -243,7 +243,7 @@ function shellTick(self, delta)
                     if hit then
                         local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
-                        if GetBool("savegame.mod.simulate_dud") and math.random(100) <= 2 then
+                        if CONFIG:getConfValue(CONFIG_VARIABLES["G_SIMULATE_UXO"]) and math.random(100) <= 2 then
                             dPrint("Submunition at index "..index.." is a dud.")
                             MakeHole(position_hit, 0.5, 0.1, 0, false)
                         else
@@ -357,7 +357,7 @@ function shellTick(self, delta)
             addToDebugTable(DEBUG_POSITIONS, {position_initial_hit, {1, 1, 1}})
 
             -- Guard clause: Check if ballistics is disabled to halt expensive computation
-            if not GetBool("savegame.mod.simulate_ballistics") then
+            if not CONFIG:getConfValue(CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"]) then
                 shellDetonate(self, position_initial_hit)
                 return
             end
@@ -447,7 +447,7 @@ function shellDetonate(self, pos)
 
     addToDebugTable(DEBUG_POSITIONS, {pos, {1, 0.2, 0.2}})
 
-    if GetBool("savegame.mod.simulate_dud") and math.random(100) <= 2 then
+    if CONFIG:getConfValue(CONFIG_VARIABLES["G_SIMULATE_UXO"]) and math.random(100) <= 2 then
         MakeHole(pos, 5, 2, 1, false)
         return
     end

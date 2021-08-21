@@ -1,3 +1,5 @@
+#include "classes/configmanager.lua"
+
 G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 
@@ -13,77 +15,104 @@ SHELL_STATES = {
 
 -- #region Options
 
-CONFIG_OPTIONS = {
-    {
-        type = "textbutton",
-        variable = "savegame.mod.debug_mode",
-        name = "Debug Mode",
+CONFIG_VARIABLES = {
+    ["G_DEBUG_MODE"] = {
+        variable = "savegame.mod.option.debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
-    {
-        type = "textbutton",
-        variable = "savegame.mod.simulate_ballistics",
-        name = "Simulate Ballistics [BETA]",
+    ["G_SIMULATE_BALLISTICS"] = {
+        variable = "savegame.mod.option.simulate_ballistics",
 
         value_type = "boolean",
         value_default = true
     },
-    {
-        type = "textbutton",
-        variable = "savegame.mod.simulate_dud",
-        name = "Simulate Dud Rate (2%)",
+    ["G_SIMULATE_UXO"] = {
+        variable = "savegame.mod.option.simulate_uxo",
 
         value_type = "boolean",
         value_default = false
     },
-    {
-        type = "slider",
-        variable = "savegame.mod.flight_time",
-        name = "Flight Time",
+    ["G_FLIGHT_TIME"] = {
+        variable = "savegame.mod.option.flight_time",
 
         value_type = "float",
+        value_default = 0.0
+    },
+    ["G_SHELL_INACCURACY"] = {
+        variable = "savegame.mod.option.shell_inaccuracy",
+
+        value_type = "float",
+        value_default = 5.0
+    },
+    ["G_QUICK_SALVO_DELAY"] = {
+        variable = "savegame.mod.option.quick_salvo_delay",
+
+        value_type = "float",
+        value_default = 0.5
+    },
+    ["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"] = {
+        variable = "savegame.mod.option.shells.secondary.cluster_bomblet_amount",
+
+        value_type = "int",
+        value_default = 50
+    },
+}
+
+CONFIG_OPTIONS = {
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
+        name = "Debug Mode"
+    },
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"],
+        name = "Simulate Ballistics [BETA]"
+    },
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SIMULATE_UXO"],
+        name = "Simulate Dud Rate (2%)"
+    },
+    {
+        type = "slider",
+        mapping = CONFIG_VARIABLES["G_FLIGHT_TIME"],
+        name = "Flight Time",
         value_unit = "second(s)",
-        value_default = 0.0,
 
         value_min = 0,
         value_max = 25
     },
     {
         type = "slider",
-        variable = "savegame.mod.shell_inaccuracy",
+        mapping = CONFIG_VARIABLES["G_SHELL_INACCURACY"],
         name = "Shell Inaccuracy",
 
-        value_type = "float",
         value_unit = "meter(s)",
         value_digits = 1,
-        value_default = 5.0,
 
         value_min = 0,
         value_max = 50
     },
     {
         type = "slider",
-        variable = "savegame.mod.quick_salvo_delay",
+        mapping = CONFIG_VARIABLES["G_QUICK_SALVO_DELAY"],
         name = "Delay between shells (Quick Salvo)",
 
-        value_type = "float",
         value_unit = "second(s)",
         value_digits = 2,
-        value_default = 0.5,
 
         value_min = 0.1,
         value_max = 5
     },
     {
         type = "slider",
-        variable = "savegame.mod.shells.secondary.cluster_bomblet_amount",
+        mapping = CONFIG_VARIABLES["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"],
         name = "Bomblets per cluster shell",
 
-        value_type = "int",
         value_unit = "bomblet(s)",
-        value_default = 50,
 
         value_min = 5,
         value_max = 100

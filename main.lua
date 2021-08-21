@@ -1,5 +1,4 @@
 #include "constants.lua"
-#include "utils.lua"
 #include "shell.lua"
 
 SHELLS_prev_length = 0
@@ -20,36 +19,17 @@ function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
-    for index, option in ipairs(CONFIG_OPTIONS) do
-        if not HasKey(option.variable) then
-            local func = nil
-
-            local default = false
-            if option.value_type == "boolean" then
-                func = SetBool
-            end
-            if option.value_type == "int" then
-                func = SetInt
-                default = 0
-            end
-            if option.value_type == "float" then
-                func = SetFloat
-                default = 0.0
-            end
-            if option.value_type == "string" then
-                func = SetString
-                default = ""
-            end
-
-            option.value = option.value_default or default
-            func(option.variable, option.value)
-        end
+    if CONFIG:init() then
+        dPrint("Restoring configuration defaults...")
+        CONFIG:reset()
+    else
+        dPrint("Config exists and is complete.")
     end
 
-    G_DEV = GetBool("savegame.mod.debug_mode")
-    G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay")
-    DEFAULT_SHELL.flight_time = GetFloat("savegame.mod.flight_time")
-    DEFAULT_SHELL.inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
+    G_DEV = CONFIG:getConfValue(CONFIG_VARIABLES["G_DEBUG_MODE"])
+    G_QUICK_SALVO_DELAY = CONFIG:getConfValue(CONFIG_VARIABLES["G_QUICK_SALVO_DELAY"])
+    DEFAULT_SHELL.flight_time = CONFIG:getConfValue(CONFIG_VARIABLES["G_FLIGHT_TIME"])
+    DEFAULT_SHELL.inaccuracy = CONFIG:getConfValue(CONFIG_VARIABLES["G_SHELL_INACCURACY"])
 
     STATES = {
         enabled = false,
@@ -58,7 +38,7 @@ function init()
         selected_shell = 1,
         selected_variant = 1,
 
-        shell_inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
+        shell_inaccuracy = CONFIG:getConfValue(CONFIG_VARIABLES["G_SHELL_INACCURACY"])
     }
 
     DELAYS = {
@@ -77,7 +57,7 @@ function tick(delta)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
     dWatch("state(SELECTED SHELL)", STATES.selected_shell)
     dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
-    dWatch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
+    dWatch("option(FLIGHT_TIME)", CONFIG:getConfValue(CONFIG_VARIABLES["G_FLIGHT_TIME"]))
     dWatch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
@@ -252,7 +232,6 @@ function update()
         end
     end
 end
-
 
 function draw()
     if not STATES.enabled or GetPlayerVehicle() ~= 0 then
