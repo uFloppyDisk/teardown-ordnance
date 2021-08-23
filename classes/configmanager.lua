@@ -24,7 +24,13 @@ function CONFIG:init()
     return false
 end
 
-function CONFIG:getConfValue(objConf)
+function CONFIG:getConfValue(obj_or_key)
+    local objConf = obj_or_key
+    if type(objConf) == "string" then
+        objConf = CONFIG_VARIABLES[objConf]
+        if objConf == nil then return nil end
+    end
+
     local func = nil
     if objConf.value_type == nil then return nil end
     if objConf.value_type == "boolean" then func = GetBool end
@@ -35,7 +41,13 @@ function CONFIG:getConfValue(objConf)
     return func(objConf.variable)
 end
 
-function CONFIG:setConfValue(objConf, value)
+function CONFIG:setConfValue(obj_or_key, value)
+    local objConf = obj_or_key
+    if type(objConf) == "string" then
+        objConf = CONFIG_VARIABLES[objConf]
+        if objConf == nil then return nil end
+    end
+
     local func = nil
     if objConf.value_type == nil then return nil end
     if objConf.value_type == "boolean" then func = SetBool end

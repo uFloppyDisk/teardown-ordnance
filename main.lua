@@ -26,10 +26,10 @@ function init()
         dPrint("Config exists and is complete.")
     end
 
-    G_DEV = CONFIG:getConfValue(CONFIG_VARIABLES["G_DEBUG_MODE"])
-    G_QUICK_SALVO_DELAY = CONFIG:getConfValue(CONFIG_VARIABLES["G_QUICK_SALVO_DELAY"])
-    DEFAULT_SHELL.flight_time = CONFIG:getConfValue(CONFIG_VARIABLES["G_FLIGHT_TIME"])
-    DEFAULT_SHELL.inaccuracy = CONFIG:getConfValue(CONFIG_VARIABLES["G_SHELL_INACCURACY"])
+    G_DEV = CONFIG:getConfValue("G_DEBUG_MODE")
+    G_QUICK_SALVO_DELAY = CONFIG:getConfValue("G_QUICK_SALVO_DELAY")
+    DEFAULT_SHELL.flight_time = CONFIG:getConfValue("G_FLIGHT_TIME")
+    DEFAULT_SHELL.inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
 
     STATES = {
         enabled = false,
@@ -38,7 +38,7 @@ function init()
         selected_shell = 1,
         selected_variant = 1,
 
-        shell_inaccuracy = CONFIG:getConfValue(CONFIG_VARIABLES["G_SHELL_INACCURACY"])
+        shell_inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
     }
 
     DELAYS = {
@@ -57,7 +57,7 @@ function tick(delta)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
     dWatch("state(SELECTED SHELL)", STATES.selected_shell)
     dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
-    dWatch("option(FLIGHT_TIME)", CONFIG:getConfValue(CONFIG_VARIABLES["G_FLIGHT_TIME"]))
+    dWatch("option(FLIGHT_TIME)", CONFIG:getConfValue("G_FLIGHT_TIME"))
     dWatch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
@@ -116,7 +116,7 @@ function tick(delta)
 
     drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
 
-    if InputDown("Z") then
+    if InputDown(CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
 
         if InputValue("mousewheel") ~= 0 then
@@ -131,7 +131,7 @@ function tick(delta)
         ClearKey("savegame.mod.crash_disclaimer")
     end
 
-    if InputPressed("B") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS")) then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
 
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
@@ -141,7 +141,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
     end
 
-    if InputPressed("N") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
             PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
         else
@@ -150,14 +150,14 @@ function tick(delta)
         end
     end
 
-    if InputPressed("C") and STATES.quick_salvo then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
         QUICK_SALVO = {}
         PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
 
         STATES.quick_salvo = false
     end
 
-    if InputPressed("rmb") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quick_salvo = not STATES.quick_salvo
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
 
@@ -178,7 +178,7 @@ function tick(delta)
         DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
     end
 
-    STATES.fire = InputPressed("lmb")
+    STATES.fire = InputPressed(CONFIG:getConfValue("KEYBIND_PRIMARY_FIRE"))
 
     if STATES.fire then
         local values = SHELL_VALUES[STATES.selected_shell]
@@ -249,9 +249,9 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("<B> | Cycle shells ["..values.name.."]", true)
-            UiText("<N> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
-            UiText("Hold <Z> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
+            UiText("<"..CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS").."> | Cycle shells ["..values.name.."]", true)
+            UiText("<"..CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS").."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
+            UiText("Hold <"..CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY").."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
@@ -273,7 +273,7 @@ function draw()
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
-                    UiText("<C> | Cancel salvo", true)
+                    UiText("<"..CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL").."> | Cancel salvo", true)
                 end
             end
 
