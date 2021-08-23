@@ -87,19 +87,6 @@ function drawButtonKeybinding(option)
             STATES.set_keybind.target = option
             STATES.set_keybind.active = true
         end
-
-
-        UiTranslate(display_width + (MENU.spacing_option * 3), 0)
-
-        UiAlign("center bottom")
-        UiFont("regular.ttf", 18)
-        UiButtonHoverColor(1, 0.3, 0.3)
-
-        local restore_text = "[restore]"
-        local width, height = UiGetTextSize(restore_text)
-        if UiTextButton(restore_text, width, height) then
-            CONFIG:setConfValue(option.mapping, option.mapping.value_default)
-        end
     UiPop()
 
     return option.value
@@ -150,7 +137,7 @@ function modalSetKey(option)
 
                 UiTranslate(0, spacing_height)
 
-                UiText("Press any key or Enter/Return to cancel.", true)
+                UiText("Press Enter/Return to cancel.", true)
                 if STATES.set_keybind.msg_error_duplicate_bind then
                     UiPush()
                         UiColor(1, 0.3, 0.3, 1)
@@ -383,6 +370,24 @@ function renderMenu()
         UiTranslate(0, 30)
 
         UiFont("bold.ttf", 28)
+
+        if CONFIG_MENUS[STATES.menu].filter == "keybind" then
+            UiPush()
+                UiFont("bold.ttf", 20)
+                UiButtonHoverColor(1, 0.3, 0)
+
+                local width, height = UiGetTextSize("Restore Defaults")
+                if UiTextButton("Restore Defaults", width, height) then
+                    for index, option in ipairs(OPTIONS) do
+                        if option.category == "keybind" then
+                            CONFIG:setConfValue(option.mapping, option.mapping.value_default)
+                        end
+                    end
+                end
+            UiPop()
+
+            UiTranslate(0, height + 20)
+        end
 
         UiPush()
             UiTranslate(-20, 0)
