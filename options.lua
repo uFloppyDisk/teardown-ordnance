@@ -134,10 +134,22 @@ function modalSetKey(option)
                 UiText("Set Keybind", true)
 
                 UiFont("regular.ttf", 28)
+
+                local _, spacing_height = UiGetTextSize("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+                UiTranslate(0, spacing_height)
+
                 UiWordWrap(box.width - 30)
 
                 UiText("Keybind setting for:", true)
-                UiText(option.name, true)
+
+                UiPush()
+                    UiFont("bold.ttf", 28)
+                    _, spacing_height = UiGetTextSize(option.name)
+                    UiText(option.name)
+                UiPop()
+
+                UiTranslate(0, spacing_height)
+
                 UiText("Press any key or Enter/Return to cancel.", true)
                 if STATES.set_keybind.msg_error_duplicate_bind then
                     UiPush()
@@ -150,7 +162,14 @@ function modalSetKey(option)
 
                 -- Ad lib loop to enable use of break for flow control
                 while string.len(input) > 0 do
-                    if input == "return" then
+                    if input == "return" or input == "esc" then
+                        STATES.set_keybind.active = false
+                        STATES.set_keybind.target = nil
+                        STATES.set_keybind.msg_error_duplicate_bind = false
+                        break
+                    end
+
+                    if input == CONFIG:getConfValue(option.mapping) then
                         STATES.set_keybind.active = false
                         STATES.set_keybind.target = nil
                         STATES.set_keybind.msg_error_duplicate_bind = false

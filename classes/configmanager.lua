@@ -1,7 +1,6 @@
 #include "utils.lua"
 
 G_CONFIG_REGISTRY = "savegame.mod.version_config"
-G_CONFIG_KEYBINDS_ROOT = "savegame.mod.config.keybind"
 
 CONFIG = {
     version = 1,
