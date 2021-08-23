@@ -6,6 +6,8 @@ G_VEC_GRAVITY = Vec(0, -39.2, 0)
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
 
+G_CONFIG_KEYBINDS_ROOT = "savegame.mod.config.keybind"
+
 SHELL_STATES = {
     queued = 0,
     in_flight = 1,
@@ -16,27 +18,27 @@ SHELL_STATES = {
 -- #region Config Definitions
 
 CONFIG_KEYBIND_FRIENDLYNAMES = {
-    ["esc"] = "Escape",
-    ["tab"] = "Tab",
-    ["lmb"] = "Left Mouse",
-    ["rmb"] = "Right Mouse",
-    ["mmb"] = "Middle Mouse",
-    ["uparrow"] = "Up Arrow",
-    ["downarrow"] = "Down Arrow",
-    ["leftarrow"] = "Left Arrow",
-    ["rightarrow"] = "Right Arrow",
-    ["backspace"] = "Backspace",
-    ["alt"] = "Alt",
-    ["delete"] = "Delete",
-    ["home"] = "Home",
-    ["end"] = "End",
-    ["pgup"] = "Page Up",
-    ["pgdown"] = "Page Down",
-    ["insert"] = "Insert",
-    ["space"] = "Spacebar",
-    ["shift"] = "Shift",
-    ["ctrl"] = "Control",
-    ["return"] = "Enter/Return",
+    ["esc"]         = "Escape",
+    ["tab"]         = "Tab",
+    ["lmb"]         = "Left Mouse",
+    ["rmb"]         = "Right Mouse",
+    ["mmb"]         = "Middle Mouse",
+    ["uparrow"]     = "Up Arrow",
+    ["downarrow"]   = "Down Arrow",
+    ["leftarrow"]   = "Left Arrow",
+    ["rightarrow"]  = "Right Arrow",
+    ["backspace"]   = "Backspace",
+    ["alt"]         = "Alt",
+    ["delete"]      = "Delete",
+    ["home"]        = "Home",
+    ["end"]         = "End",
+    ["pgup"]        = "Page Up",
+    ["pgdown"]      = "Page Down",
+    ["insert"]      = "Insert",
+    ["space"]       = "Spacebar",
+    ["shift"]       = "Shift",
+    ["ctrl"]        = "Control",
+    ["return"]      = "Enter/Return",
 }
 
 CONFIG_VARIABLES = {
@@ -83,37 +85,37 @@ CONFIG_VARIABLES = {
         value_default = 50
     },
     ["KEYBIND_CYCLE_SHELLS"] = {
-        variable = "savegame.mod.config.keybind.cycle_shells",
+        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_shells",
 
         value_type = "string",
         value_default = "B"
     },
     ["KEYBIND_CYCLE_VARIANTS"] = {
-        variable = "savegame.mod.config.keybind.cycle_variants",
+        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_variants",
 
         value_type = "string",
         value_default = "N"
     },
     ["KEYBIND_ADJUST_INACCURACY"] = {
-        variable = "savegame.mod.config.keybind.adjust_inaccuracy",
+        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_inaccuracy",
 
         value_type = "string",
         value_default = "Z"
     },
     ["KEYBIND_GENERAL_CANCEL"] = {
-        variable = "savegame.mod.config.keybind.cancel",
+        variable = G_CONFIG_KEYBINDS_ROOT..".cancel",
 
         value_type = "string",
         value_default = "C"
     },
     ["KEYBIND_TOGGLE_QUICKSALVO"] = {
-        variable = "savegame.mod.config.keybind.toggle_quicksalvo",
+        variable = G_CONFIG_KEYBINDS_ROOT..".toggle_quicksalvo",
 
         value_type = "string",
         value_default = "rmb"
     },
     ["KEYBIND_PRIMARY_FIRE"] = {
-        variable = "savegame.mod.config.keybind.primary_fire",
+        variable = G_CONFIG_KEYBINDS_ROOT..".primary_fire",
 
         value_type = "string",
         value_default = "lmb"

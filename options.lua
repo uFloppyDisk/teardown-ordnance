@@ -82,9 +82,23 @@ function drawButtonKeybinding(option)
         UiTranslate(MENU.spacing_option, 0)
         UiButtonHoverColor(1, 1, 0.5)
         local display_value = CONFIG_KEYBIND_FRIENDLYNAMES[option:getRegValue()] or option:getRegValue()
-        if UiTextButton(display_value, option.width, option.height) then
+        local display_width, display_height = UiGetTextSize(display_value)
+        if UiTextButton(display_value, display_width, display_height) then
             STATES.set_keybind.target = option
             STATES.set_keybind.active = true
+        end
+
+
+        UiTranslate(display_width + (MENU.spacing_option * 3), 0)
+
+        UiAlign("center bottom")
+        UiFont("regular.ttf", 18)
+        UiButtonHoverColor(1, 0.3, 0.3)
+
+        local restore_text = "[restore]"
+        local width, height = UiGetTextSize(restore_text)
+        if UiTextButton(restore_text, width, height) then
+            CONFIG:setConfValue(option.mapping, option.mapping.value_default)
         end
     UiPop()
 
@@ -124,20 +138,43 @@ function modalSetKey(option)
 
                 UiText("Keybind setting for:", true)
                 UiText(option.name, true)
-                UiText("Press any key or Enter/Return to cancel.")
+                UiText("Press any key or Enter/Return to cancel.", true)
+                if STATES.set_keybind.msg_error_duplicate_bind then
+                    UiPush()
+                        UiColor(1, 0.3, 0.3, 1)
+                        UiText("Duplicate bind. Please try another key.", true)
+                    UiPop()
+                end
 
                 local input = InputLastPressedKey()
 
+                -- Ad lib loop to enable use of break for flow control
                 while string.len(input) > 0 do
                     if input == "return" then
                         STATES.set_keybind.active = false
                         STATES.set_keybind.target = nil
+                        STATES.set_keybind.msg_error_duplicate_bind = false
+                        break
+                    end
+
+                    local duplicate_bind = false
+                    local all_binds = ListKeys(G_CONFIG_KEYBINDS_ROOT)
+                    for index, variable in ipairs(all_binds) do
+                        if GetString(G_CONFIG_KEYBINDS_ROOT.."."..variable) == input then
+                            STATES.set_keybind.msg_error_duplicate_bind = true
+                            duplicate_bind = true
+                            break
+                        end
+                    end
+
+                    if duplicate_bind then
                         break
                     end
 
                     CONFIG:setConfValue(option.mapping, input)
                     STATES.set_keybind.active = false
                     STATES.set_keybind.target = nil
+                    STATES.set_keybind.msg_error_duplicate_bind = false
                     break
                 end
         UiModalEnd()
@@ -250,8 +287,9 @@ function renderMasthead(font_reg, font_selected)
     end
 
     UiPush()
-
         UiAlign("left")
+        UiButtonHoverColor(0.7, 0.7, 0.7, 1)
+        UiButtonPressDist(4)
         renderLeftSide(masthead_offsets)
         renderRightSide(masthead_offsets)
     UiPop()
@@ -356,7 +394,8 @@ function init()
         menu = 1,
         set_keybind = {
             active = false,
-            target = nil
+            target = nil,
+            msg_error_duplicate_bind = false,
         },
         confirm_reset = 0
     }
