@@ -5,6 +5,11 @@ function clamp(value, minimum, maximum)
 	return value
 end
 
+function round(number, digits)
+    local power = 10^(digits or 0)
+    return math.floor((number * power) + 0.5) / power
+end
+
 function assertTableKeys(root, ...)
     for i, key in ipairs(arg) do
         if root[key] == nil then return false end

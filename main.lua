@@ -1,5 +1,4 @@
 #include "constants.lua"
-#include "utils.lua"
 #include "shell.lua"
 
 SHELLS_prev_length = 0
@@ -20,36 +19,17 @@ function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
-    for index, option in ipairs(CONFIG_OPTIONS) do
-        if not HasKey(option.variable) then
-            local func = nil
-
-            local default = false
-            if option.value_type == "boolean" then
-                func = SetBool
-            end
-            if option.value_type == "int" then
-                func = SetInt
-                default = 0
-            end
-            if option.value_type == "float" then
-                func = SetFloat
-                default = 0.0
-            end
-            if option.value_type == "string" then
-                func = SetString
-                default = ""
-            end
-
-            option.value = option.value_default or default
-            func(option.variable, option.value)
-        end
+    if CONFIG:init() then
+        dPrint("Restoring configuration defaults...")
+        CONFIG:reset()
+    else
+        dPrint("Config exists and is complete.")
     end
 
-    G_DEV = GetBool("savegame.mod.debug_mode")
-    G_QUICK_SALVO_DELAY = GetFloat("savegame.mod.quick_salvo_delay")
-    DEFAULT_SHELL.flight_time = GetFloat("savegame.mod.flight_time")
-    DEFAULT_SHELL.inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
+    G_DEV = CONFIG:getConfValue("G_DEBUG_MODE")
+    G_QUICK_SALVO_DELAY = CONFIG:getConfValue("G_QUICK_SALVO_DELAY")
+    DEFAULT_SHELL.flight_time = CONFIG:getConfValue("G_FLIGHT_TIME")
+    DEFAULT_SHELL.inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
 
     STATES = {
         enabled = false,
@@ -58,11 +38,18 @@ function init()
         selected_shell = 1,
         selected_variant = 1,
 
-        shell_inaccuracy = GetFloat("savegame.mod.shell_inaccuracy")
+        shell_inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
     }
 
     DELAYS = {
         quick_salvo = G_QUICK_SALVO_DELAY
+    }
+
+    KEYBINDS = {
+        ["KEYBIND_CYCLE_SHELLS"] = CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS"),
+        ["KEYBIND_CYCLE_VARIANTS"] = CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS"),
+        ["KEYBIND_ADJUST_INACCURACY"] = CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY"),
+        ["KEYBIND_GENERAL_CANCEL"] = CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL"),
     }
 
     SND_UI = {}
@@ -77,7 +64,7 @@ function tick(delta)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
     dWatch("state(SELECTED SHELL)", STATES.selected_shell)
     dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
-    dWatch("option(FLIGHT_TIME)", GetFloat("savegame.mod.flight_time"))
+    dWatch("option(FLIGHT_TIME)", CONFIG:getConfValue("G_FLIGHT_TIME"))
     dWatch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
@@ -136,7 +123,7 @@ function tick(delta)
 
     drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
 
-    if InputDown("Z") then
+    if InputDown(CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
 
         if InputValue("mousewheel") ~= 0 then
@@ -151,7 +138,7 @@ function tick(delta)
         ClearKey("savegame.mod.crash_disclaimer")
     end
 
-    if InputPressed("B") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS")) then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
 
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
@@ -161,7 +148,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
     end
 
-    if InputPressed("N") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
             PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
         else
@@ -170,14 +157,14 @@ function tick(delta)
         end
     end
 
-    if InputPressed("C") and STATES.quick_salvo then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
         QUICK_SALVO = {}
         PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
 
         STATES.quick_salvo = false
     end
 
-    if InputPressed("rmb") then
+    if InputPressed(CONFIG:getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quick_salvo = not STATES.quick_salvo
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
 
@@ -198,7 +185,7 @@ function tick(delta)
         DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
     end
 
-    STATES.fire = InputPressed("lmb")
+    STATES.fire = InputPressed(CONFIG:getConfValue("KEYBIND_PRIMARY_FIRE"))
 
     if STATES.fire then
         local values = SHELL_VALUES[STATES.selected_shell]
@@ -253,7 +240,6 @@ function update()
     end
 end
 
-
 function draw()
     if not STATES.enabled or GetPlayerVehicle() ~= 0 then
         return
@@ -270,9 +256,9 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("<B> | Cycle shells ["..values.name.."]", true)
-            UiText("<N> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
-            UiText("Hold <Z> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
+            UiText("<"..KEYBINDS["KEYBIND_CYCLE_SHELLS"].."> | Cycle shells ["..values.name.."]", true)
+            UiText("<"..KEYBINDS["KEYBIND_CYCLE_VARIANTS"].."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
+            UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_INACCURACY"].."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
@@ -294,7 +280,7 @@ function draw()
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
-                    UiText("<C> | Cancel salvo", true)
+                    UiText("<"..KEYBINDS["KEYBIND_GENERAL_CANCEL"].."> | Cancel salvo", true)
                 end
             end
 

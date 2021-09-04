@@ -1,8 +1,12 @@
+#include "classes/configmanager.lua"
+
 G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
+
+G_CONFIG_KEYBINDS_ROOT = "savegame.mod.config.keybind"
 
 SHELL_STATES = {
     queued = 0,
@@ -11,82 +15,222 @@ SHELL_STATES = {
     detonated = 3
 }
 
--- #region Options
+-- #region Config Definitions
 
-CONFIG_OPTIONS = {
-    {
-        type = "textbutton",
-        variable = "savegame.mod.debug_mode",
-        name = "Debug Mode",
+CONFIG_KEYBIND_FRIENDLYNAMES = {
+    ["esc"]         = "Escape",
+    ["tab"]         = "Tab",
+    ["lmb"]         = "Left Mouse",
+    ["rmb"]         = "Right Mouse",
+    ["mmb"]         = "Middle Mouse",
+    ["uparrow"]     = "Up Arrow",
+    ["downarrow"]   = "Down Arrow",
+    ["leftarrow"]   = "Left Arrow",
+    ["rightarrow"]  = "Right Arrow",
+    ["backspace"]   = "Backspace",
+    ["alt"]         = "Alt",
+    ["delete"]      = "Delete",
+    ["home"]        = "Home",
+    ["end"]         = "End",
+    ["pgup"]        = "Page Up",
+    ["pgdown"]      = "Page Down",
+    ["insert"]      = "Insert",
+    ["space"]       = "Spacebar",
+    ["shift"]       = "Shift",
+    ["ctrl"]        = "Control",
+    ["return"]      = "Enter/Return",
+}
+
+CONFIG_VARIABLES = {
+    ["G_DEBUG_MODE"] = {
+        variable = "savegame.mod.config.debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
-    {
-        type = "textbutton",
-        variable = "savegame.mod.simulate_ballistics",
-        name = "Simulate Ballistics [BETA]",
+    ["G_SIMULATE_BALLISTICS"] = {
+        variable = "savegame.mod.config.simulate_ballistics",
 
         value_type = "boolean",
         value_default = true
     },
-    {
-        type = "textbutton",
-        variable = "savegame.mod.simulate_dud",
-        name = "Simulate Dud Rate (2%)",
+    ["G_SIMULATE_UXO"] = {
+        variable = "savegame.mod.config.simulate_uxo",
 
         value_type = "boolean",
         value_default = false
     },
-    {
-        type = "slider",
-        variable = "savegame.mod.flight_time",
-        name = "Flight Time",
+    ["G_FLIGHT_TIME"] = {
+        variable = "savegame.mod.config.flight_time",
 
         value_type = "float",
+        value_default = 0.0
+    },
+    ["G_SHELL_INACCURACY"] = {
+        variable = "savegame.mod.config.shell_inaccuracy",
+
+        value_type = "float",
+        value_default = 5.0
+    },
+    ["G_QUICK_SALVO_DELAY"] = {
+        variable = "savegame.mod.config.quick_salvo_delay",
+
+        value_type = "float",
+        value_default = 0.5
+    },
+    ["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"] = {
+        variable = "savegame.mod.config.shells.secondary.cluster_bomblet_amount",
+
+        value_type = "int",
+        value_default = 50
+    },
+    ["KEYBIND_CYCLE_SHELLS"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_shells",
+
+        value_type = "string",
+        value_default = "B"
+    },
+    ["KEYBIND_CYCLE_VARIANTS"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_variants",
+
+        value_type = "string",
+        value_default = "N"
+    },
+    ["KEYBIND_ADJUST_INACCURACY"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_inaccuracy",
+
+        value_type = "string",
+        value_default = "Z"
+    },
+    ["KEYBIND_GENERAL_CANCEL"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".cancel",
+
+        value_type = "string",
+        value_default = "C"
+    },
+    ["KEYBIND_TOGGLE_QUICKSALVO"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".toggle_quicksalvo",
+
+        value_type = "string",
+        value_default = "rmb"
+    },
+    ["KEYBIND_PRIMARY_FIRE"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".primary_fire",
+
+        value_type = "string",
+        value_default = "lmb"
+    },
+}
+
+CONFIG_OPTIONS = {
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
+        name = "Debug Mode"
+    },
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"],
+        name = "Simulate Ballistics [BETA]"
+    },
+    {
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SIMULATE_UXO"],
+        name = "Simulate Dud Rate (2%)"
+    },
+    {
+        type = "slider",
+        mapping = CONFIG_VARIABLES["G_FLIGHT_TIME"],
+        name = "Flight Time",
         value_unit = "second(s)",
-        value_default = 0.0,
 
         value_min = 0,
         value_max = 25
     },
     {
         type = "slider",
-        variable = "savegame.mod.shell_inaccuracy",
+        mapping = CONFIG_VARIABLES["G_SHELL_INACCURACY"],
         name = "Shell Inaccuracy",
 
-        value_type = "float",
         value_unit = "meter(s)",
         value_digits = 1,
-        value_default = 5.0,
 
         value_min = 0,
         value_max = 50
     },
     {
         type = "slider",
-        variable = "savegame.mod.quick_salvo_delay",
+        mapping = CONFIG_VARIABLES["G_QUICK_SALVO_DELAY"],
         name = "Delay between shells (Quick Salvo)",
 
-        value_type = "float",
         value_unit = "second(s)",
         value_digits = 2,
-        value_default = 0.5,
 
         value_min = 0.1,
         value_max = 5
     },
     {
         type = "slider",
-        variable = "savegame.mod.shells.secondary.cluster_bomblet_amount",
+        mapping = CONFIG_VARIABLES["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"],
         name = "Bomblets per cluster shell",
 
-        value_type = "int",
         value_unit = "bomblet(s)",
-        value_default = 50,
 
         value_min = 5,
         value_max = 100
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_CYCLE_SHELLS"],
+        name = "Cycle Shells"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_CYCLE_VARIANTS"],
+        name = "Cycle Variants"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_INACCURACY"],
+        name = "Adjust Inaccuracy In-game (Hold)"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_GENERAL_CANCEL"],
+        name = "Cancel"
+    },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO"],
+    --     name = "Toggle/Launch Quick Salvo"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
+    --     name = "Fire/Mark Shell"
+    -- },
+}
+
+CONFIG_MENUS = {
+    [1] = {
+        title = "Global",
+        filter = nil
+    },
+    [2] = {
+        title = "Keybindings",
+        filter = "keybind"
     },
 }
 
