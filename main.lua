@@ -45,6 +45,13 @@ function init()
         quick_salvo = G_QUICK_SALVO_DELAY
     }
 
+    KEYBINDS = {
+        ["KEYBIND_CYCLE_SHELLS"] = CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS"),
+        ["KEYBIND_CYCLE_VARIANTS"] = CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS"),
+        ["KEYBIND_ADJUST_INACCURACY"] = CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY"),
+        ["KEYBIND_GENERAL_CANCEL"] = CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL"),
+    }
+
     SND_UI = {}
     SND_UI["select"]                = LoadSound("MOD/snd/menu_select.ogg")
     SND_UI["cancel"]                = LoadSound("MOD/snd/menu_cancel.ogg")
@@ -249,9 +256,9 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
-            UiText("<"..CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS").."> | Cycle shells ["..values.name.."]", true)
-            UiText("<"..CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS").."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
-            UiText("Hold <"..CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY").."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
+            UiText("<"..KEYBINDS["KEYBIND_CYCLE_SHELLS"].."> | Cycle shells ["..values.name.."]", true)
+            UiText("<"..KEYBINDS["KEYBIND_CYCLE_VARIANTS"].."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
+            UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_INACCURACY"].."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then
                 UiColor(1, 1, 1)
@@ -273,7 +280,7 @@ function draw()
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
-                    UiText("<"..CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL").."> | Cancel salvo", true)
+                    UiText("<"..KEYBINDS["KEYBIND_GENERAL_CANCEL"].."> | Cancel salvo", true)
                 end
             end
 
