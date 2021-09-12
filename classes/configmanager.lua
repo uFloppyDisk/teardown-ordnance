@@ -7,7 +7,7 @@ CONFIG = {
     incompatible = true
 }
 
-function CONFIG:init()
+function CONFIG_init()
     if not HasKey(G_CONFIG_REGISTRY) then
         return true
     end
@@ -19,12 +19,12 @@ function CONFIG:init()
         return true
     end
 
-    if not self:checkIntegrity() then return true end
+    if not CONFIG_checkIntegrity() then return true end
 
     return false
 end
 
-function CONFIG:getConfValue(obj_or_key)
+function CONFIG_getConfValue(obj_or_key)
     local objConf = obj_or_key
     if type(objConf) == "string" then
         objConf = CONFIG_VARIABLES[objConf]
@@ -41,7 +41,7 @@ function CONFIG:getConfValue(obj_or_key)
     return func(objConf.variable)
 end
 
-function CONFIG:setConfValue(obj_or_key, value)
+function CONFIG_setConfValue(obj_or_key, value)
     local objConf = obj_or_key
     if type(objConf) == "string" then
         objConf = CONFIG_VARIABLES[objConf]
@@ -58,7 +58,7 @@ function CONFIG:setConfValue(obj_or_key, value)
     return func(objConf.variable, value)
 end
 
-function CONFIG:checkIntegrity()
+function CONFIG_checkIntegrity()
     for key, conf in pairs(CONFIG_VARIABLES) do
         if not HasKey(conf.variable) then
             dPrint("Could not find variable '"..conf.variable.."'")
@@ -69,7 +69,7 @@ function CONFIG:checkIntegrity()
     return true
 end
 
-function CONFIG:reset(no_restore)
+function CONFIG_reset(no_restore)
     ClearKey("savegame.mod")
 
     if no_restore then
@@ -78,7 +78,7 @@ function CONFIG:reset(no_restore)
     end
 
     for key, conf in pairs(CONFIG_VARIABLES) do
-        self:setConfValue(conf, conf.value_default)
+        CONFIG_setConfValue(conf, conf.value_default)
     end
 
     SetInt(G_CONFIG_REGISTRY, CONFIG.version)

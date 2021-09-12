@@ -19,17 +19,17 @@ function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
-    if CONFIG:init() then
+    if CONFIG_init() then
         dPrint("Restoring configuration defaults...")
-        CONFIG:reset()
+        CONFIG_reset()
     else
         dPrint("Config exists and is complete.")
     end
 
-    G_DEV = CONFIG:getConfValue("G_DEBUG_MODE")
-    G_QUICK_SALVO_DELAY = CONFIG:getConfValue("G_QUICK_SALVO_DELAY")
-    DEFAULT_SHELL.flight_time = CONFIG:getConfValue("G_FLIGHT_TIME")
-    DEFAULT_SHELL.inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
+    G_DEV = CONFIG_getConfValue("G_DEBUG_MODE")
+    G_QUICK_SALVO_DELAY = CONFIG_getConfValue("G_QUICK_SALVO_DELAY")
+    DEFAULT_SHELL.flight_time = CONFIG_getConfValue("G_FLIGHT_TIME")
+    DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
 
     STATES = {
         enabled = false,
@@ -38,7 +38,7 @@ function init()
         selected_shell = 1,
         selected_variant = 1,
 
-        shell_inaccuracy = CONFIG:getConfValue("G_SHELL_INACCURACY")
+        shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
     }
 
     DELAYS = {
@@ -46,10 +46,10 @@ function init()
     }
 
     KEYBINDS = {
-        ["KEYBIND_CYCLE_SHELLS"] = CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS"),
-        ["KEYBIND_CYCLE_VARIANTS"] = CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS"),
-        ["KEYBIND_ADJUST_INACCURACY"] = CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY"),
-        ["KEYBIND_GENERAL_CANCEL"] = CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL"),
+        ["KEYBIND_CYCLE_SHELLS"] = CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS"),
+        ["KEYBIND_CYCLE_VARIANTS"] = CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS"),
+        ["KEYBIND_ADJUST_INACCURACY"] = CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY"),
+        ["KEYBIND_GENERAL_CANCEL"] = CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL"),
     }
 
     SND_UI = {}
@@ -64,7 +64,7 @@ function tick(delta)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
     dWatch("state(SELECTED SHELL)", STATES.selected_shell)
     dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
-    dWatch("option(FLIGHT_TIME)", CONFIG:getConfValue("G_FLIGHT_TIME"))
+    dWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_FLIGHT_TIME"))
     dWatch("option(SHELL_INACCURACY)", STATES.shell_inaccuracy)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
@@ -123,7 +123,7 @@ function tick(delta)
 
     drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
 
-    if InputDown(CONFIG:getConfValue("KEYBIND_ADJUST_INACCURACY")) then
+    if InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
 
         if InputValue("mousewheel") ~= 0 then
@@ -138,7 +138,7 @@ function tick(delta)
         ClearKey("savegame.mod.crash_disclaimer")
     end
 
-    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_SHELLS")) then
+    if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS")) then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
 
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
@@ -148,7 +148,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
     end
 
-    if InputPressed(CONFIG:getConfValue("KEYBIND_CYCLE_VARIANTS")) then
+    if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
             PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
         else
@@ -157,14 +157,14 @@ function tick(delta)
         end
     end
 
-    if InputPressed(CONFIG:getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
+    if InputPressed(CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
         QUICK_SALVO = {}
         PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
 
         STATES.quick_salvo = false
     end
 
-    if InputPressed(CONFIG:getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
+    if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quick_salvo = not STATES.quick_salvo
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
 
@@ -185,7 +185,7 @@ function tick(delta)
         DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
     end
 
-    STATES.fire = InputPressed(CONFIG:getConfValue("KEYBIND_PRIMARY_FIRE"))
+    STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))
 
     if STATES.fire then
         local values = SHELL_VALUES[STATES.selected_shell]
