@@ -15,6 +15,18 @@ SHELL_STATES = {
     detonated = 3
 }
 
+-- #region Colours
+
+COLOUR = {
+    ["white"]           = {1, 1, 1, 1},
+    ["red"]             = {1, 0.2, 0.2, 1},
+    ["yellow"]          = {1, 1, 0, 1},
+    ["yellow_dark"]     = {1, 0.8, 0, 1},
+    ["orange"]          = {1, 0.6, 0.2, 1}
+}
+
+-- #endregion
+
 -- #region Config Definitions
 
 CONFIG_KEYBIND_FRIENDLYNAMES = {
@@ -251,6 +263,17 @@ MAT_PEN = {
             chance = 0
         },
     },
+    ["snow"] = {
+        absorb = 3,
+        ["HE"] = {
+            min_energy = 20,
+            chance = 0
+        },
+        ["BB"] = {
+            min_energy = 0,
+            chance = 0
+        },
+    },
     ["dirt"] = {
         absorb = 10,
         ["HE"] = {
@@ -366,7 +389,8 @@ MAT_PEN = {
         },
     },
 
-    ["default"] = {
+    -- Indestructible materials
+    ["rock"] = {
         absorb = 100,
         ["HE"] = {
             min_energy = 9999,
@@ -375,6 +399,19 @@ MAT_PEN = {
         ["BB"] = {
             min_energy = 9999,
             chance = 100
+        },
+    },
+
+    -- Lazy fix for snow material returning null, old values are commented
+    ["default"] = {
+        absorb = 0, -- 100
+        ["HE"] = {
+            min_energy = 0, -- 9999
+            chance = 0 -- 100
+        },
+        ["BB"] = {
+            min_energy = 0, -- 9999
+            chance = 0 -- 100
         },
     }
 }

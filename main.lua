@@ -105,6 +105,18 @@ function tick(delta)
         end
     end
 
+    if not STATES.quick_salvo and #QUICK_SALVO > 0 then
+        DELAYS.quick_salvo = DELAYS.quick_salvo - delta
+
+        if DELAYS.quick_salvo < 0 then
+            local salvo_shell = table.remove(QUICK_SALVO, 1)
+            fire_shell(salvo_shell)
+            DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+        end
+    else
+        DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+    end
+
     if GetPlayerVehicle() ~= 0 then
         STATES.enabled = false
         return
@@ -121,8 +133,7 @@ function tick(delta)
 
     STATES.enabled = true
 
-    drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, {1, 0.8, 0, 1})
-
+    -- User change shell inaccuracy event
     if InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
 
@@ -134,10 +145,14 @@ function tick(delta)
         SetBool("game.input.locktool", false)
     end
 
+    drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"])
+
+    -- User dismiss crash disclaimer
     if InputPressed("K") then
         ClearKey("savegame.mod.crash_disclaimer")
     end
 
+    -- User cycling selected shell spec event
     if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS")) then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
 
@@ -148,6 +163,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
     end
 
+    -- User cycling selected shell variant event
     if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
             PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
@@ -157,6 +173,7 @@ function tick(delta)
         end
     end
 
+    -- User cancel quick salvo planning event
     if InputPressed(CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
         QUICK_SALVO = {}
         PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
@@ -164,6 +181,7 @@ function tick(delta)
         STATES.quick_salvo = false
     end
 
+    -- User toggling quick salvo event
     if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quick_salvo = not STATES.quick_salvo
         PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
@@ -173,20 +191,9 @@ function tick(delta)
         end
     end
 
-    if not STATES.quick_salvo and #QUICK_SALVO > 0 then
-        DELAYS.quick_salvo = DELAYS.quick_salvo - delta
-
-        if DELAYS.quick_salvo < 0 then
-            local salvo_shell = table.remove(QUICK_SALVO, 1)
-            fire_shell(salvo_shell)
-            DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
-        end
-    else
-        DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
-    end
-
     STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))
 
+    -- User fire event
     if STATES.fire then
         local values = SHELL_VALUES[STATES.selected_shell]
         local variant = values.variants[STATES.selected_variant]
@@ -204,6 +211,7 @@ function tick(delta)
             shell_sprite = variant.sprite
         end
 
+        -- Instantiate shell
         local shell = objectNew({
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
@@ -214,12 +222,13 @@ function tick(delta)
 
         shell.destination = getAimPos()
 
+        -- Fire shell manually and return
         if not STATES.quick_salvo then
             fire_shell(shell)
-
             return
         end
 
+        -- Queue shell in quick salvo
         shell.state = SHELL_STATES.queued
         table.insert(QUICK_SALVO, shell)
 
