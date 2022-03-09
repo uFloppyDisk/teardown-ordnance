@@ -237,7 +237,7 @@ function shellTick(self, delta)
                     local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
                     local transform_new = Transform(position_new, sub.transform.rot)
 
-                    addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, {1, 0.6, 0.2}})
+                    addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, COLOUR["orange"]})
 
                     local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
                     if hit then
@@ -287,7 +287,7 @@ function shellTick(self, delta)
         local position_detonation = nil
 
         self.distance_ground = VecLength(VecSub(self.position, self.destination))
-        dWatch("Distance to Ground", self.distance_ground)
+        dWatch("Distance to Target", self.distance_ground)
 
         -- Mark shell for deletion as the shell has gone out of bounds. Shell starts at <y>1000
         if (self.distance_ground > 2000) then
@@ -342,8 +342,8 @@ function shellTick(self, delta)
         QueryRequire("physical")
         local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position), shell_radius))
         if hit and not trigger_detonation then
-            addToDebugTable(DEBUG_POSITIONS, {self.position, {1, 1, 0}})
-            addToDebugTable(DEBUG_LINES, {self.position, position_new, {1, 0.2, 0.2}})
+            addToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
+            addToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})
             dPrint("Hit detected.")
 
             self.hit_once = true
@@ -354,7 +354,7 @@ function shellTick(self, delta)
             end
 
             local position_initial_hit = VecAdd(self.position, VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance))
-            addToDebugTable(DEBUG_POSITIONS, {position_initial_hit, {1, 1, 1}})
+            addToDebugTable(DEBUG_POSITIONS, {position_initial_hit, COLOUR["white"]})
 
             -- Guard clause: Check if ballistics is disabled to halt expensive computation
             if not CONFIG_getConfValue("G_SIMULATE_BALLISTICS") then
@@ -445,7 +445,7 @@ function shellDetonate(self, pos)
         self.state = SHELL_STATES.detonated
     end
 
-    addToDebugTable(DEBUG_POSITIONS, {pos, {1, 0.2, 0.2}})
+    addToDebugTable(DEBUG_POSITIONS, {pos, COLOUR["red"]})
 
     if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
         MakeHole(pos, 5, 2, 1, false)

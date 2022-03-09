@@ -10,6 +10,13 @@ function round(number, digits)
     return math.floor((number * power) + 0.5) / power
 end
 
+function getRGBA(colour, alpha)
+    local c = {unpack(colour)}
+
+    table.insert(c, alpha)
+    return c
+end
+
 function assertTableKeys(root, ...)
     for i, key in ipairs(arg) do
         if root[key] == nil then return false end
@@ -68,7 +75,7 @@ function drawCircle(position, radius, points, colour)
     end
 
     points = points or 16
-    colour = colour or {1, 0, 0, 0.8}
+    colour = colour or getRGBA(COLOUR["red"], 0.8)
 
     local step = (math.pi * 2) / points
 
@@ -134,7 +141,7 @@ function getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, mat
     table.insert(shapes, shape)
 
     local position_hit = VecAdd(pos, VecScale(VecNormalize(VecSub(pos_new, pos)), distance))
-    addToDebugTable(DEBUG_POSITIONS, {position_hit, {1, 1, 1}})
+    addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
     local material = GetShapeMaterialAtPosition(shape, (position_hit))
 
     table.insert(materials, material)
