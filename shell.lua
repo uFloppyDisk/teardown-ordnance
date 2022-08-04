@@ -458,11 +458,28 @@ function shellDetonate(self, pos)
     if variant.size_explosion > 0 then
         Explosion(pos, variant.size_explosion)
     end
+
+    local FRAG_AMOUNT = 250
+    local FRAG_SIZE = 0.20 --(variant.size_makehole[1] - (variant.size_makehole[1] * 0.50)) / FRAG_AMOUNT
+    local FRAG_DISTANCE = variant.size_makehole[1] / 2
+    dWatch("Frag Size", FRAG_SIZE)
+    dWatch("Frag Dist", FRAG_DISTANCE)
+    for i = 1, FRAG_AMOUNT, 1 do
+        shellFrag(self, i, pos, FRAG_SIZE, FRAG_DISTANCE)
+    end
+
+    dPrint("--- FRAGMENTATION STATS ---")
+    dPrint(FRAG_STATS[2].." - hit")
+    dPrint(FRAG_STATS[3].." - missed")
+    dPrint(FRAG_STATS[4].." - redirected")
+    dPrint("-------------")
+    dPrint("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
 end
 
 function shellFire(self)
     DEBUG_POSITIONS = {}
     DEBUG_LINES = {}
+    FRAG_STATS = {0, 0, 0, 0}
 
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
@@ -491,4 +508,47 @@ function shellFire(self)
 
     local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
     PlaySound(snd_fire, VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
+end
+
+function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
+    FRAG_STATS[1] = FRAG_STATS[1] + 1
+    local rotation
+    if rot then
+        rotation = QuatCopy(rot)
+    else
+        local rot_y = 360 * math.random()
+        local rot_z = (140 * math.random()) - 70
+        rotation = QuatEuler(0, rot_y, rot_z)
+    end
+
+    local transform = Transform(pos, rotation)
+
+    local position_new = TransformToParentPoint(transform, Vec(frag_dist, 0, 0))
+    local transform_new = Transform(position_new, transform.rot)
+
+    local hit, hit_distance = QueryRaycast(pos, VecNormalize(VecSub(position_new, pos)), VecLength(VecSub(position_new, pos)))
+    if hit then
+        local hit_pos = VecAdd(pos, VecScale(VecNormalize(VecSub(position_new, pos)), hit_distance))
+        if hit_distance < 1 and not halt then
+            local new_rotation = QuatRotateQuat(QuatCopy(rotation), QuatEuler(0, 0, 180))
+            -- dPrint("Frag #"..index.." hit too close ("..hit_distance..") in: "..table.concat(rotation, ",").." | out: "..table.concat(new_rotation, ","))
+            addToDebugTable(DEBUG_POSITIONS, {hit_pos, getRGBA(COLOUR["red"], 0.2)})
+            FRAG_STATS[4] = FRAG_STATS[4] + 1
+            shellFrag(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
+            return
+        end
+
+        if halt then
+            addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["yellow"]})
+        else
+            addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["white"]})
+        end
+
+        MakeHole(hit_pos, frag_size * 3, frag_size * 2, frag_size)
+        addToDebugTable(DEBUG_LINES, {pos, hit_pos, getRGBA(COLOUR["white"], 0.5)})
+        FRAG_STATS[2] = FRAG_STATS[2] + 1
+        return
+    end
+    addToDebugTable(DEBUG_LINES, {pos, transform_new.pos, getRGBA(COLOUR["red"], 0.1)})
+    FRAG_STATS[3] = FRAG_STATS[3] + 1
 end

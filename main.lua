@@ -31,6 +31,11 @@ function init()
     DEFAULT_SHELL.flight_time = CONFIG_getConfValue("G_FLIGHT_TIME")
     DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
 
+    -- total, hit, miss, redirected
+    FRAG_STATS = {
+        0, 0, 0, 0
+    }
+
     STATES = {
         enabled = false,
         fire = false,
@@ -91,20 +96,6 @@ function tick(delta)
         end
 	end
 
-    if G_DEV then
-        if #DEBUG_POSITIONS > 0 then
-            for i, item in pairs(DEBUG_POSITIONS) do
-                DebugCross(item[1], item[2][1], item[2][2], item[2][3], 1)
-            end
-        end
-
-        if #DEBUG_LINES > 0 then
-            for i, item in pairs(DEBUG_LINES) do
-                DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], 1)
-            end
-        end
-    end
-
     if not STATES.quick_salvo and #QUICK_SALVO > 0 then
         DELAYS.quick_salvo = DELAYS.quick_salvo - delta
 
@@ -132,6 +123,20 @@ function tick(delta)
     -- -------------------------------
 
     STATES.enabled = true
+
+    if G_DEV then
+        if #DEBUG_POSITIONS > 0 then
+            for i, item in pairs(DEBUG_POSITIONS) do
+                DebugCross(item[1], item[2][1], item[2][2], item[2][3], item[2][4] or 1)
+            end
+        end
+
+        if #DEBUG_LINES > 0 then
+            for i, item in pairs(DEBUG_LINES) do
+                DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], item[3][4] or 1) -- assertTableKeys(item[3], 4) and item[3][4] or 1)
+            end
+        end
+    end
 
     -- User change shell inaccuracy event
     if InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then

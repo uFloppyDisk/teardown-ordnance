@@ -13,7 +13,7 @@ end
 function getRGBA(colour, alpha)
     local c = {unpack(colour)}
 
-    table.insert(c, alpha)
+    table.insert(c, 4, alpha)
     return c
 end
 
