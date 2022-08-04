@@ -517,13 +517,13 @@ function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
         rotation = QuatCopy(rot)
     else
         local rot_y = 360 * math.random()
-        local rot_z = (140 * math.random()) - 70
+        local rot_z = (179 * math.random()) - 89.5
         rotation = QuatEuler(0, rot_y, rot_z)
     end
 
     local transform = Transform(pos, rotation)
 
-    local position_new = TransformToParentPoint(transform, Vec(frag_dist, 0, 0))
+    local position_new = TransformToParentPoint(transform, Vec(((frag_dist - 5) + (math.random() * 10)), 0, 0))
     local transform_new = Transform(position_new, transform.rot)
 
     local hit, hit_distance = QueryRaycast(pos, VecNormalize(VecSub(position_new, pos)), VecLength(VecSub(position_new, pos)))
@@ -544,7 +544,14 @@ function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
             addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["white"]})
         end
 
-        MakeHole(hit_pos, frag_size * 3, frag_size * 2, frag_size)
+        local rand_frag_size = frag_size * (1.0 - (math.random() * 0.50))
+        MakeHole(hit_pos, rand_frag_size * 3, rand_frag_size * 2, rand_frag_size)
+
+        if math.random() < 0.66 then
+            ParticleReset()
+            SpawnParticle(hit_pos, Vec(-0.15, 0, 0.05), (3 - (2.5 * math.random())))
+        end
+
         addToDebugTable(DEBUG_LINES, {pos, hit_pos, getRGBA(COLOUR["white"], 0.5)})
         FRAG_STATS[2] = FRAG_STATS[2] + 1
         return
