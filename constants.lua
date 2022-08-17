@@ -90,11 +90,35 @@ CONFIG_VARIABLES = {
         value_type = "float",
         value_default = 0.5
     },
+    ["G_SIMULATE_FRAGMENTATION"] = {
+        variable = "savegame.mod.config.fragmentation.enabled",
+
+        value_type = "boolean",
+        value_default = true
+    },
+    ["G_FRAGMENTATION_DEBUG"] = {
+        variable = "savegame.mod.config.fragmentation.debug_mode",
+
+        value_type = "boolean",
+        value_default = false
+    },
     ["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"] = {
         variable = "savegame.mod.config.shells.secondary.cluster_bomblet_amount",
 
         value_type = "int",
         value_default = 50
+    },
+    ["SHELL_FRAGMENTATION_AMOUNT"] = {
+        variable = "savegame.mod.config.fragmentation.amount",
+
+        value_type = "int",
+        value_default = 250
+    },
+    ["SHELL_FRAGMENTATION_SIZE"] = {
+        variable = "savegame.mod.config.fragmentation.size",
+
+        value_type = "int",
+        value_default = 20
     },
     ["KEYBIND_CYCLE_SHELLS"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".cycle_shells",
@@ -192,6 +216,40 @@ CONFIG_OPTIONS = {
         value_max = 100
     },
     {
+        category = "fragmentation",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SIMULATE_FRAGMENTATION"],
+        name = "Simulate Fragmentation"
+    },
+    {
+        category = "fragmentation",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_FRAGMENTATION_DEBUG"],
+        name = "Debug Mode"
+    },
+    {
+        category = "fragmentation",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["SHELL_FRAGMENTATION_AMOUNT"],
+        name = "Amount per shell",
+
+        value_unit = "",
+
+        value_min = 50,
+        value_max = 1000
+    },
+    {
+        category = "fragmentation",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["SHELL_FRAGMENTATION_SIZE"],
+        name = "Frag Size",
+
+        value_unit = "cm",
+
+        value_min = 10,
+        value_max = 100
+    },
+    {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
@@ -241,6 +299,10 @@ CONFIG_MENUS = {
         filter = nil
     },
     [2] = {
+        title = "Fragmentation",
+        filter = "fragmentation"
+    },
+    [3] = {
         title = "Keybindings",
         filter = "keybind"
     },

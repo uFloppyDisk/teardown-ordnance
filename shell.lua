@@ -219,6 +219,16 @@ function shellTick(self, delta)
                 if #self.secondary.submunitions == 0 then
                     self.state = SHELL_STATES.detonated
                     self.secondary.active = false
+
+                    -- if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+                    --     dPrint("--- FRAGMENTATION STATS ---")
+                    --     dPrint(FRAG_STATS[2].." - hit")
+                    --     dPrint(FRAG_STATS[3].." - missed")
+                    --     dPrint(FRAG_STATS[4].." - redirected")
+                    --     dPrint("-------------")
+                    --     dPrint("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
+                    -- end
+                    return
                 end
 
                 local sprite = LoadSprite("MOD/img/".."bomblet"..".png")
@@ -227,6 +237,11 @@ function shellTick(self, delta)
                     "155mm_shell_cluster_submunition_explode_01",
                     "155mm_shell_cluster_submunition_explode_02",
                 }
+
+                -- local amount_submunitions = CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
+                -- local FRAG_AMOUNT = round((CONFIG_getConfValue("SHELL_FRAGMENTATION_AMOUNT") or 250) / (amount_submunitions / 4), 0)
+                -- local FRAG_SIZE = (CONFIG_getConfValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
+                -- local FRAG_DISTANCE = 3
 
                 for index, sub in ipairs(self.secondary.submunitions) do
                     local gravity = math.abs(G_VEC_GRAVITY[2])
@@ -257,6 +272,17 @@ function shellTick(self, delta)
                             ParticleCollide(0)
 
                             SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 7 + 3)
+
+                            -- if CONFIG_getConfValue("G_SIMULATE_FRAGMENTATION") then
+                            --     if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+                            --         dWatch("Frag Size", FRAG_SIZE)
+                            --         dWatch("Frag Dist", FRAG_DISTANCE)
+                            --     end
+
+                            --     for i = 1, FRAG_AMOUNT, 1 do
+                            --         shellFrag(self, i, position_hit, FRAG_SIZE, FRAG_DISTANCE, nil, true)
+                            --     end
+                            -- end
 
                             -- if math.random() > 0.7 then
                             --     local sound = LoadSound("MOD/snd/"..sounds[math.random(#sounds)]..".ogg")
@@ -457,23 +483,37 @@ function shellDetonate(self, pos)
 
     if variant.size_explosion > 0 then
         Explosion(pos, variant.size_explosion)
-    end
 
-    local FRAG_AMOUNT = 250
-    local FRAG_SIZE = 0.20 --(variant.size_makehole[1] - (variant.size_makehole[1] * 0.50)) / FRAG_AMOUNT
-    local FRAG_DISTANCE = variant.size_makehole[1] / 2
-    dWatch("Frag Size", FRAG_SIZE)
-    dWatch("Frag Dist", FRAG_DISTANCE)
-    for i = 1, FRAG_AMOUNT, 1 do
-        shellFrag(self, i, pos, FRAG_SIZE, FRAG_DISTANCE)
-    end
+        if variant.size_explosion < 0.5 then
+            return
+        end
 
-    dPrint("--- FRAGMENTATION STATS ---")
-    dPrint(FRAG_STATS[2].." - hit")
-    dPrint(FRAG_STATS[3].." - missed")
-    dPrint(FRAG_STATS[4].." - redirected")
-    dPrint("-------------")
-    dPrint("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
+        if not CONFIG_getConfValue("G_SIMULATE_FRAGMENTATION") then
+            return
+        end
+
+        local FRAG_AMOUNT = CONFIG_getConfValue("SHELL_FRAGMENTATION_AMOUNT") or 250
+        local FRAG_SIZE = (CONFIG_getConfValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
+        local FRAG_DISTANCE = variant.size_makehole[1] / 2
+
+        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+            dWatch("Frag Size", FRAG_SIZE)
+            dWatch("Frag Dist", FRAG_DISTANCE)
+        end
+
+        for i = 1, FRAG_AMOUNT, 1 do
+            shellFrag(self, i, pos, FRAG_SIZE, FRAG_DISTANCE)
+        end
+
+        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+            dPrint("--- FRAGMENTATION STATS ---")
+            dPrint(FRAG_STATS[2].." - hit")
+            dPrint(FRAG_STATS[3].." - missed")
+            dPrint(FRAG_STATS[4].." - redirected")
+            dPrint("-------------")
+            dPrint("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
+        end
+    end
 end
 
 function shellFire(self)
@@ -484,7 +524,7 @@ function shellFire(self)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
-    dPrint("--- Firing shell ("..values.name..") ---")
+    dPrint("--- Firing shell ("..values.name.." ["..variant.name.."]) ---")
 
     if assertTableKeys(variant, "secondary", "timer") then
         self.secondary.timer = variant.secondary.timer
@@ -532,16 +572,21 @@ function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
         if hit_distance < 1 and not halt then
             local new_rotation = QuatRotateQuat(QuatCopy(rotation), QuatEuler(0, 0, 180))
             -- dPrint("Frag #"..index.." hit too close ("..hit_distance..") in: "..table.concat(rotation, ",").." | out: "..table.concat(new_rotation, ","))
-            addToDebugTable(DEBUG_POSITIONS, {hit_pos, getRGBA(COLOUR["red"], 0.2)})
-            FRAG_STATS[4] = FRAG_STATS[4] + 1
+            if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+                addToDebugTable(DEBUG_POSITIONS, {hit_pos, getRGBA(COLOUR["red"], 0.2)})
+                FRAG_STATS[4] = FRAG_STATS[4] + 1
+            end
+
             shellFrag(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
             return
         end
 
-        if halt then
-            addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["yellow"]})
-        else
-            addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["white"]})
+        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+            if halt then
+                addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["yellow"]})
+            else
+                addToDebugTable(DEBUG_POSITIONS, {hit_pos, COLOUR["white"]})
+            end
         end
 
         local rand_frag_size = frag_size * (1.0 - (math.random() * 0.50))
@@ -552,10 +597,18 @@ function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
             SpawnParticle(hit_pos, Vec(-0.15, 0, 0.05), (3 - (2.5 * math.random())))
         end
 
-        addToDebugTable(DEBUG_LINES, {pos, hit_pos, getRGBA(COLOUR["white"], 0.5)})
-        FRAG_STATS[2] = FRAG_STATS[2] + 1
+        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+            addToDebugTable(DEBUG_LINES, {pos, hit_pos, getRGBA(COLOUR["white"], 0.5)})
+            FRAG_STATS[2] = FRAG_STATS[2] + 1
+        end
+
         return
     end
+
+    if not CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+        return
+    end
+
     addToDebugTable(DEBUG_LINES, {pos, transform_new.pos, getRGBA(COLOUR["red"], 0.1)})
     FRAG_STATS[3] = FRAG_STATS[3] + 1
 end
