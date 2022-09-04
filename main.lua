@@ -1,5 +1,6 @@
 #include "constants.lua"
 #include "shell.lua"
+#include "tactical.lua"
 
 SHELLS_prev_length = 0
 SHELLS = {}
@@ -40,6 +41,7 @@ function init()
         enabled = false,
         fire = false,
         quick_salvo = false,
+        tactical = false,
         selected_shell = 1,
         selected_variant = 1,
 
@@ -136,6 +138,16 @@ function tick(delta)
                 DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], item[3][4] or 1) -- assertTableKeys(item[3], 4) and item[3][4] or 1)
             end
         end
+    end
+
+    if InputPressed("m") then
+        if STATES_TACMARK.enabled == false then STATES_TACMARK.screen = tactical_init() end
+        STATES_TACMARK.enabled = not STATES_TACMARK.enabled
+    end
+
+    if STATES_TACMARK.enabled then
+        tactical_tick(delta)
+        return
     end
 
     -- User change shell inaccuracy event
@@ -260,6 +272,11 @@ function draw()
     end
 
     local values = SHELL_VALUES[STATES.selected_shell]
+
+    if STATES_TACMARK.enabled then
+        tactical_draw(STATES_TACMARK.screen)
+        return
+    end
 
     UiPush()
         UiTranslate(80, UiMiddle() + UiMiddle() / 2)

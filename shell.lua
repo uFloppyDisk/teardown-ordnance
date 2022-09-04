@@ -366,7 +366,7 @@ function shellTick(self, delta)
         local shell_radius = self.sprite.width / 2
         QueryRequire('large')
         QueryRequire("physical")
-        local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position), shell_radius))
+        local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)), shell_radius)
         if hit and not trigger_detonation then
             addToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
             addToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})

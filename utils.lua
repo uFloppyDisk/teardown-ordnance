@@ -69,6 +69,33 @@ function getAimPos()
 	return camera_center, hit, distance
 end
 
+function getMousePosInWorld(set_distance)
+    local dist = 200
+    if set_distance ~= nil then dist = set_distance end
+
+	local camera_transform = GetCameraTransform()
+    local m_pos_x, m_pos_y = STATES_TACMARK.mouse_pos[1], STATES_TACMARK.mouse_pos[2]
+    if m_pos_x == nil or m_pos_y == nil then
+        m_pos_x = UiCenter()
+        m_pos_y = UiMiddle()
+    end
+
+    local direction = UiPixelToWorld(m_pos_x, m_pos_y)
+
+    local hit_position = VecAdd(camera_transform.pos, VecScale(direction, dist))
+
+    local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, dist)
+    if not hit then
+        hit, hit_distance = QueryRaycast(camera_transform.pos, direction, 500)
+    end
+
+	if hit then
+        hit_position = VecAdd(camera_transform.pos, VecScale(direction, hit_distance))
+    end
+
+	return hit_position, hit, hit_distance
+end
+
 function drawCircle(position, radius, points, colour)
     if not (radius > 0) then
         return
