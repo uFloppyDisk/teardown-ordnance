@@ -547,7 +547,7 @@ function shellFire(self)
     end
 
     local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
-    PlaySound(snd_fire, VecAdd(GetPlayerPos(), Vec(100, 0, 100)), 20)
+    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, Vec(100, 0, 100)), 20)
 end
 
 function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)

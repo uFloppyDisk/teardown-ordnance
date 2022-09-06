@@ -51,6 +51,52 @@ function dWatch(name, variable)
     DebugWatch(name, variable)
 end
 
+function setEnvProps(env)
+    for k, v in pairs(env) do
+        SetEnvironmentProperty(k, unpack(v))
+    end
+end
+
+function setPostProcProps(pp)
+    for k, v in pairs(pp) do
+        SetPostProcessingProperty(k, unpack(v))
+    end
+end
+
+function VecEqual(vec, vec2)
+    local vecToCompare = VecCopy(vec)
+    if vecToCompare[1] ~= vec2[1] then
+        return false
+    end
+
+    if vecToCompare[2] ~= vec2[2] then
+        return false
+    end
+
+    if vecToCompare[3] ~= vec2[3] then
+        return false
+    end
+
+    return true
+end
+
+function getPlayerTransform()
+    local current_transform = GetPlayerCameraTransform()
+    return Transform(VecCopy(current_transform.pos), current_transform.rot)
+end
+
+function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
+    local offset = set_offset or Vec(0, 0, 0)
+    local rot = set_rot or QuatEuler(-90, 0, 0)
+    local rot_absolute = rot_absolute or true
+
+    if not rot_absolute then
+        rot = QuatRotateQuat(transform.rot, rot)
+    end
+
+    return Transform(VecAdd(transform.pos, offset), rot)
+end
+
 function getAimPos()
 	local camera_transform = GetCameraTransform()
 	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
@@ -97,6 +143,7 @@ function getMousePosInWorld(set_distance)
 end
 
 function drawCircle(position, radius, points, colour)
+    local position = position or Vec(0, 0, 0)
     if not (radius > 0) then
         return
     end

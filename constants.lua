@@ -6,7 +6,9 @@ G_VEC_GRAVITY = Vec(0, -39.2, 0)
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
 
-G_CONFIG_KEYBINDS_ROOT = "savegame.mod.config.keybind"
+G_CONFIG_ROOT = "savegame.mod.config"
+G_CONFIG_KEYBINDS_ROOT = G_CONFIG_ROOT..".keybind"
+G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT..".tactical"
 
 SHELL_STATES = {
     queued = 0,
@@ -55,71 +57,95 @@ CONFIG_KEYBIND_FRIENDLYNAMES = {
 
 CONFIG_VARIABLES = {
     ["G_DEBUG_MODE"] = {
-        variable = "savegame.mod.config.debug_mode",
+        variable = G_CONFIG_ROOT..".debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
     ["G_SIMULATE_BALLISTICS"] = {
-        variable = "savegame.mod.config.simulate_ballistics",
+        variable = G_CONFIG_ROOT..".simulate_ballistics",
 
         value_type = "boolean",
         value_default = true
     },
     ["G_SIMULATE_UXO"] = {
-        variable = "savegame.mod.config.simulate_uxo",
+        variable = G_CONFIG_ROOT..".simulate_uxo",
 
         value_type = "boolean",
         value_default = false
     },
     ["G_FLIGHT_TIME"] = {
-        variable = "savegame.mod.config.flight_time",
+        variable = G_CONFIG_ROOT..".flight_time",
 
         value_type = "float",
         value_default = 0.0
     },
     ["G_SHELL_INACCURACY"] = {
-        variable = "savegame.mod.config.shell_inaccuracy",
+        variable = G_CONFIG_ROOT..".shell_inaccuracy",
 
         value_type = "float",
         value_default = 5.0
     },
     ["G_QUICK_SALVO_DELAY"] = {
-        variable = "savegame.mod.config.quick_salvo_delay",
+        variable = G_CONFIG_ROOT..".quick_salvo_delay",
 
         value_type = "float",
         value_default = 0.5
     },
     ["G_SIMULATE_FRAGMENTATION"] = {
-        variable = "savegame.mod.config.fragmentation.enabled",
+        variable = G_CONFIG_ROOT..".fragmentation.enabled",
 
         value_type = "boolean",
         value_default = true
     },
     ["G_FRAGMENTATION_DEBUG"] = {
-        variable = "savegame.mod.config.fragmentation.debug_mode",
+        variable = G_CONFIG_ROOT..".fragmentation.debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
     ["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"] = {
-        variable = "savegame.mod.config.shells.secondary.cluster_bomblet_amount",
+        variable = G_CONFIG_ROOT..".shells.secondary.cluster_bomblet_amount",
 
         value_type = "int",
         value_default = 50
     },
     ["SHELL_FRAGMENTATION_AMOUNT"] = {
-        variable = "savegame.mod.config.fragmentation.amount",
+        variable = G_CONFIG_ROOT..".fragmentation.amount",
 
         value_type = "int",
         value_default = 250
     },
     ["SHELL_FRAGMENTATION_SIZE"] = {
-        variable = "savegame.mod.config.fragmentation.size",
+        variable = G_CONFIG_ROOT..".fragmentation.size",
 
         value_type = "int",
         value_default = 20
     },
+    ["TACTICAL_POSTPROCESSING_TOGGLE"] = {
+        variable = G_CONFIG_ROOT..".tactical.postprocessing",
+
+        value_type = "boolean",
+        value_default = true
+    },
+    ["TACTICAL_SHELL_LABELS_TOGGLE"] = {
+        variable = G_CONFIG_ROOT..".tactical.shell_labels",
+
+        value_type = "boolean",
+        value_default = true
+    },
+    ["TACTICAL_DEFAULT_CAMERA_FOV"] = {
+        variable = G_CONFIG_ROOT..".tactical.camera_fov",
+
+        value_type = "int",
+        value_default = 75
+    },
+
+    --------------------------------------
+    -- Keybindings
+    --------------------------------------
+
+    -- Global
     ["KEYBIND_CYCLE_SHELLS"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".cycle_shells",
 
@@ -155,6 +181,68 @@ CONFIG_VARIABLES = {
 
         value_type = "string",
         value_default = "lmb"
+    },
+
+    -- Tactical Mode
+    ["KEYBIND_TACTICAL_TOGGLE"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."toggle",
+
+        value_type = "string",
+        value_default = "M"
+    },
+    ["KEYBIND_TACTICAL_CENTER_PLAYER"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."center_player",
+
+        value_type = "string",
+        value_default = "H"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.z_negative",
+
+        value_type = "string",
+        value_default = "W"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_Z_POS"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.z_positive",
+
+        value_type = "string",
+        value_default = "S"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_X_NEG"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.x_negative",
+
+        value_type = "string",
+        value_default = "A"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_X_POS"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.x_positive",
+
+        value_type = "string",
+        value_default = "D"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.y_negative",
+
+        value_type = "string",
+        value_default = "R"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_Y_POS"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.y_positive",
+
+        value_type = "string",
+        value_default = "F"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_MOD_FAST"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.mod_fast",
+
+        value_type = "string",
+        value_default = "shift"
+    },
+    ["KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW"] = {
+        variable = G_CONFIG_KEYBINDS_TAC.."translate.mod_slow",
+
+        value_type = "string",
+        value_default = "ctrl"
     },
 }
 
@@ -250,6 +338,30 @@ CONFIG_OPTIONS = {
         value_max = 100
     },
     {
+        category = "tactical",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["TACTICAL_POSTPROCESSING_TOGGLE"],
+        name = "Enable Postprocessing"
+    },
+    {
+        category = "tactical",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["TACTICAL_SHELL_LABELS_TOGGLE"],
+        name = "Enable Shell Labels"
+    },
+    {
+        category = "tactical",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["TACTICAL_DEFAULT_CAMERA_FOV"],
+        name = "Default Camera FOV",
+
+        value_unit = "",
+        value_digits = 0,
+
+        value_min = 25,
+        value_max = 120
+    },
+    {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
@@ -277,6 +389,62 @@ CONFIG_OPTIONS = {
         mapping = CONFIG_VARIABLES["KEYBIND_GENERAL_CANCEL"],
         name = "Cancel"
     },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TOGGLE"],
+        name = "Toggle Tactical Mode"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_CENTER_PLAYER"],
+        name = "Tactical: Center Player"
+    },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"],
+    --     name = "TAC: Move Up"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_POS"],
+    --     name = "TAC: Move Down"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_NEG"],
+    --     name = "TAC: Move Left"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_POS"],
+    --     name = "TAC: Move Right"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_POS"],
+    --     name = "TAC: Elevation Up"
+    -- },
+    -- {
+    --     category = "keybind",
+    --     type = "textbutton",
+    --     variant = "keybinding",
+    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"],
+    --     name = "TAC: Elevation Down"
+    -- },
     -- {
     --     category = "keybind",
     --     type = "textbutton",
@@ -303,6 +471,10 @@ CONFIG_MENUS = {
         filter = "fragmentation"
     },
     [3] = {
+        title = "Tactical",
+        filter = "tactical"
+    },
+    [4] = {
         title = "Keybindings",
         filter = "keybind"
     },

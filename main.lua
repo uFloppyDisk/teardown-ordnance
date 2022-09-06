@@ -9,6 +9,15 @@ QUICK_SALVO = {}
 DEBUG_LINES = {}
 DEBUG_POSITIONS = {}
 
+-- fogParams
+-- 1 - Start
+-- 2 - End
+-- 3 - Opacity
+-- 4 - Exponent
+DEFAULT_ENVIRONMENT = {}
+DEFAULT_POSTPROCESSING = {}
+
+
 -- #region Main
 
 function fire_shell(shell)
@@ -53,6 +62,7 @@ function init()
     }
 
     KEYBINDS = {
+        ["KEYBIND_TACTICAL_TOGGLE"] = CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE"),
         ["KEYBIND_CYCLE_SHELLS"] = CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS"),
         ["KEYBIND_CYCLE_VARIANTS"] = CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS"),
         ["KEYBIND_ADJUST_INACCURACY"] = CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY"),
@@ -76,6 +86,21 @@ function tick(delta)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
 
+    local next = next
+    if (next(DEFAULT_ENVIRONMENT) == nil) then
+        dPrint("Default environment properties are unknown. Fetching them now...")
+        DEFAULT_ENVIRONMENT["fogcolor"] = {GetEnvironmentProperty("fogcolor")}
+        DEFAULT_ENVIRONMENT["fogParams"] = {GetEnvironmentProperty("fogParams")}
+        DEFAULT_ENVIRONMENT["snowamount"] = {GetEnvironmentProperty("snowamount")}
+        DEFAULT_ENVIRONMENT["snowdir"] = {GetEnvironmentProperty("snowdir")}
+    end
+
+    if (next(DEFAULT_POSTPROCESSING) == nil) then
+        dPrint("Default post processing properties are unknown. Fetching them now...")
+        DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
+        DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
+    end
+
     if (SHELLS_prev_length ~= #SHELLS) then
         SHELLS_prev_length = #SHELLS
     end
@@ -85,7 +110,7 @@ function tick(delta)
         for i=1, queue_length do
             local shell = QUICK_SALVO[i]
             DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
-            drawCircle(shell.destination, shell.inaccuracy, 32)
+            drawCircle(VecAdd(shell.destination, Vec(0, 0.02, 0)), shell.inaccuracy, 32)
         end
     end
 
@@ -125,6 +150,7 @@ function tick(delta)
     -- -------------------------------
 
     STATES.enabled = true
+    local sound_pos = GetCameraTransform().pos
 
     if G_DEV then
         if #DEBUG_POSITIONS > 0 then
@@ -140,14 +166,15 @@ function tick(delta)
         end
     end
 
-    if InputPressed("m") then
-        if STATES_TACMARK.enabled == false then STATES_TACMARK.screen = tactical_init() end
-        STATES_TACMARK.enabled = not STATES_TACMARK.enabled
-    end
+    -- User toggles tactical marking mode
+    if InputPressed(CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE")) then
+        if not STATES_TACMARK.enabled then STATES_TACMARK.screen = tactical_init() end
+        if STATES_TACMARK.enabled then
+            setEnvProps(DEFAULT_ENVIRONMENT)
+            setPostProcProps(DEFAULT_POSTPROCESSING)
+        end
 
-    if STATES_TACMARK.enabled then
-        tactical_tick(delta)
-        return
+        STATES_TACMARK.enabled = not STATES_TACMARK.enabled
     end
 
     -- User change shell inaccuracy event
@@ -162,8 +189,6 @@ function tick(delta)
         SetBool("game.input.locktool", false)
     end
 
-    drawCircle(getAimPos(), STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"])
-
     -- User dismiss crash disclaimer
     if InputPressed("K") then
         ClearKey("savegame.mod.crash_disclaimer")
@@ -177,23 +202,23 @@ function tick(delta)
             STATES.selected_variant = 1
         end
 
-        PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
+        PlaySound(SND_UI["select"], sound_pos, 0.6)
     end
 
     -- User cycling selected shell variant event
     if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
-            PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
+            PlaySound(SND_UI["cancel"], sound_pos, 0.4)
         else
             STATES.selected_variant = (STATES.selected_variant % #SHELL_VALUES[STATES.selected_shell].variants) + 1
-            PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
+            PlaySound(SND_UI["select"], sound_pos, 0.6)
         end
     end
 
     -- User cancel quick salvo planning event
     if InputPressed(CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quick_salvo then
         QUICK_SALVO = {}
-        PlaySound(SND_UI["cancel"], GetPlayerPos(), 0.4)
+        PlaySound(SND_UI["cancel"], sound_pos, 0.4)
 
         STATES.quick_salvo = false
     end
@@ -201,12 +226,24 @@ function tick(delta)
     -- User toggling quick salvo event
     if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quick_salvo = not STATES.quick_salvo
-        PlaySound(SND_UI["select"], GetPlayerPos(), 0.6)
+        PlaySound(SND_UI["select"], sound_pos, 0.6)
 
         if not STATES.quick_salvo and #QUICK_SALVO > 0 then
             fire_shell(table.remove(QUICK_SALVO, 1))
         end
     end
+
+    local aim_pos = getAimPos()
+    if STATES_TACMARK.enabled then
+        tactical_tick(delta)
+        aim_pos = tactical_hitscan()
+
+        if not STATES_TACMARK.hitscan.hit then
+            return
+        end
+    end
+
+    drawCircle(VecAdd(aim_pos, Vec(0, 0.02, 0)), STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"])
 
     STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))
 
@@ -237,7 +274,7 @@ function tick(delta)
             snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
         }, DEFAULT_SHELL)
 
-        shell.destination = getAimPos()
+        shell.destination = aim_pos
 
         -- Fire shell manually and return
         if not STATES.quick_salvo then
@@ -249,7 +286,7 @@ function tick(delta)
         shell.state = SHELL_STATES.queued
         table.insert(QUICK_SALVO, shell)
 
-        PlaySound(SND_UI["salvo_mark"], GetPlayerPos(), 0.4)
+        PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
     end
 end
 
@@ -273,13 +310,8 @@ function draw()
 
     local values = SHELL_VALUES[STATES.selected_shell]
 
-    if STATES_TACMARK.enabled then
-        tactical_draw(STATES_TACMARK.screen)
-        return
-    end
-
     UiPush()
-        UiTranslate(80, UiMiddle() + UiMiddle() / 2)
+        UiTranslate(80, UiMiddle() + UiMiddle() / 1.75)
         UiColor(0.4, 0.4, 0.4)
         UiAlign("left")
         UiFont("regular.ttf", 26)
@@ -287,6 +319,7 @@ function draw()
 
         UiPush()
             UiColor(1, 1, 1)
+            UiText("<"..KEYBINDS["KEYBIND_TACTICAL_TOGGLE"].."> | Toggle Tactical Mode", true)
             UiText("<"..KEYBINDS["KEYBIND_CYCLE_SHELLS"].."> | Cycle shells ["..values.name.."]", true)
             UiText("<"..KEYBINDS["KEYBIND_CYCLE_VARIANTS"].."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
             UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_INACCURACY"].."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
@@ -326,6 +359,11 @@ function draw()
             UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
+
+    if STATES_TACMARK.enabled then
+        tactical_draw(STATES_TACMARK.screen)
+        return
+    end
 end
 
 -- #endregion Main
