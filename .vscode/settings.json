@@ -263,7 +263,11 @@
         "UiBlankButton",
         "UiSlider",
         "UiGetScreen",
-        "include"
+        "include",
+        "SetEnvironmentProperty",
+        "SetPostProcessingProperty",
+        "GetEnvironmentProperty",
+        "GetPostProcessingProperty"
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global",
