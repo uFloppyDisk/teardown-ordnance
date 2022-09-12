@@ -501,8 +501,33 @@ function shellDetonate(self, pos)
             dWatch("Frag Dist", FRAG_DISTANCE)
         end
 
+        local frag_pos = pos
+
+        local check_dist = 0.5
+        QueryRequire('large')
+        local hit, dist1, _, shape1 = QueryRaycast(frag_pos, Vec(0, 1, 0), check_dist)
+        if hit then
+            local dist2
+            QueryRequire('large')
+            hit, dist2 = QueryRaycast(VecAdd(VecCopy(frag_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
+
+            local dist_diff = round(dist2, 4) - dist1
+            dPrint("Diff 1/2: "..dist1.." / "..dist2)
+            dPrint("Diff: "..dist_diff)
+            if dist_diff ~= 0 then
+                dPrint("Using differential calculation")
+                frag_pos = VecAdd(pos, Vec(0, dist1 + (check_dist - (dist_diff * 0.95)), 0))
+            else
+                dPrint("Using shape bounds calculation")
+                local bounds_min, bounds_max = GetShapeBounds(shape1)
+                local bounds_size = VecSub(bounds_max, bounds_min)
+
+                frag_pos = VecAdd(pos, Vec(0, math.abs(bounds_size[2]), 0))
+            end
+        end
+
         for i = 1, FRAG_AMOUNT, 1 do
-            shellFrag(self, i, pos, FRAG_SIZE, FRAG_DISTANCE)
+            shellFrag(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
         end
 
         if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
