@@ -125,6 +125,52 @@ function tactical_hitscan()
 end
 
 function tactical_draw(screen)
+    function drawGrid(metres, width, depth, opacity)
+        local step = metres or 50
+        local grid_width, grid_depth = width or 1, depth or 0
+        local alpha = opacity or 1
+
+        local ui_width, ui_height = UiWidth(), UiHeight()
+        local point_below = Vec(STATES_TACMARK.camera_settings.camera_transform.pos[1], 0, STATES_TACMARK.camera_settings.camera_transform.pos[3])
+
+        local current_point, current_point_inverted = {}, {}
+        local wx, wz = math.ceil(point_below[1] / step) * step, math.ceil(point_below[3] / step) * step
+
+        local iter = 1
+        repeat
+            local step_invert = ((iter * 2) - 1) * step
+            local wxi, wzi = wx - step_invert, wz - step_invert
+
+            current_point = {UiWorldToPixel(Vec(wx, grid_depth, wz))}
+            current_point[4], current_point[5] = wx, wz
+
+            current_point_inverted = {UiWorldToPixel(Vec(wxi, grid_depth, wzi))}
+            current_point_inverted[4], current_point_inverted[5] = wxi, wzi
+
+            UiPush()
+                UiColor(0, 0, 0, alpha)
+                UiPush()
+                    UiTranslate(current_point[1], 0)
+                    UiRect(grid_width, ui_height)
+                UiPop()
+                UiPush()
+                    UiTranslate(0, current_point[2])
+                    UiRect(ui_width, grid_width)
+                UiPop()
+                UiPush()
+                    UiTranslate(current_point_inverted[1], 0)
+                    UiRect(grid_width, ui_height)
+                UiPop()
+                UiPush()
+                    UiTranslate(0, current_point_inverted[2])
+                    UiRect(ui_width, grid_width)
+                UiPop()
+            UiPop()
+
+            wx, wz = wx + step, wz + step
+            iter = iter + 1
+        until (current_point[1] > ui_width and current_point[2] > ui_height)
+    end
     function drawPlayer()
         UiPush()
             local x, y, dist = UiWorldToPixel(GetPlayerPos())
@@ -280,6 +326,33 @@ function tactical_draw(screen)
             UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
         UiPop()
 
+        -- local grid_1    = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0.25, 0)
+        -- local grid_10   = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0, 0.5)
+        -- local grid_50   = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0, 0.5)
+
+        -- if grid_1 > 0 then
+        --     drawGrid(1, 1, nil, grid_1)
+        --     dWatch("grid 1", grid_1)
+        -- end
+        -- if grid_10 > 0 then
+        --     drawGrid(10, 1, nil, grid_10)
+        --     dWatch("grid 10", grid_10)
+        -- end
+        -- if grid_50 > 0 then
+        --     drawGrid(50, 1, nil, grid_50)
+        --     dWatch("grid 50", grid_50)
+        -- end
+
+        -- if CAMERA_CURRENT_FOV >= 75 then
+        --     drawGrid(10, 1, nil, 0.5 - (0.5 * (CAMERA_CURRENT_FOV / 120)))
+        --     drawGrid(50, 2, nil, 0.5)
+        -- else
+        --     drawGrid(1, 1, nil, 0.25 - (0.25 * (CAMERA_CURRENT_FOV / 75)))
+        --     drawGrid(10, 2, nil, 0.5)
+        -- end
+        -- drawGrid()
+
+        drawGrid(10, 1, nil, 0.25)
         drawPlayer()
         drawCursor()
         drawQueuedSalvo()
