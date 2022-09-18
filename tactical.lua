@@ -326,33 +326,10 @@ function tactical_draw(screen)
             UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
         UiPop()
 
-        -- local grid_1    = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0.25, 0)
-        -- local grid_10   = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0, 0.5)
-        -- local grid_50   = mapToRange(CAMERA_CURRENT_FOV, 25, 50, 0, 0.5)
+        local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
 
-        -- if grid_1 > 0 then
-        --     drawGrid(1, 1, nil, grid_1)
-        --     dWatch("grid 1", grid_1)
-        -- end
-        -- if grid_10 > 0 then
-        --     drawGrid(10, 1, nil, grid_10)
-        --     dWatch("grid 10", grid_10)
-        -- end
-        -- if grid_50 > 0 then
-        --     drawGrid(50, 1, nil, grid_50)
-        --     dWatch("grid 50", grid_50)
-        -- end
-
-        -- if CAMERA_CURRENT_FOV >= 75 then
-        --     drawGrid(10, 1, nil, 0.5 - (0.5 * (CAMERA_CURRENT_FOV / 120)))
-        --     drawGrid(50, 2, nil, 0.5)
-        -- else
-        --     drawGrid(1, 1, nil, 0.25 - (0.25 * (CAMERA_CURRENT_FOV / 75)))
-        --     drawGrid(10, 2, nil, 0.5)
-        -- end
-        -- drawGrid()
-
-        drawGrid(10, 1, nil, 0.25)
+        drawGrid(10, 1, nil, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+        drawGrid(50, 2, nil, 0.5)
         drawPlayer()
         drawCursor()
         drawQueuedSalvo()
