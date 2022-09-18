@@ -68,6 +68,15 @@ function tactical_tick(delta)
     end
 
     dWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
+    dWatch("Camera Position", STATES_TACMARK.camera_settings.camera_transform.pos)
+
+    if pos_translate[2] > 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] >= (GetPlayerPos()[2] + 200) then
+        pos_translate[2] = 0
+    end
+
+    if pos_translate[2] < 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] < (GetPlayerPos()[2] + 20) then
+        pos_translate[2] = 0
+    end
 
     local set_offset_x = pos_translate[1] * translate
     local set_offset_y = pos_translate[2] * 50
