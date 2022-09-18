@@ -30,6 +30,8 @@ function tactical_init()
     end
 
     if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
+        SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 2))
+        SetEnvironmentProperty("brightness", clamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
         SetPostProcessingProperty("saturation", 0.9)
         SetPostProcessingProperty("colorbalance", 1, 1.75, 0.75)
     end
@@ -38,6 +40,7 @@ function tactical_init()
     SetEnvironmentProperty("fogColor", 0, 0, 0)
     SetEnvironmentProperty("snowamount", 0, 0)
     SetEnvironmentProperty("snowdir", 0, 0, 0, 0)
+    SetEnvironmentProperty("rain", 0)
 
     return UiGetScreen()
 end
