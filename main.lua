@@ -9,11 +9,6 @@ QUICK_SALVO = {}
 DEBUG_LINES = {}
 DEBUG_POSITIONS = {}
 
--- fogParams
--- 1 - Start
--- 2 - End
--- 3 - Opacity
--- 4 - Exponent
 DEFAULT_ENVIRONMENT = {}
 DEFAULT_POSTPROCESSING = {}
 

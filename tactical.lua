@@ -55,6 +55,14 @@ function tactical_tick(delta)
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then pos_translate[2] = pos_translate[2] - 1 end
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
 
+    if pos_translate[2] > 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] >= (GetPlayerPos()[2] + 200) then
+        pos_translate[2] = 0
+    end
+
+    if pos_translate[2] < 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] < (GetPlayerPos()[2] + 20) then
+        pos_translate[2] = 0
+    end
+
     if not VecEqual(pos_translate, Vec(0, 0, 0)) then
         pos_translate = VecNormalize(pos_translate)
     end
@@ -72,14 +80,6 @@ function tactical_tick(delta)
 
     dWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
     dWatch("Camera Position", STATES_TACMARK.camera_settings.camera_transform.pos)
-
-    if pos_translate[2] > 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] >= (GetPlayerPos()[2] + 200) then
-        pos_translate[2] = 0
-    end
-
-    if pos_translate[2] < 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] < (GetPlayerPos()[2] + 20) then
-        pos_translate[2] = 0
-    end
 
     local set_offset_x = pos_translate[1] * translate
     local set_offset_y = pos_translate[2] * 50
@@ -286,7 +286,7 @@ function tactical_draw(screen)
             UiPop()
             UiTranslate(0, 28)
             UiPush()
-                UiColor(unpack(COLOUR["yellow"]))
+                UiColor(unpack(COLOUR["yellow_dark"]))
                 UiRect(20, 20)
                 UiTranslate(24, 16)
                 UiColor(unpack(COLOUR["white"]))
