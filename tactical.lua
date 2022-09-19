@@ -135,9 +135,9 @@ function tactical_hitscan()
 end
 
 function tactical_draw()
-    function drawGrid(metres, width, depth, opacity)
+    function drawGrid(metres, width, world_depth, opacity)
         local step = metres or 50
-        local grid_width, grid_depth = width or 1, depth or 0
+        local grid_width, grid_world_depth = width or 1, world_depth or 0
         local alpha = opacity or 1
 
         local ui_width, ui_height = UiWidth(), UiHeight()
@@ -151,10 +151,10 @@ function tactical_draw()
             local step_invert = ((iter * 2) - 1) * step
             local wxi, wzi = wx - step_invert, wz - step_invert
 
-            current_point = {UiWorldToPixel(Vec(wx, grid_depth, wz))}
+            current_point = {UiWorldToPixel(Vec(wx, grid_world_depth, wz))}
             current_point[4], current_point[5] = wx, wz
 
-            current_point_inverted = {UiWorldToPixel(Vec(wxi, grid_depth, wzi))}
+            current_point_inverted = {UiWorldToPixel(Vec(wxi, grid_world_depth, wzi))}
             current_point_inverted[4], current_point_inverted[5] = wxi, wzi
 
             UiPush()
@@ -264,8 +264,16 @@ function tactical_draw()
 
         local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
 
-        drawGrid(10, 1, nil, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
-        drawGrid(50, 2, nil, 0.5)
+        if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+            local world_depth = 0
+            if InputDown('space') and STATES_TACMARK.hitscan.hit then
+                world_depth = STATES_TACMARK.hitscan.pos[2]
+            end
+
+            drawGrid(10, 1, world_depth, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+            drawGrid(50, 2, world_depth, 0.5)
+        end
+
         drawPlayer()
         drawCursor()
         drawQueuedSalvo()
@@ -335,10 +343,15 @@ function tactical_draw()
                 UiText("- Elevation Down | Up")
             UiPop()
             UiTranslate(0, 28)
+            UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
+            UiText("Scroll - Camera zoom", true)
             UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")].." - Fast camera", true)
             UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")].." - Slow camera", true)
-            UiText("Scroll - Camera zoom", true)
-            UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
+
+            if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+                UiText("Space (hold) - Snap grid to target elevation")
+            end
+
         UiPop()
     UiPop()
 end
