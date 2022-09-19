@@ -9,11 +9,6 @@ QUICK_SALVO = {}
 DEBUG_LINES = {}
 DEBUG_POSITIONS = {}
 
--- fogParams
--- 1 - Start
--- 2 - End
--- 3 - Opacity
--- 4 - Exponent
 DEFAULT_ENVIRONMENT = {}
 DEFAULT_POSTPROCESSING = {}
 
@@ -86,21 +81,6 @@ function tick(delta)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
 
-    local next = next
-    if (next(DEFAULT_ENVIRONMENT) == nil) then
-        dPrint("Default environment properties are unknown. Fetching them now...")
-        DEFAULT_ENVIRONMENT["fogcolor"] = {GetEnvironmentProperty("fogcolor")}
-        DEFAULT_ENVIRONMENT["fogParams"] = {GetEnvironmentProperty("fogParams")}
-        DEFAULT_ENVIRONMENT["snowamount"] = {GetEnvironmentProperty("snowamount")}
-        DEFAULT_ENVIRONMENT["snowdir"] = {GetEnvironmentProperty("snowdir")}
-    end
-
-    if (next(DEFAULT_POSTPROCESSING) == nil) then
-        dPrint("Default post processing properties are unknown. Fetching them now...")
-        DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
-        DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
-    end
-
     if (SHELLS_prev_length ~= #SHELLS) then
         SHELLS_prev_length = #SHELLS
     end
@@ -168,7 +148,22 @@ function tick(delta)
 
     -- User toggles tactical marking mode
     if InputPressed(CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE")) then
-        if not STATES_TACMARK.enabled then STATES_TACMARK.screen = tactical_init() end
+        if not STATES_TACMARK.enabled then
+            DEFAULT_ENVIRONMENT["fogcolor"] = {GetEnvironmentProperty("fogcolor")}
+            DEFAULT_ENVIRONMENT["fogParams"] = {GetEnvironmentProperty("fogParams")}
+            DEFAULT_ENVIRONMENT["snowamount"] = {GetEnvironmentProperty("snowamount")}
+            DEFAULT_ENVIRONMENT["snowdir"] = {GetEnvironmentProperty("snowdir")}
+            DEFAULT_ENVIRONMENT["sunBrightness"] = {GetEnvironmentProperty("sunBrightness")}
+            DEFAULT_ENVIRONMENT["rain"] = {GetEnvironmentProperty("rain")}
+            DEFAULT_ENVIRONMENT["brightness"] = {GetEnvironmentProperty("brightness")}
+            DEFAULT_ENVIRONMENT["exposure"] = {GetEnvironmentProperty("exposure")}
+
+            DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
+            DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
+
+            tactical_init()
+        end
+
         if STATES_TACMARK.enabled then
             setEnvProps(DEFAULT_ENVIRONMENT)
             setPostProcProps(DEFAULT_POSTPROCESSING)
@@ -310,6 +305,10 @@ function draw()
 
     local values = SHELL_VALUES[STATES.selected_shell]
 
+    if STATES_TACMARK.enabled then
+        tactical_draw()
+    end
+
     UiPush()
         UiTranslate(80, UiMiddle() + UiMiddle() / 1.75)
         UiColor(0.4, 0.4, 0.4)
@@ -359,11 +358,6 @@ function draw()
             UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
-
-    if STATES_TACMARK.enabled then
-        tactical_draw(STATES_TACMARK.screen)
-        return
-    end
 end
 
 -- #endregion Main

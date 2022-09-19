@@ -140,6 +140,12 @@ CONFIG_VARIABLES = {
         value_type = "int",
         value_default = 75
     },
+    ["TACTICAL_DRAW_GRID_TOGGLE"] = {
+        variable = G_CONFIG_ROOT..".tactical.draw_grid",
+
+        value_type = "boolean",
+        value_default = true
+    },
 
     --------------------------------------
     -- Keybindings
@@ -348,6 +354,12 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         mapping = CONFIG_VARIABLES["TACTICAL_SHELL_LABELS_TOGGLE"],
         name = "Enable Shell Labels"
+    },
+    {
+        category = "tactical",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["TACTICAL_DRAW_GRID_TOGGLE"],
+        name = "Draw Grid"
     },
     {
         category = "tactical",

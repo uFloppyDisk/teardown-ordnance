@@ -1,8 +1,6 @@
 STATES_TACMARK = {
     enabled = false,
 
-    screen = nil,
-
     mouse_pos = {},
     hitscan = {
         hit = false,
@@ -29,7 +27,13 @@ function tactical_init()
         STATES_TACMARK.camera_defaults = {unpack(STATES_TACMARK.camera_settings)}
     end
 
+    return UiGetScreen()
+end
+
+function tactical_tick(delta)
     if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
+        SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
+        SetEnvironmentProperty("brightness", clamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
         SetPostProcessingProperty("saturation", 0.9)
         SetPostProcessingProperty("colorbalance", 1, 1.75, 0.75)
     end
@@ -38,11 +42,8 @@ function tactical_init()
     SetEnvironmentProperty("fogColor", 0, 0, 0)
     SetEnvironmentProperty("snowamount", 0, 0)
     SetEnvironmentProperty("snowdir", 0, 0, 0, 0)
+    SetEnvironmentProperty("rain", 0)
 
-    return UiGetScreen()
-end
-
-function tactical_tick(delta)
     local pos_translate = Vec(0, 0, 0)
 
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then pos_translate[3] = pos_translate[3] - 1 end
@@ -51,6 +52,14 @@ function tactical_tick(delta)
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_X_POS")) then pos_translate[1] = pos_translate[1] + 1 end
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then pos_translate[2] = pos_translate[2] - 1 end
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
+
+    if pos_translate[2] > 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] >= (GetPlayerPos()[2] + 200) then
+        pos_translate[2] = 0
+    end
+
+    if pos_translate[2] < 0 and STATES_TACMARK.camera_settings.camera_transform.pos[2] < (GetPlayerPos()[2] + 20) then
+        pos_translate[2] = 0
+    end
 
     if not VecEqual(pos_translate, Vec(0, 0, 0)) then
         pos_translate = VecNormalize(pos_translate)
@@ -68,6 +77,7 @@ function tactical_tick(delta)
     end
 
     dWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
+    dWatch("Camera Position", STATES_TACMARK.camera_settings.camera_transform.pos)
 
     local set_offset_x = pos_translate[1] * translate
     local set_offset_y = pos_translate[2] * 50
@@ -124,7 +134,53 @@ function tactical_hitscan()
     return STATES_TACMARK.hitscan.pos
 end
 
-function tactical_draw(screen)
+function tactical_draw()
+    function drawGrid(metres, width, world_depth, opacity)
+        local step = metres or 50
+        local grid_width, grid_world_depth = width or 1, world_depth or 0
+        local alpha = opacity or 1
+
+        local ui_width, ui_height = UiWidth(), UiHeight()
+        local point_below = Vec(STATES_TACMARK.camera_settings.camera_transform.pos[1], 0, STATES_TACMARK.camera_settings.camera_transform.pos[3])
+
+        local current_point, current_point_inverted = {}, {}
+        local wx, wz = math.ceil(point_below[1] / step) * step, math.ceil(point_below[3] / step) * step
+
+        local iter = 1
+        repeat
+            local step_invert = ((iter * 2) - 1) * step
+            local wxi, wzi = wx - step_invert, wz - step_invert
+
+            current_point = {UiWorldToPixel(Vec(wx, grid_world_depth, wz))}
+            current_point[4], current_point[5] = wx, wz
+
+            current_point_inverted = {UiWorldToPixel(Vec(wxi, grid_world_depth, wzi))}
+            current_point_inverted[4], current_point_inverted[5] = wxi, wzi
+
+            UiPush()
+                UiColor(0, 0, 0, alpha)
+                UiPush()
+                    UiTranslate(current_point[1], 0)
+                    UiRect(grid_width, ui_height)
+                UiPop()
+                UiPush()
+                    UiTranslate(0, current_point[2])
+                    UiRect(ui_width, grid_width)
+                UiPop()
+                UiPush()
+                    UiTranslate(current_point_inverted[1], 0)
+                    UiRect(grid_width, ui_height)
+                UiPop()
+                UiPush()
+                    UiTranslate(0, current_point_inverted[2])
+                    UiRect(ui_width, grid_width)
+                UiPop()
+            UiPop()
+
+            wx, wz = wx + step, wz + step
+            iter = iter + 1
+        until (current_point[1] > ui_width and current_point[2] > ui_height)
+    end
     function drawPlayer()
         UiPush()
             local x, y, dist = UiWorldToPixel(GetPlayerPos())
@@ -190,9 +246,6 @@ function tactical_draw(screen)
         end
     end
 
-    if not IsScreenEnabled(screen) then SetScreenEnabled(screen, true) end
-    SetPlayerScreen(screen)
-
     UiPush()
         UiMakeInteractive()
         local margins = {}
@@ -208,6 +261,22 @@ function tactical_draw(screen)
 
             dWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
+
+        local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
+
+        if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+            local world_depth = 0
+            if InputDown('space') and STATES_TACMARK.hitscan.hit then
+                world_depth = STATES_TACMARK.hitscan.pos[2]
+            end
+
+            drawGrid(10, 1, world_depth, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+            drawGrid(50, 2, world_depth, 0.5)
+        end
+
+        drawPlayer()
+        drawCursor()
+        drawQueuedSalvo()
 
         UiPush()
             UiTranslate(80, UiMiddle() / 6)
@@ -228,7 +297,7 @@ function tactical_draw(screen)
             UiPop()
             UiTranslate(0, 28)
             UiPush()
-                UiColor(unpack(COLOUR["yellow"]))
+                UiColor(unpack(COLOUR["yellow_dark"]))
                 UiRect(20, 20)
                 UiTranslate(24, 16)
                 UiColor(unpack(COLOUR["white"]))
@@ -274,14 +343,15 @@ function tactical_draw(screen)
                 UiText("- Elevation Down | Up")
             UiPop()
             UiTranslate(0, 28)
+            UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
+            UiText("Scroll - Camera zoom", true)
             UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")].." - Fast camera", true)
             UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")].." - Slow camera", true)
-            UiText("Scroll - Camera zoom", true)
-            UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
-        UiPop()
 
-        drawPlayer()
-        drawCursor()
-        drawQueuedSalvo()
+            if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+                UiText("Space (hold) - Snap grid to target elevation")
+            end
+
+        UiPop()
     UiPop()
 end

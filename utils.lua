@@ -10,6 +10,10 @@ function round(number, digits)
     return math.floor((number * power) + 0.5) / power
 end
 
+function mapToRange(input, in_start, in_end, out_start, out_end)
+    return out_start + (input - in_start) * (out_end - out_start) / (in_end - in_start)
+end
+
 function getRGBA(colour, alpha)
     local c = {unpack(colour)}
 
