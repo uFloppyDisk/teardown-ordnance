@@ -29,8 +29,12 @@ function tactical_init()
         STATES_TACMARK.camera_defaults = {unpack(STATES_TACMARK.camera_settings)}
     end
 
+    return UiGetScreen()
+end
+
+function tactical_tick(delta)
     if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
-        SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 2))
+        SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
         SetEnvironmentProperty("brightness", clamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
         SetPostProcessingProperty("saturation", 0.9)
         SetPostProcessingProperty("colorbalance", 1, 1.75, 0.75)
@@ -42,10 +46,6 @@ function tactical_init()
     SetEnvironmentProperty("snowdir", 0, 0, 0, 0)
     SetEnvironmentProperty("rain", 0)
 
-    return UiGetScreen()
-end
-
-function tactical_tick(delta)
     local pos_translate = Vec(0, 0, 0)
 
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then pos_translate[3] = pos_translate[3] - 1 end
