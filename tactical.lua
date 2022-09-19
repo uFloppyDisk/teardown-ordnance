@@ -1,8 +1,6 @@
 STATES_TACMARK = {
     enabled = false,
 
-    screen = nil,
-
     mouse_pos = {},
     hitscan = {
         hit = false,
@@ -136,7 +134,7 @@ function tactical_hitscan()
     return STATES_TACMARK.hitscan.pos
 end
 
-function tactical_draw(screen)
+function tactical_draw()
     function drawGrid(metres, width, depth, opacity)
         local step = metres or 50
         local grid_width, grid_depth = width or 1, depth or 0
@@ -248,9 +246,6 @@ function tactical_draw(screen)
         end
     end
 
-    if not IsScreenEnabled(screen) then SetScreenEnabled(screen, true) end
-    SetPlayerScreen(screen)
-
     UiPush()
         UiMakeInteractive()
         local margins = {}
@@ -266,6 +261,14 @@ function tactical_draw(screen)
 
             dWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
+
+        local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
+
+        drawGrid(10, 1, nil, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+        drawGrid(50, 2, nil, 0.5)
+        drawPlayer()
+        drawCursor()
+        drawQueuedSalvo()
 
         UiPush()
             UiTranslate(80, UiMiddle() / 6)
@@ -337,13 +340,5 @@ function tactical_draw(screen)
             UiText("Scroll - Camera zoom", true)
             UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
         UiPop()
-
-        local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
-
-        drawGrid(10, 1, nil, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
-        drawGrid(50, 2, nil, 0.5)
-        drawPlayer()
-        drawCursor()
-        drawQueuedSalvo()
     UiPop()
 end

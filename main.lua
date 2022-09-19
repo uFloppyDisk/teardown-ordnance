@@ -161,7 +161,7 @@ function tick(delta)
             DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
             DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
 
-            STATES_TACMARK.screen = tactical_init()
+            tactical_init()
         end
 
         if STATES_TACMARK.enabled then
@@ -305,6 +305,10 @@ function draw()
 
     local values = SHELL_VALUES[STATES.selected_shell]
 
+    if STATES_TACMARK.enabled then
+        tactical_draw()
+    end
+
     UiPush()
         UiTranslate(80, UiMiddle() + UiMiddle() / 1.75)
         UiColor(0.4, 0.4, 0.4)
@@ -354,11 +358,6 @@ function draw()
             UiColor(0.4, 0.4, 0.4)
         UiPop()
     UiPop()
-
-    if STATES_TACMARK.enabled then
-        tactical_draw(STATES_TACMARK.screen)
-        return
-    end
 end
 
 -- #endregion Main
