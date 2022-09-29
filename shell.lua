@@ -1,11 +1,11 @@
-function shellDraw(self, pos)
+function shell_draw_sprite(self, pos)
     local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
     local transform_pos = Transform(pos, rotation)
 
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
-function shellTriggerSecondary(self, parameters, detonate)
+function shell_trigger_secondary(self, parameters, detonate)
     local isDetonated = true
 
     if assertTableKeys(parameters, "trigger_height") then
@@ -50,7 +50,46 @@ function shellTriggerSecondary(self, parameters, detonate)
     return isDetonated
 end
 
-function shellTick(self, delta)
+function shell_fire_init(shell)
+    table.insert(SHELLS, shell)
+    shell_fire(shell)
+end
+
+function shell_fire(self)
+    DEBUG_POSITIONS = {}
+    DEBUG_LINES = {}
+    FRAG_STATS = {0, 0, 0, 0}
+
+    local values = SHELL_VALUES[self.type]
+    local variant = values.variants[self.variant]
+
+    dPrint("--- Firing shell ("..values.name.." ["..variant.name.."]) ---")
+
+    if assertTableKeys(variant, "secondary", "timer") then
+        self.secondary.timer = variant.secondary.timer
+    end
+
+    if self.inaccuracy > 0 then
+        local rotation = QuatEuler(0, 360 * math.random(), 0)
+        local distance = Vec(self.inaccuracy * math.random(), 0, 0)
+
+        local transform = Transform(VecCopy(self.destination), rotation)
+        self.destination = TransformToParentPoint(transform, distance)
+    end
+
+    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
+    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
+
+    self.state = SHELL_STATES.in_flight
+    if self.flight_time < 0.2 then
+        self.state = SHELL_STATES.active
+    end
+
+    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
+    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, Vec(100, 0, 100)), 20)
+end
+
+function shell_tick(self, delta)
     dWatch("Flight Time", self.flight_time)
 
     local values = SHELL_VALUES[self.type]
@@ -254,6 +293,10 @@ function shellTick(self, delta)
 
                     addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, COLOUR["orange"]})
 
+                    local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
+                    local draw_pos = Transform(sub.transform.pos, look_rotation)
+                    DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
+
                     local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
                     if hit then
                         local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
@@ -291,13 +334,9 @@ function shellTick(self, delta)
                         end
 
                         table.remove(self.secondary.submunitions, index)
-                    else
-                        local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
-                        local draw_pos = Transform(sub.transform.pos, look_rotation)
-                        DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
-
-                        sub.transform = transform_new
                     end
+
+                    sub.transform = transform_new
                 end
             else
                 self.state = SHELL_STATES.detonated
@@ -324,7 +363,7 @@ function shellTick(self, delta)
         -- Check if shell has a secondary state and that the secondary has not been activated yet;
         -- if so, check various trigger conditions
         if (assertTableKeys(variant, "secondary") and not self.secondary.active) then
-            shellTriggerSecondary(self, variant.secondary)
+            shell_trigger_secondary(self, variant.secondary)
         end
 
         -- Shell whistle logic
@@ -344,7 +383,7 @@ function shellTick(self, delta)
             ParticleStretch(1.0)
             SpawnParticle(VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
 
-            shellDraw(self, self.position)
+            shell_draw_sprite(self, self.position)
         end
 
         -- Stop increasing kinetic energy after first hit
@@ -384,7 +423,7 @@ function shellTick(self, delta)
 
             -- Guard clause: Check if ballistics is disabled to halt expensive computation
             if not CONFIG_getConfValue("G_SIMULATE_BALLISTICS") then
-                shellDetonate(self, position_initial_hit)
+                shell_detonate(self, position_initial_hit)
                 return
             end
 
@@ -392,11 +431,16 @@ function shellTick(self, delta)
             dPrint("Initial material is '"..material_initial.."'")
 
             -- Perform recursive check for materials encountered during this tick
-            local hit_materials, hit_positions, reached_max_depth = getRecursiveMaterialsInRaycast(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 3)
-            if hit_positions ~= nil then position_detonation = hit_positions[#hit_positions] else position_detonation = position_initial_hit end
+            local hit_materials, hit_positions, reached_max_depth = getMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 3)
+            if hit_positions ~= nil then
+                position_detonation = hit_positions[#hit_positions]
+            else
+                position_detonation = position_initial_hit
+                trigger_detonation = true
+            end
 
-            if reached_max_depth then
-                shellDetonate(self, position_detonation)
+            if reached_max_depth or trigger_detonation then
+                shell_detonate(self, position_detonation)
                 return
             end
 
@@ -452,7 +496,7 @@ function shellTick(self, delta)
         end
 
         if trigger_detonation then
-            shellDetonate(self, position_detonation)
+            shell_detonate(self, position_detonation)
             return
         end
 
@@ -461,13 +505,13 @@ function shellTick(self, delta)
     end
 end
 
-function shellDetonate(self, pos)
+function shell_detonate(self, pos)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
     self.position = VecCopy(pos)
 
-    if not (assertTableKeys(variant, "secondary")) or shellTriggerSecondary(self, variant.secondary, true) then
+    if not (assertTableKeys(variant, "secondary")) or shell_trigger_secondary(self, variant.secondary, true) then
         self.state = SHELL_STATES.detonated
     end
 
@@ -527,7 +571,7 @@ function shellDetonate(self, pos)
         end
 
         for i = 1, FRAG_AMOUNT, 1 do
-            shellFrag(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
+            shell_frag(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
         end
 
         if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
@@ -541,41 +585,7 @@ function shellDetonate(self, pos)
     end
 end
 
-function shellFire(self)
-    DEBUG_POSITIONS = {}
-    DEBUG_LINES = {}
-    FRAG_STATS = {0, 0, 0, 0}
-
-    local values = SHELL_VALUES[self.type]
-    local variant = values.variants[self.variant]
-
-    dPrint("--- Firing shell ("..values.name.." ["..variant.name.."]) ---")
-
-    if assertTableKeys(variant, "secondary", "timer") then
-        self.secondary.timer = variant.secondary.timer
-    end
-
-    if self.inaccuracy > 0 then
-        local rotation = QuatEuler(0, 360 * math.random(), 0)
-        local distance = Vec(self.inaccuracy * math.random(), 0, 0)
-
-        local transform = Transform(VecCopy(self.destination), rotation)
-        self.destination = TransformToParentPoint(transform, distance)
-    end
-
-    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
-    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
-
-    self.state = SHELL_STATES.in_flight
-    if self.flight_time < 0.2 then
-        self.state = SHELL_STATES.active
-    end
-
-    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
-    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, Vec(100, 0, 100)), 20)
-end
-
-function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
+function shell_frag(self, index, pos, frag_size, frag_dist, rot, halt)
     FRAG_STATS[1] = FRAG_STATS[1] + 1
     local rotation
     if rot then
@@ -602,7 +612,7 @@ function shellFrag(self, index, pos, frag_size, frag_dist, rot, halt)
                 FRAG_STATS[4] = FRAG_STATS[4] + 1
             end
 
-            shellFrag(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
+            shell_frag(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
             return
         end
 

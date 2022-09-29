@@ -15,11 +15,6 @@ DEFAULT_POSTPROCESSING = {}
 
 -- #region Main
 
-function fire_shell(shell)
-    shellFire(shell)
-    table.insert(SHELLS, shell)
-end
-
 function init()
     RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
@@ -31,8 +26,8 @@ function init()
         dPrint("Config exists and is complete.")
     end
 
-    G_DEV = CONFIG_getConfValue("G_DEBUG_MODE")
-    G_QUICK_SALVO_DELAY = CONFIG_getConfValue("G_QUICK_SALVO_DELAY")
+    G_DEV = CONFIG_getConfValue("G_DEBUG_MODE") or false
+    G_QUICK_SALVO_DELAY = CONFIG_getConfValue("G_QUICK_SALVO_DELAY") or 0.5
     DEFAULT_SHELL.flight_time = CONFIG_getConfValue("G_FLIGHT_TIME")
     DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
 
@@ -95,7 +90,7 @@ function tick(delta)
     end
 
     for i, shell in ipairs(SHELLS) do
-        shellTick(shell, delta)
+        shell_tick(shell, delta)
 
         if shell.state == SHELL_STATES.detonated then
             dPrint("Shell "..i.." detonated. Removing...")
@@ -108,7 +103,7 @@ function tick(delta)
 
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
-            fire_shell(salvo_shell)
+            shell_fire_init(salvo_shell)
             DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
     else
@@ -224,7 +219,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], sound_pos, 0.6)
 
         if not STATES.quick_salvo and #QUICK_SALVO > 0 then
-            fire_shell(table.remove(QUICK_SALVO, 1))
+            shell_fire_init(table.remove(QUICK_SALVO, 1))
         end
     end
 
@@ -273,7 +268,7 @@ function tick(delta)
 
         -- Fire shell manually and return
         if not STATES.quick_salvo then
-            fire_shell(shell)
+            shell_fire_init(shell)
             return
         end
 
@@ -284,7 +279,6 @@ function tick(delta)
         PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
     end
 end
-
 
 function update()
     local shells_length = #SHELLS

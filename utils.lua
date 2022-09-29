@@ -69,17 +69,10 @@ end
 
 function VecEqual(vec, vec2)
     local vecToCompare = VecCopy(vec)
-    if vecToCompare[1] ~= vec2[1] then
-        return false
-    end
 
-    if vecToCompare[2] ~= vec2[2] then
-        return false
-    end
-
-    if vecToCompare[3] ~= vec2[3] then
-        return false
-    end
+    if vecToCompare[1] ~= vec2[1] then return false end
+    if vecToCompare[2] ~= vec2[2] then return false end
+    if vecToCompare[3] ~= vec2[3] then return false end
 
     return true
 end
@@ -92,7 +85,7 @@ end
 function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
     local offset = set_offset or Vec(0, 0, 0)
     local rot = set_rot or QuatEuler(-90, 0, 0)
-    local rot_absolute = rot_absolute or true
+    rot_absolute = rot_absolute or true
 
     if not rot_absolute then
         rot = QuatRotateQuat(transform.rot, rot)
@@ -147,7 +140,7 @@ function getMousePosInWorld(set_distance)
 end
 
 function drawCircle(position, radius, points, colour)
-    local position = position or Vec(0, 0, 0)
+    position = position or Vec(0, 0, 0)
     if not (radius > 0) then
         return
     end
@@ -199,7 +192,7 @@ function objectCopy(object)
     return copy
 end
 
-function getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
+function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
     if depth < 0 or depth == nil then
         dPrint("Max depth reached.")
         return materials, hit_pos, true
@@ -226,5 +219,5 @@ function getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, mat
     table.insert(hit_pos, VecCopy(position_hit))
 
     dPrint("Hit shape with material '"..material.."'")
-    return getRecursiveMaterialsInRaycast(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
+    return getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end
