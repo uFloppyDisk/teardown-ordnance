@@ -77,8 +77,27 @@ function shell_fire(self)
         self.destination = TransformToParentPoint(transform, distance)
     end
 
-    self.position = VecAdd(self.destination, Vec(0, 1000, 0))
-    -- self.position = VecAdd(self.destination, Vec(0, 2, 0))
+    local angle = math.rad(STATES.selected_attack_angle)
+    local v = 827 / 2
+    local vx, vy = v * math.cos(angle), v * math.sin(angle)
+    local hmax = (vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2])) + 1
+
+    local range = ((v*v) * (2 * math.sin(angle) * math.cos(angle))) / math.abs(G_VEC_GRAVITY[2])
+    range = range / 2
+    dPrint(self.destination[2])
+    dPrint(hmax)
+
+    local hrad = math.rad((STATES.selected_attack_heading + 90) % 360)
+    local hx = math.sin(hrad)
+    local hz = math.cos(hrad)
+
+    local hvec = Vec(hx, 0, hz)
+
+    local rangevec = VecScale(hvec, range)
+    self.position = VecAdd(VecCopy(self.destination), Vec(rangevec[1], hmax, rangevec[3]))
+
+    local velvec = VecScale(hvec, vx)
+    self.vel_current = Vec(-velvec[1], 0, -velvec[3])
 
     self.state = SHELL_STATES.in_flight
     if self.flight_time < 0.2 then
@@ -355,7 +374,7 @@ function shell_tick(self, delta)
         dWatch("Distance to Target", self.distance_ground)
 
         -- Mark shell for deletion as the shell has gone out of bounds. Shell starts at <y>1000
-        if (self.distance_ground > 2000) then
+        if (self.distance_ground > 5000) then
             self.state = SHELL_STATES.detonated
             return
         end
@@ -396,6 +415,8 @@ function shell_tick(self, delta)
 
         -- Predicted position after the current tick
         local position_new = VecAdd(self.position, VecScale(self.vel_current, delta))
+
+        addToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 1}})
 
         if self.secondary.active and self.hit_once then
             return

@@ -12,6 +12,8 @@ DEBUG_POSITIONS = {}
 DEFAULT_ENVIRONMENT = {}
 DEFAULT_POSTPROCESSING = {}
 
+PLAYER_LOCK_TRANSFORM = nil
+
 
 -- #region Main
 
@@ -43,6 +45,8 @@ function init()
         tactical = false,
         selected_shell = 1,
         selected_variant = 1,
+        selected_attack_angle = 90,
+        selected_attack_heading = 0,
 
         shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
     }
@@ -167,6 +171,26 @@ function tick(delta)
         STATES_TACMARK.enabled = not STATES_TACMARK.enabled
     end
 
+    -- Capture user's current player transform for locking camera
+    if InputPressed("R") then
+        PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
+    end
+
+    -- User change heading and angle of attack event
+    if InputDown("R") then
+        if InputValue("mousedx") ~= 0 then
+            local offset = 0.5 * InputValue("mousedx")
+            STATES.selected_attack_heading = (STATES.selected_attack_heading % 360) + offset
+        end
+
+        if InputValue("mousedy") ~= 0 then
+            local offset = 0.2 * InputValue("mousedy")
+            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 30, 90)
+        end
+
+        SetPlayerTransform(PLAYER_LOCK_TRANSFORM, true)
+    end
+
     -- User change shell inaccuracy event
     if InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
@@ -233,6 +257,8 @@ function tick(delta)
         end
     end
 
+    local aim_transform = Transform(aim_pos, QuatEuler(0, STATES.selected_attack_heading, STATES.selected_attack_angle))
+    DrawLine(aim_pos, TransformToParentPoint(aim_transform, Vec(5, 0, 0)), unpack(COLOUR["yellow_dark"]))
     drawCircle(VecAdd(aim_pos, Vec(0, 0.02, 0)), STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"])
 
     STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))
