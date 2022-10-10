@@ -267,7 +267,8 @@
         "SetEnvironmentProperty",
         "SetPostProcessingProperty",
         "GetEnvironmentProperty",
-        "GetPostProcessingProperty"
+        "GetPostProcessingProperty",
+        "GetQuatEuler"
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global",

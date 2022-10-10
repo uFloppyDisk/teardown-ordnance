@@ -1,7 +1,18 @@
 function shell_draw_sprite(self, pos)
-    local rotation = QuatRotateQuat(QuatLookAt(self.position, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
-    local transform_pos = Transform(pos, rotation)
+    local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
+    local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
+    local lx, ly, lz = GetQuatEuler(look_at)
+    -- lx = clamp(lx, -15, 15)
+    -- lz = clamp(lz, -15, 15)
+    look_at = QuatEuler(0, -ly, 0)
+
+    rotation = QuatRotateQuat(rotation, look_at)
+
+    local transform_pos = Transform(pos, rotation)
+    local transform_pos_90 = Transform(pos, QuatRotateQuat(rotation, QuatAxisAngle(Vec(0, 1, 0), 90)))
+
+    DrawSprite(self.sprite.img, transform_pos_90, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false) -- Second
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
@@ -77,17 +88,17 @@ function shell_fire(self)
         self.destination = TransformToParentPoint(transform, distance)
     end
 
-    local angle = math.rad(STATES.selected_attack_angle)
+    local pitch = math.rad(self.pitch)
     local v = 827 / 2
-    local vx, vy = v * math.cos(angle), v * math.sin(angle)
-    local hmax = (vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2])) + 1
+    local vx, vy = v * math.cos(pitch), v * math.sin(pitch)
+    local hmax = ((vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2])))
 
-    local range = ((v*v) * (2 * math.sin(angle) * math.cos(angle))) / math.abs(G_VEC_GRAVITY[2])
+    local range = ((v*v) * (2 * math.sin(pitch) * math.cos(pitch))) / math.abs(G_VEC_GRAVITY[2])
     range = range / 2
     dPrint(self.destination[2])
     dPrint(hmax)
 
-    local hrad = math.rad((STATES.selected_attack_heading + 90) % 360)
+    local hrad = math.rad((self.heading + 90) % 360)
     local hx = math.sin(hrad)
     local hz = math.cos(hrad)
 
@@ -95,6 +106,7 @@ function shell_fire(self)
 
     local rangevec = VecScale(hvec, range)
     self.position = VecAdd(VecCopy(self.destination), Vec(rangevec[1], hmax, rangevec[3]))
+    -- self.position = VecAdd(VecCopy(self.destination), Vec(0, 2, 0)) -- Testing
 
     local velvec = VecScale(hvec, vx)
     self.vel_current = Vec(-velvec[1], 0, -velvec[3])
@@ -395,19 +407,23 @@ function shell_tick(self, delta)
 
         -- Provide default behaviours until secondary is active
         if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
-            self.vel_current = VecAdd(self.vel_current, (VecScale(G_VEC_GRAVITY, delta)))
+            self.vel_current = VecAdd(self.vel_current, (VecScale(G_VEC_GRAVITY, delta))) -- Calculation of gravity's effect on shell velocity
 
             ParticleReset()
             ParticleRadius(0.2)
             ParticleStretch(1.0)
-            SpawnParticle(VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0)), Vec(0, -1, 0), 0.1)
+
+            local dist = self.sprite.width * self.sprite.scaling_factor
+            local veln = VecNormalize(self.vel_current)
+            local vx, vy, vz = dist * veln[1], dist * veln[2], dist * veln[3]
+            SpawnParticle(VecAdd(self.position, Vec(vx, vy, vz)), Vec(0, 0, 0), 0.2)
 
             shell_draw_sprite(self, self.position)
         end
 
         -- Stop increasing kinetic energy after first hit
         if not self.hit_once then
-            self.kinetic_energy = clamp((values.weight * math.pow(math.abs(self.vel_current[2]), 2)) / 1000, 0, 5000)
+            self.kinetic_energy = clamp((values.weight * math.pow(math.abs(self.vel_current[2]), 2)) / 1000, 0, 5000) -- TODO: Change energy calculation to use whole velocity vector
         end
 
         dWatch("shell(CURRENT VELOCITY)", self.vel_current)

@@ -88,7 +88,9 @@ function tick(delta)
     if queue_length > 0 then
         for i=1, queue_length do
             local shell = QUICK_SALVO[i]
-            DrawLine(shell.destination, VecAdd(shell.destination, Vec(0, 5, 0)), 1, 0, 0, 0.8)
+
+            local destination_transform = Transform(shell.destination, QuatEuler(0, shell.heading, shell.pitch))
+            DrawLine(shell.destination, TransformToParentPoint(destination_transform, Vec(5, 0, 0)), unpack(COLOUR["red"]))
             drawCircle(VecAdd(shell.destination, Vec(0, 0.02, 0)), shell.inaccuracy, 32)
         end
     end
@@ -286,6 +288,8 @@ function tick(delta)
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
             inaccuracy = STATES.shell_inaccuracy,
+            pitch = STATES.selected_attack_angle,
+            heading = STATES.selected_attack_heading,
             sprite = shell_sprite,
             snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
         }, DEFAULT_SHELL)

@@ -784,6 +784,9 @@ DEFAULT_SHELL = {
     inaccuracy = 0,
 
     destination = nil,
+    pitch = 90,
+    heading = 0,
+
     position = nil,
 
     vel_previous = nil,
