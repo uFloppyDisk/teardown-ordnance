@@ -95,10 +95,15 @@ function shell_fire(self)
         self.destination = TransformToParentPoint(transform, distance)
     end
 
+    local h_offset = 0
+    if variant.id == "PF" then
+        h_offset = variant.secondary.trigger_height
+    end
+
     local pitch = math.rad(self.pitch)
     local v = 827 / 2
     local vx, vy = v * math.cos(pitch), v * math.sin(pitch)
-    local hmax = ((vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2])))
+    local hmax = ((vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2]))) + h_offset
 
     local range = ((v*v) * (2 * math.sin(pitch) * math.cos(pitch))) / math.abs(G_VEC_GRAVITY[2])
     range = range / 2
@@ -443,7 +448,7 @@ function shell_tick(self, delta)
         -- Predicted position after the current tick
         local position_new = VecAdd(self.position, VecScale(self.vel_current, delta))
 
-        addToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 1}})
+        addToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 0.5}})
 
         if self.secondary.active and self.hit_once then
             return

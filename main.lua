@@ -187,7 +187,7 @@ function tick(delta)
 
         if InputValue("mousedy") ~= 0 then
             local offset = 0.2 * InputValue("mousedy")
-            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 30, 90)
+            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 20, 90)
         end
 
         SetPlayerTransform(PLAYER_LOCK_TRANSFORM, true)
