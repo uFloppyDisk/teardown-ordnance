@@ -776,6 +776,7 @@ DEFAULT_SHELL = {
         timer = 0,
         intensity = 1000,
         particle_spread = Vec(0, 0, 0),
+        inertia = Vec(0, 0, 0),
     },
 
     type = 1,

@@ -27,6 +27,8 @@ function shell_trigger_secondary(self, parameters, detonate)
         end
 
         self.secondary.active = true
+        self.secondary.inertia = self.vel_current
+
         self.vel_current = Vec(-0.1, -1, 0.02)
 
         if assertTableKeys(parameters, "trigger_sound") then
@@ -280,6 +282,10 @@ function shell_tick(self, delta)
                             velocity = Vec(math.random() * 5 + 5, 0, 0)
                         }, DEFAULT_SUBMUNITION)
 
+                        local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
+                        vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
+                        sub.velocity = VecAdd(sub.velocity, vel_to_sub)
+
                         table.insert(self.secondary.submunitions, sub)
                     end
 
@@ -324,7 +330,7 @@ function shell_tick(self, delta)
 
                     addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, COLOUR["orange"]})
 
-                    local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0,0,1), 180))
+                    local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0, 0, 1), 180))
                     local draw_pos = Transform(sub.transform.pos, look_rotation)
                     DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
 
