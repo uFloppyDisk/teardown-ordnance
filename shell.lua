@@ -32,7 +32,12 @@ function shell_trigger_secondary(self, parameters, detonate)
         self.vel_current = Vec(-0.1, -1, 0.02)
 
         if assertTableKeys(parameters, "trigger_sound") then
-            PlaySound(parameters.trigger_sound, self.position, 90)
+            local volume = 90
+            if assertTableKeys(parameters, "trigger_sound_volume") then
+                volume = parameters.trigger_sound_volume
+            end
+
+            PlaySound(parameters.trigger_sound, self.position, volume)
         end
 
         ParticleReset()
@@ -279,7 +284,7 @@ function shell_tick(self, delta)
 
                         local sub = objectNew({
                             transform = TransformCopy(transform),
-                            velocity = Vec(math.random() * 5 + 5, 0, 0)
+                            velocity = Vec(math.random() * 10 + 5, 0, 0)
                         }, DEFAULT_SUBMUNITION)
 
                         local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
