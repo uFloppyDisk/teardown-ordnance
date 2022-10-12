@@ -189,19 +189,21 @@ function tick(delta)
     if InputPressed(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
 
+        STATES.input_attack_invert = false
+
+        local heading = STATES.selected_attack_heading
         if not STATES_TACMARK.enabled then
             local _, py, _ = GetQuatEuler(GetPlayerTransform(true).rot)
-            local heading = STATES.selected_attack_heading
 
-            local ph = (heading - py) % 360
+            heading = (heading - py) % 360
+        end
 
-            if ph < 180 and ph > 0 then
-                STATES.input_attack_invert = true
-            else
-                STATES.input_attack_invert = false
-            end
+        if heading < 180 and heading > 0 then
+            STATES.input_attack_invert = true
         end
     end
+
+    dWatch("Heading", STATES.selected_attack_heading)
 
     if InputReleased(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         local transform_player_current = GetPlayerTransform(true)

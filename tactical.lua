@@ -254,7 +254,10 @@ function tactical_draw()
         margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
 
         UiPush()
-            STATES_TACMARK.mouse_pos = {UiGetMousePos()}
+            if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) then
+                STATES_TACMARK.mouse_pos = {UiGetMousePos()}
+            end
+
             local m_pos = STATES_TACMARK.mouse_pos
 
             STATES_TACMARK.hitscan.pos,
