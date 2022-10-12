@@ -14,6 +14,8 @@ DEFAULT_POSTPROCESSING = {}
 
 PLAYER_LOCK_TRANSFORM = nil
 
+TEMP_TIME = 0
+
 
 -- #region Main
 
@@ -70,6 +72,7 @@ function init()
 end
 
 function tick(delta)
+    TEMP_TIME = TEMP_TIME + delta
     dWatch("state(ENABLED)", STATES.enabled)
     dWatch("state(FIRE)", STATES.fire)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
@@ -89,9 +92,15 @@ function tick(delta)
         for i=1, queue_length do
             local shell = QUICK_SALVO[i]
 
-            local destination_transform = Transform(shell.destination, QuatEuler(0, shell.heading, shell.pitch))
-            DrawLine(shell.destination, TransformToParentPoint(destination_transform, Vec(5, 0, 0)), unpack(COLOUR["red"]))
-            drawCircle(VecAdd(shell.destination, Vec(0, 0.02, 0)), shell.inaccuracy, 32)
+            drawShellImpactGizmo(
+                {
+                    shell.destination,
+                    shell.heading,
+                    shell.pitch
+                },
+                shell.inaccuracy, 32, COLOUR["red"], 2
+            )
+
         end
     end
 
@@ -270,9 +279,14 @@ function tick(delta)
         end
     end
 
-    local aim_transform = Transform(aim_pos, QuatEuler(0, STATES.selected_attack_heading, STATES.selected_attack_angle))
-    DrawLine(aim_pos, TransformToParentPoint(aim_transform, Vec(5, 0, 0)), unpack(COLOUR["yellow_dark"]))
-    drawCircle(VecAdd(aim_pos, Vec(0, 0.02, 0)), STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"])
+    drawShellImpactGizmo(
+        {
+            aim_pos,
+            STATES.selected_attack_heading,
+            STATES.selected_attack_angle
+        },
+        STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"], 6
+    )
 
     STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))
 

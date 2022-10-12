@@ -169,6 +169,61 @@ function drawCircle(position, radius, points, colour)
     until (theta > math.pi * 2)
 end
 
+function drawHeadingCircle(transform, length, colour)
+    if not (length > 0) then
+        return
+    end
+
+    colour = colour or getRGBA(COLOUR["red"], 0.8)
+
+    local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
+    DrawLine(transform.pos, pos_end, unpack(colour))
+end
+
+function drawPitchHeadingLine(transform, length, colour, lines)
+    transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
+    length = length or 1
+    colour = colour or {1, 1, 1, 1}
+    lines = lines or 6
+
+    local pos_start = transform.pos
+    local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
+    DrawLine(pos_start, pos_end, unpack(colour))
+
+    for i = 1, lines, 1 do
+        local vec_interim = VecLerp(pos_start, pos_end, ((1 / lines) * i))
+
+        DrawLine(vec_interim, Vec(vec_interim[1], pos_start[2], vec_interim[3]), unpack(colour))
+    end
+end
+
+function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
+    telemetry = telemetry or {
+        Vec(0, 0, 0),
+        0,
+        90
+    }
+    colour = colour or COLOUR["yellow_dark"]
+    lines = lines or 1
+
+    telemetry[1] = VecAdd(telemetry[1], Vec(0, 0.02, 0))
+
+    if telemetry[3] == 90 then lines = 0 end
+    local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
+    drawPitchHeadingLine(transform_aim_shell_both, 3.5, colour, lines)
+
+    if not (radius > 0) then
+        return
+    end
+
+    points = points or 16
+
+    local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
+
+    if telemetry[3] < 90 then drawHeadingCircle(transform_aim_shell_heading, radius, colour) end
+    drawCircle(transform_aim_shell_heading.pos, radius, points, colour)
+end
+
 function objectNew(new, base_object)
     local base = objectCopy(base_object)
     for key, value in pairs(new) do
