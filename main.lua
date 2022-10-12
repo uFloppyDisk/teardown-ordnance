@@ -178,19 +178,14 @@ function tick(delta)
         PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
     end
 
-    -- User change heading and angle of attack event
-    if InputDown("R") then
-        if InputValue("mousedx") ~= 0 then
-            local offset = 0.5 * InputValue("mousedx")
-            STATES.selected_attack_heading = (STATES.selected_attack_heading % 360) + offset
-        end
+    if InputReleased("R") then
+        local transform_player_current = GetPlayerTransform(true)
+        local transform_player_reset = Transform(transform_player_current.pos, PLAYER_LOCK_TRANSFORM.rot)
 
-        if InputValue("mousedy") ~= 0 then
-            local offset = 0.2 * InputValue("mousedy")
-            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 20, 90)
-        end
+        local velocity_player_current = GetPlayerVelocity()
 
-        SetPlayerTransform(PLAYER_LOCK_TRANSFORM, true)
+        SetPlayerTransform(transform_player_reset, true)
+        SetPlayerVelocity(velocity_player_current)
     end
 
     -- User change shell inaccuracy event
@@ -201,6 +196,22 @@ function tick(delta)
             local offset = 0.5 * InputValue("mousewheel")
             STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
         end
+    elseif InputDown("R") then -- User change heading and angle of attack event
+        SetBool("game.input.locktool", true)
+
+        if InputValue("mousedx") ~= 0 then
+            local offset = 0.5 * InputValue("mousedx")
+            STATES.selected_attack_heading = (STATES.selected_attack_heading % 360) + offset
+        end
+
+        if InputValue("mousedy") ~= 0 then
+            local offset = 0.2 * InputValue("mousedy")
+            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 20, 90)
+        end
+
+        local transform_player_current = GetPlayerCameraTransform()
+        transform_player_current.rot = PLAYER_LOCK_TRANSFORM.rot
+        SetCameraTransform(transform_player_current, true)
     else
         SetBool("game.input.locktool", false)
     end
@@ -331,6 +342,12 @@ function draw()
 
     if STATES_TACMARK.enabled then
         tactical_draw()
+    end
+
+    if InputDown("R") then
+        UiPush()
+            UiMakeInteractive()
+        UiPop()
     end
 
     UiPush()
