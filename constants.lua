@@ -164,6 +164,12 @@ CONFIG_VARIABLES = {
         value_type = "string",
         value_default = "N"
     },
+    ["KEYBIND_ADJUST_ATTACK"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_attack",
+
+        value_type = "string",
+        value_default = "G"
+    },
     ["KEYBIND_ADJUST_INACCURACY"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".adjust_inaccuracy",
 
@@ -386,6 +392,13 @@ CONFIG_OPTIONS = {
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_CYCLE_VARIANTS"],
         name = "Cycle Variants"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_ATTACK"],
+        name = "Adjust Shell Pitch/Heading (Hold)"
     },
     {
         category = "keybind",

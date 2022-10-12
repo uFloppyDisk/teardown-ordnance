@@ -63,6 +63,7 @@ function init()
         ["KEYBIND_TACTICAL_TOGGLE"] = CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE"),
         ["KEYBIND_CYCLE_SHELLS"] = CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS"),
         ["KEYBIND_CYCLE_VARIANTS"] = CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS"),
+        ["KEYBIND_ADJUST_ATTACK"] = CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK"),
         ["KEYBIND_ADJUST_INACCURACY"] = CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY"),
         ["KEYBIND_GENERAL_CANCEL"] = CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL"),
     }
@@ -185,7 +186,7 @@ function tick(delta)
     end
 
     -- Capture user's current player transform for locking camera
-    if InputPressed("R") then
+    if InputPressed(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
 
         if not STATES_TACMARK.enabled then
@@ -202,7 +203,7 @@ function tick(delta)
         end
     end
 
-    if InputReleased("R") then
+    if InputReleased(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         local transform_player_current = GetPlayerTransform(true)
         local transform_player_reset = Transform(transform_player_current.pos, PLAYER_LOCK_TRANSFORM.rot)
 
@@ -220,7 +221,7 @@ function tick(delta)
             local offset = 0.5 * InputValue("mousewheel")
             STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
         end
-    elseif InputDown("R") then -- User change heading and angle of attack event
+    elseif InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then -- User change heading and angle of attack event
         SetBool("game.input.locktool", true)
 
         if InputValue("mousedx") ~= 0 then
@@ -376,7 +377,7 @@ function draw()
         tactical_draw()
     end
 
-    if InputDown("R") then
+    if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         UiPush()
             UiMakeInteractive()
         UiPop()
