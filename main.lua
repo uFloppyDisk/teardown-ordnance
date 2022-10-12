@@ -50,6 +50,8 @@ function init()
         selected_attack_angle = 90,
         selected_attack_heading = 0,
 
+        input_attack_invert = false,
+
         shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
     }
 
@@ -185,6 +187,19 @@ function tick(delta)
     -- Capture user's current player transform for locking camera
     if InputPressed("R") then
         PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
+
+        if not STATES_TACMARK.enabled then
+            local _, py, _ = GetQuatEuler(GetPlayerTransform(true).rot)
+            local heading = STATES.selected_attack_heading
+
+            local ph = (heading - py) % 360
+
+            if ph < 180 and ph > 0 then
+                STATES.input_attack_invert = true
+            else
+                STATES.input_attack_invert = false
+            end
+        end
     end
 
     if InputReleased("R") then
@@ -209,12 +224,15 @@ function tick(delta)
         SetBool("game.input.locktool", true)
 
         if InputValue("mousedx") ~= 0 then
-            local offset = 0.5 * InputValue("mousedx")
+            local offset = 0.5
+            if STATES.input_attack_invert then offset = -offset end
+
+            offset = offset * InputValue("mousedx")
             STATES.selected_attack_heading = (STATES.selected_attack_heading % 360) + offset
         end
 
         if InputValue("mousedy") ~= 0 then
-            local offset = 0.2 * InputValue("mousedy")
+            local offset = -0.2 * InputValue("mousedy")
             STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 20, 90)
         end
 
