@@ -100,8 +100,12 @@ function shell_fire(self)
         h_offset = variant.secondary.trigger_height
     end
 
-    local pitch = math.rad(self.pitch)
     local v = 827 / 2
+    if assertTableKeys(values, "muzzle_velocity") then
+        v = values.muzzle_velocity
+    end
+
+    local pitch = math.rad(self.pitch)
     local vx, vy = v * math.cos(pitch), v * math.sin(pitch)
     local hmax = ((vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2]))) + h_offset
 

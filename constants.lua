@@ -671,6 +671,7 @@ SHELL_VALUES = {
         name = "155mm Howitzer",
         caliber = "155mm",
         weight = 43.2,
+        muzzle_velocity = 827 / 2,
         variants = {
             {
                 id = "HE",
