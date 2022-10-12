@@ -303,7 +303,7 @@ function tick(delta)
             STATES.selected_attack_heading,
             STATES.selected_attack_angle
         },
-        STATES.shell_inaccuracy, 32, COLOUR["yellow_dark"], 6
+        STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6
     )
 
     STATES.fire = InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE"))

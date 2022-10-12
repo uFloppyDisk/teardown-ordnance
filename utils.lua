@@ -155,21 +155,27 @@ function drawCircle(position, radius, points, colour)
     local point_y = position[2]
     local point_z = position[3] - radius * math.sin(theta)
 
+    local iter = 0
     repeat
         theta = theta + step
 
         local new_point_x = position[1] + radius * math.cos(theta)
         local new_point_z = position[3] - radius * math.sin(theta)
 
-        DrawLine(Vec(point_x, point_y, point_z), Vec(new_point_x, point_y, new_point_z),  colour[1], colour[2], colour[3], colour[4])
+        local pos_start, pos_end = Vec(point_x, point_y, point_z), Vec(new_point_x, point_y, new_point_z)
+        DrawLine(pos_start, pos_end, colour[1], colour[2], colour[3], colour[4])
+
+        if iter % 2 == 0 then
+            DebugLine(pos_start, pos_end, unpack(colour))
+        end
 
         point_x = new_point_x
         point_z = new_point_z
-
+        iter = iter + 1
     until (theta > math.pi * 2)
 end
 
-function drawHeadingCircle(transform, length, colour)
+function drawHeading(transform, length, colour)
     if not (length > 0) then
         return
     end
@@ -178,6 +184,7 @@ function drawHeadingCircle(transform, length, colour)
 
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
     DrawLine(transform.pos, pos_end, unpack(colour))
+    DebugLine(transform.pos, pos_end, unpack(colour))
 end
 
 function drawPitchHeadingLine(transform, length, colour, lines)
@@ -189,11 +196,17 @@ function drawPitchHeadingLine(transform, length, colour, lines)
     local pos_start = transform.pos
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
     DrawLine(pos_start, pos_end, unpack(colour))
+    DebugLine(transform.pos, pos_end, unpack(colour))
 
     for i = 1, lines, 1 do
         local vec_interim = VecLerp(pos_start, pos_end, ((1 / lines) * i))
 
-        DrawLine(vec_interim, Vec(vec_interim[1], pos_start[2], vec_interim[3]), unpack(colour))
+        local vec_interim_end = Vec(vec_interim[1], pos_start[2], vec_interim[3])
+        DrawLine(vec_interim, vec_interim_end, unpack(colour))
+
+        if i == lines then
+            DebugLine(vec_interim, vec_interim_end, unpack(colour))
+        end
     end
 end
 
@@ -206,7 +219,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
     colour = colour or COLOUR["yellow_dark"]
     lines = lines or 1
 
-    telemetry[1] = VecAdd(telemetry[1], Vec(0, 0.02, 0))
+    telemetry[1] = VecAdd(telemetry[1], Vec(0, 0.03, 0))
 
     if telemetry[3] == 90 then lines = 0 end
     local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
@@ -220,7 +233,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 
-    if telemetry[3] < 90 then drawHeadingCircle(transform_aim_shell_heading, radius, colour) end
+    if telemetry[3] < 90 then drawHeading(transform_aim_shell_heading, radius, colour) end
     drawCircle(transform_aim_shell_heading.pos, radius, points, colour)
 end
 
