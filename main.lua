@@ -68,6 +68,14 @@ function init()
         ["KEYBIND_GENERAL_CANCEL"] = CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL"),
     }
 
+    UI_HELPERS = {
+        shell_telemetry = {
+            combined_transform = nil,
+            arrow_pitch_pos = nil,
+            arrow_heading_pos = nil
+        }
+    }
+
     SND_UI = {}
     SND_UI["select"]                = LoadSound("MOD/snd/menu_select.ogg")
     SND_UI["cancel"]                = LoadSound("MOD/snd/menu_cancel.ogg")
@@ -300,6 +308,9 @@ function tick(delta)
         end
     end
 
+    UI_HELPERS.shell_telemetry.combined_transform,
+    UI_HELPERS.shell_telemetry.arrow_pitch_pos,
+    UI_HELPERS.shell_telemetry.arrow_heading_pos =
     drawShellImpactGizmo(
         {
             aim_pos,
@@ -382,6 +393,41 @@ function draw()
     if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
         UiPush()
             UiMakeInteractive()
+
+            UiTranslate(UiWidth() / 2, UiHeight() / 2)
+
+            UiAlign("left")
+            UiFont("regular.ttf", 26)
+            UiTextShadow(0, 0, 0, 2, 1, 1)
+
+            if not STATES_TACMARK.enabled then -- TODO: Add text offset based on distance to prevent overcrowding
+                local ui_pos_pitch = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_pitch_pos)}
+                local ui_pos_heading = nil
+                if UI_HELPERS.shell_telemetry.arrow_heading_pos ~= nil then
+                    ui_pos_heading = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_heading_pos)}
+                end
+
+                if ui_pos_heading ~= nil then
+                    local offset_x, offset_y = 15, -12
+
+                    UiPush()
+                        if ui_pos_heading[1] < 0 then
+                            UiAlign('right')
+                            offset_x = -offset_x
+                        end
+
+                        UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
+                        UiText(round(STATES.selected_attack_heading).."°", true)
+                    UiPop()
+                end
+
+                UiPush()
+                    UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
+                    UiText(round(STATES.selected_attack_angle).."°", true)
+                UiPop()
+            else
+                -- TODO: Tactical mark pitch/heading value display
+            end
         UiPop()
     end
 
@@ -397,6 +443,7 @@ function draw()
             UiText("<"..KEYBINDS["KEYBIND_TACTICAL_TOGGLE"].."> | Toggle Tactical Mode", true)
             UiText("<"..KEYBINDS["KEYBIND_CYCLE_SHELLS"].."> | Cycle shells ["..values.name.."]", true)
             UiText("<"..KEYBINDS["KEYBIND_CYCLE_VARIANTS"].."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
+            UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_ATTACK"].."> + <Move Mouse> | Change shell incoming pitch/heading", true)
             UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_INACCURACY"].."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
 
             if not(STATES.quick_salvo) then

@@ -185,6 +185,8 @@ function drawHeading(transform, length, colour)
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
     DrawLine(transform.pos, pos_end, unpack(colour))
     DebugLine(transform.pos, pos_end, unpack(colour))
+
+    return pos_end
 end
 
 function drawPitchHeadingLine(transform, length, colour, lines)
@@ -198,6 +200,7 @@ function drawPitchHeadingLine(transform, length, colour, lines)
     DrawLine(pos_start, pos_end, unpack(colour))
     DebugLine(transform.pos, pos_end, unpack(colour))
 
+    local pos_horizontal_end = nil
     for i = 1, lines, 1 do
         local vec_interim = VecLerp(pos_start, pos_end, ((1 / lines) * i))
 
@@ -205,36 +208,46 @@ function drawPitchHeadingLine(transform, length, colour, lines)
         DrawLine(vec_interim, vec_interim_end, unpack(colour))
 
         if i == lines then
+            pos_horizontal_end = vec_interim_end
             DebugLine(vec_interim, vec_interim_end, unpack(colour))
         end
     end
+
+    return pos_end, pos_horizontal_end
 end
 
 function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
     telemetry = telemetry or {
-        Vec(0, 0, 0),
-        0,
-        90
+        Vec(0, 0, 0), 0, 90
     }
     colour = colour or COLOUR["yellow_dark"]
     lines = lines or 1
 
     telemetry[1] = VecAdd(telemetry[1], Vec(0, 0.03, 0))
 
-    if telemetry[3] == 90 then lines = 0 end
     local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
-    drawPitchHeadingLine(transform_aim_shell_both, 3.5, colour, lines)
+
+    if telemetry[3] == 90 then lines = 0 end
+    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, 2.25, colour, lines)
+
+    local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
+
+    local length_heading = VecLength(VecSub(telemetry[1], pos_heading_end))
+    if radius > length_heading then length_heading = radius end
+
+    if telemetry[3] < 90 then
+        drawHeading(transform_aim_shell_heading, length_heading, colour)
+    end
 
     if not (radius > 0) then
-        return
+        return transform_aim_shell_both, pos_pitch_end, pos_heading_end
     end
 
     points = points or 16
 
-    local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
+    drawCircle(telemetry[1], radius, points, colour)
 
-    if telemetry[3] < 90 then drawHeading(transform_aim_shell_heading, radius, colour) end
-    drawCircle(transform_aim_shell_heading.pos, radius, points, colour)
+    return transform_aim_shell_both, pos_pitch_end, pos_heading_end
 end
 
 function objectNew(new, base_object)
