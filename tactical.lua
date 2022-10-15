@@ -290,7 +290,11 @@ function tactical_draw()
             UiFont("regular.ttf", 48)
             UiTextShadow(0, 0, 0, 1, 1, 1)
 
-            UiText("Tactical Ordnance Mode", true)
+            local ui_title = "Tactical Ordnance Mode"
+
+            drawUIShellImpactGizmo(true, COLOUR["yellow_dark"], UiGetTextSize(ui_title))
+
+            UiText(ui_title, true)
 
             UiFont("regular.ttf", 22)
             UiPush()
