@@ -48,7 +48,7 @@ function init()
         selected_shell = 1,
         selected_variant = 1,
         selected_attack_angle = 90,
-        selected_attack_heading = 0,
+        selected_attack_heading = 90,
 
         input_attack_invert = false,
 

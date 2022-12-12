@@ -254,6 +254,8 @@ end
 function drawUIShellImpactGizmo(static, colour, x, y)
     if static == nil then static = false end
 
+    local heading = math.abs(math.ceil((((STATES.selected_attack_heading + 270) % 360) * -1) + 359))
+
     if static then
         -- TODO: Static UI display
         if x == nil then x = 0 end
@@ -262,7 +264,6 @@ function drawUIShellImpactGizmo(static, colour, x, y)
 
         local length = 100
         local pitch = STATES.selected_attack_angle
-        local heading = STATES.selected_attack_heading
         local length_base = math.cos(math.rad(pitch)) * length
         local length_vert = math.sin(math.rad(pitch)) * length
 
@@ -366,10 +367,9 @@ function drawUIShellImpactGizmo(static, colour, x, y)
             end
 
             UiPush()
-                local value = round(STATES.selected_attack_heading)
                 if ui_pos_root[3] < 23 then
                     local offset_x, offset_y = 15, -12
-                    local size_x, size_y = UiGetTextSize(value)
+                    local size_x, size_y = UiGetTextSize(heading.."°")
 
                     if pos_diff[1] > size_x or pos_diff[2] > size_y then
                         if ui_pos_heading[1] < 0 then
@@ -384,13 +384,13 @@ function drawUIShellImpactGizmo(static, colour, x, y)
                     end
 
                     UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
-                    UiText(value.."°", true)
+                    UiText(heading.."°", true)
                 else
                     local offset_extra = mapToRange(ui_pos_root[3], 25, 150, 0, 7)
                     UiTranslate(0, 25 + offset_extra)
 
                     UiAlign('center')
-                    UiText(value.."°", true)
+                    UiText(heading.."°", true)
                 end
             UiPop()
         else
