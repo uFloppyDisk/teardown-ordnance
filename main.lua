@@ -118,7 +118,7 @@ function tick(delta)
     for i, shell in ipairs(SHELLS) do
         shell_tick(shell, delta)
 
-        if shell.state == SHELL_STATES.detonated then
+        if shell.state == shell_states.DETONATED then
             dPrint("Shell "..i.." detonated. Removing...")
             table.remove(SHELLS, i)
         end
@@ -130,7 +130,7 @@ function tick(delta)
 
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
-            shell_fire_init(salvo_shell)
+            shell_init(salvo_shell)
             DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
     else
@@ -287,7 +287,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], sound_pos, 0.6)
 
         if not STATES.quicksalvo.enabled and #QUICK_SALVO > 0 then
-            shell_fire_init(table.remove(QUICK_SALVO, 1))
+            shell_init(table.remove(QUICK_SALVO, 1))
         end
     end
 
@@ -356,12 +356,12 @@ function tick(delta)
 
     -- Fire shell manually
     if not STATES.quicksalvo.enabled then
-        shell_fire_init(shell)
+        shell_init(shell)
         return
     end
 
     -- Queue shell in quick salvo
-    shell.state = SHELL_STATES.queued
+    shell.state = shell_states.QUEUED
     table.insert(QUICK_SALVO, shell)
 
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
