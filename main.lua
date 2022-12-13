@@ -221,8 +221,13 @@ function tick(delta)
         SetBool("game.input.locktool", true)
 
         if InputValue("mousewheel") ~= 0 then
-            local offset = 0.5 * InputValue("mousewheel")
-            STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 50)
+            local value = 0.5
+            if STATES.shell_inaccuracy >= 15 then value = 1 end
+            if STATES.shell_inaccuracy >= 50 then value = 2.5 end
+            if STATES.shell_inaccuracy >= 100 then value = 5 end
+
+            local offset = value * InputValue("mousewheel")
+            STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 150)
         end
     elseif InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then -- User change heading and angle of attack event
         SetBool("game.input.locktool", true)
