@@ -5,17 +5,18 @@ CAMERA_CURRENT_FOV = nil
 CAMERA_DEFAULT_FOV = nil
 
 function tactical_init()
-    if STATES.tactical.camera_settings.camera_transform == nil then
-        STATES.tactical.camera_settings.camera_transform = getCameraTransform(getPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
-        CAMERA_DEFAULT_FOV = CONFIG_getConfValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
-        CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
-        STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
-        STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
+    if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
-        STATES.tactical.camera_defaults = {unpack(STATES.tactical.camera_settings)}
-    end
+    STATES.tactical.camera_settings.camera_transform = getCameraTransform(getPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
+    CAMERA_DEFAULT_FOV = CONFIG_getConfValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
+    CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
+    STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
+    STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
+
+    STATES.tactical.camera_defaults = {unpack(STATES.tactical.camera_settings)}
 end
 
+---@param delta number Time elapsed since last tick.
 function tactical_tick(delta)
     if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
         SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
@@ -104,6 +105,10 @@ function tactical_tick(delta)
     SetCameraTransform(camera_transform_new, STATES.tactical.camera_settings.current_camera_fov)
 end
 
+---@param metres integer Gap between gridlines in metres.
+---@param width integer Pixel width of gridlines.
+---@param world_depth number Z coordinate of world position.
+---@param opacity number Float between 0 and 1. (inclusive)
 local function drawGrid(metres, width, world_depth, opacity)
     if opacity < 0.05 then
         return
@@ -155,6 +160,10 @@ local function drawGrid(metres, width, world_depth, opacity)
     until (current_point[1] > ui_width and current_point[2] > ui_height)
 end
 
+---@param pos table World position.
+---@param initial_rect_size integer Max rectangle dimensions.
+---@param colour table r, g, b, a
+---@see getRGBA
 local function drawHUDMarker(pos, initial_rect_size, colour)
     local x, y, dist = UiWorldToPixel(pos)
     local rect_colour = colour or getRGBA(COLOUR["white"], 1)

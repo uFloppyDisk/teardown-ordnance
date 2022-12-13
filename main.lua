@@ -319,7 +319,9 @@ function tick(delta)
         STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6
     )
 
-    if not InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE")) then return end
+    if not InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE")) then
+        return
+    end
 
     -- -------------------------------
     -- User has pressed the fire button

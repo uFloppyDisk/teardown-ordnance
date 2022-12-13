@@ -27,15 +27,28 @@ function mapToRange(input, in_start, in_end, out_start, out_end)
     return out_start + (input - in_start) * (out_end - out_start) / (in_end - in_start)
 end
 
----@param colour table {r, g, b} with values between 0 and 255. (inclusive)
+--- Takes a colour table (and, optionally, an alpha value) and returns a table {r, g, b, a}
+---@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
 ---@param alpha? number Float between 0 and 1. (inclusive).
----@return table colour
+---@return table colour {r, g, b, alpha}
 function getRGBA(colour, alpha)
     alpha = alpha or 1
     local c = {unpack(colour)}
 
     table.insert(c, 4, alpha)
     return c
+end
+
+--- Takes a colour table (and, optionally, an alpha value) and returns unpacked colour values.
+---@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
+---@param alpha? number Float between 0 and 1. (inclusive)
+---@return integer r, integer g, integer b, number a
+function getUnpackedRGBA(colour, alpha)
+    alpha = alpha or 1
+    local c = {unpack(colour)}
+
+    table.insert(c, 4, alpha)
+    return unpack(c)
 end
 
 ---@param root table
