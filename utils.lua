@@ -1,3 +1,7 @@
+---@param value number
+---@param minimum number
+---@param maximum number
+---@return number
 function clamp(value, minimum, maximum)
 	if value < minimum then value = minimum end
 	if value > maximum then value = maximum end
@@ -5,22 +9,38 @@ function clamp(value, minimum, maximum)
 	return value
 end
 
+---@param number number
+---@param digits? integer
+---@return integer
 function round(number, digits)
     local power = 10^(digits or 0)
     return math.floor((number * power) + 0.5) / power
 end
 
+---@param input number
+---@param in_start number
+---@param in_end number
+---@param out_start number
+---@param out_end number
+---@return number
 function mapToRange(input, in_start, in_end, out_start, out_end)
     return out_start + (input - in_start) * (out_end - out_start) / (in_end - in_start)
 end
 
+---@param colour table {r, g, b} with values between 0 and 255. (inclusive)
+---@param alpha? number Float between 0 and 1. (inclusive).
+---@return table colour
 function getRGBA(colour, alpha)
+    alpha = alpha or 1
     local c = {unpack(colour)}
 
     table.insert(c, 4, alpha)
     return c
 end
 
+---@param root table
+---@param ... string Path to traverse.
+---@return boolean # True if path exists.
 function assertTableKeys(root, ...)
     for i, key in ipairs(arg) do
         if root[key] == nil then return false end
@@ -31,42 +51,46 @@ function assertTableKeys(root, ...)
     return true
 end
 
+---@param target table
+---@param value any
 function addToDebugTable(target, value)
-    if not G_DEV then
-        return
-    end
+    if not G_DEV then return end
 
     table.insert(target, value)
 end
 
+---@param msg number|string
 function dPrint(msg)
-    if not G_DEV then
-        return
-    end
+    if not G_DEV then return end
 
     DebugPrint(msg)
 end
 
+---@param name string
+---@param variable table|number|string|boolean|nil String representation of Teardown mod variable. Ex. 'savegame.mod.variable'
 function dWatch(name, variable)
-    if not G_DEV then
-        return
-    end
+    if not G_DEV then return end
 
     DebugWatch(name, variable)
 end
 
+---@param env table
 function setEnvProps(env)
     for k, v in pairs(env) do
         SetEnvironmentProperty(k, unpack(v))
     end
 end
 
+---@param pp table
 function setPostProcProps(pp)
     for k, v in pairs(pp) do
         SetPostProcessingProperty(k, unpack(v))
     end
 end
 
+---@param vec table
+---@param vec2 table
+---@return boolean # True if vec and vec2 are equal.
 function VecEqual(vec, vec2)
     local vecToCompare = VecCopy(vec)
 
@@ -77,11 +101,17 @@ function VecEqual(vec, vec2)
     return true
 end
 
+---@return table
 function getPlayerTransform()
     local current_transform = GetPlayerCameraTransform()
     return Transform(VecCopy(current_transform.pos), current_transform.rot)
 end
 
+---@param transform table
+---@param set_offset? table
+---@param set_rot? table
+---@param rot_absolute? boolean
+---@return table Transform
 function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
     local offset = set_offset or Vec(0, 0, 0)
     local rot = set_rot or QuatEuler(-90, 0, 0)
@@ -94,6 +124,7 @@ function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
     return Transform(VecAdd(transform.pos, offset), rot)
 end
 
+---@return table aim_position, boolean hit, number distance
 function getAimPos()
 	local camera_transform = GetCameraTransform()
 	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
@@ -112,12 +143,14 @@ function getAimPos()
 	return camera_center, hit, distance
 end
 
+---@param set_distance? number Distance from origin.
+---@return table world_position, boolean hit, number distance
 function getMousePosInWorld(set_distance)
     local dist = 200
     if set_distance ~= nil then dist = set_distance end
 
 	local camera_transform = GetCameraTransform()
-    local m_pos_x, m_pos_y = STATES_TACMARK.mouse_pos[1], STATES_TACMARK.mouse_pos[2]
+    local m_pos_x, m_pos_y = STATES.tactical.mouse_pos[1], STATES.tactical.mouse_pos[2]
     if m_pos_x == nil or m_pos_y == nil then
         m_pos_x = UiCenter()
         m_pos_y = UiMiddle()
@@ -139,11 +172,13 @@ function getMousePosInWorld(set_distance)
 	return hit_position, hit, hit_distance
 end
 
+---@param position table
+---@param radius number
+---@param points integer
+---@param colour table
 function drawCircle(position, radius, points, colour)
     position = position or Vec(0, 0, 0)
-    if not (radius > 0) then
-        return
-    end
+    if not (radius > 0) then return end
 
     points = points or 16
     colour = colour or getRGBA(COLOUR["red"], 0.8)
@@ -175,10 +210,12 @@ function drawCircle(position, radius, points, colour)
     until (theta > math.pi * 2)
 end
 
+---@param transform table
+---@param length number
+---@param colour table
+---@return table|nil
 function drawHeading(transform, length, colour)
-    if not (length > 0) then
-        return
-    end
+    if not (length > 0) then return end
 
     colour = colour or getRGBA(COLOUR["red"], 0.8)
 
@@ -189,6 +226,13 @@ function drawHeading(transform, length, colour)
     return pos_end
 end
 
+--- Draw line using pitch and heading.
+---@param transform table
+---@param length number
+---@param colour table
+---@param lines integer Amount of vertical lines to draw.
+---@return table position # Ending position of the line based on distance, pitch, and heading.
+---@return table position_horizontal # Ending position of the line based only on the heading and distance.
 function drawPitchHeadingLine(transform, length, colour, lines)
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
     length = length or 1
@@ -332,7 +376,7 @@ function drawUIShellImpactGizmo(static, colour, x, y)
     UiPush()
         UiMakeInteractive()
 
-        if not STATES_TACMARK.enabled then -- TODO: Add text offset based on distance to prevent overcrowding
+        if not STATES.tactical.enabled then -- TODO: Add text offset based on distance to prevent overcrowding
             UiTranslate(UiWidth() / 2, UiHeight() / 2)
 
             local ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
@@ -452,6 +496,7 @@ function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, mat
     return getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end
 
+--- Get name of enum value.
 ---@param enum { [string]: integer }
 ---@param value integer
 ---@return string

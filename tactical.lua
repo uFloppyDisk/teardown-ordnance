@@ -1,20 +1,3 @@
-STATES_TACMARK = {
-    enabled = false,
-
-    mouse_pos = {},
-    hitscan = {
-        hit = false,
-        pos = Vec(),
-        dist = nil
-    },
-    camera_settings = {
-        camera_transform = nil,
-        target_camera_fov = nil,
-        current_camera_fov = nil
-    },
-    camera_defaults = {}
-}
-
 CAMERA_ELEVATION_OFFSET_MAX = 200
 CAMERA_ELEVATION_OFFSET_MIN = 20
 
@@ -22,30 +5,15 @@ CAMERA_CURRENT_FOV = nil
 CAMERA_DEFAULT_FOV = nil
 
 function tactical_init()
-    if STATES_TACMARK.camera_settings.camera_transform == nil then
-        STATES_TACMARK.camera_settings.camera_transform = getCameraTransform(getPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
+    if STATES.tactical.camera_settings.camera_transform == nil then
+        STATES.tactical.camera_settings.camera_transform = getCameraTransform(getPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
         CAMERA_DEFAULT_FOV = CONFIG_getConfValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
         CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
-        STATES_TACMARK.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
-        STATES_TACMARK.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
+        STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
+        STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
 
-        STATES_TACMARK.camera_defaults = {unpack(STATES_TACMARK.camera_settings)}
+        STATES.tactical.camera_defaults = {unpack(STATES.tactical.camera_settings)}
     end
-end
-
-function tactical_hitscan()
-    if not STATES_TACMARK.hitscan.hit then
-        return
-    end
-
-    if InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE")) then
-        dPrint("Hit! Distance from camera: "..STATES_TACMARK.hitscan.dist)
-
-        addToDebugTable(DEBUG_POSITIONS, {STATES_TACMARK.hitscan.pos, COLOUR["white"]})
-        addToDebugTable(DEBUG_LINES, {STATES_TACMARK.camera_settings.camera_transform.pos, STATES_TACMARK.hitscan.pos, COLOUR["red"]})
-    end
-
-    return STATES_TACMARK.hitscan.pos
 end
 
 function tactical_tick(delta)
@@ -75,7 +43,7 @@ function tactical_tick(delta)
     if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
 
     -- Camera elevation bounds logic
-    local current_camera_z = STATES_TACMARK.camera_settings.camera_transform.pos[2]
+    local current_camera_z = STATES.tactical.camera_settings.camera_transform.pos[2]
     if pos_translate[2] > 0 and current_camera_z >= (GetPlayerPos()[2] + CAMERA_ELEVATION_OFFSET_MAX) then
         pos_translate[2] = 0
     end
@@ -100,7 +68,7 @@ function tactical_tick(delta)
     end
 
     dWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
-    dWatch("Camera Position", STATES_TACMARK.camera_settings.camera_transform.pos)
+    dWatch("Camera Position", STATES.tactical.camera_settings.camera_transform.pos)
 
     -- User input + modifiers to translate vector
     local set_offset_x = pos_translate[1] * translate
@@ -112,15 +80,15 @@ function tactical_tick(delta)
     dWatch("Set Offset", set_offset)
 
     -- Set new camera transform based on player input
-    local camera_transform_new = getCameraTransform(STATES_TACMARK.camera_settings.camera_transform, set_offset)
-    STATES_TACMARK.camera_settings.camera_transform = camera_transform_new
+    local camera_transform_new = getCameraTransform(STATES.tactical.camera_settings.camera_transform, set_offset)
+    STATES.tactical.camera_settings.camera_transform = camera_transform_new
 
     -- Camera zoom key event
     if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
-            STATES_TACMARK.camera_settings.target_camera_fov = clamp(STATES_TACMARK.camera_settings.target_camera_fov + offset, 25, 120)
-            SetValue("CAMERA_CURRENT_FOV", STATES_TACMARK.camera_settings.target_camera_fov, "linear", 0.15)
+            STATES.tactical.camera_settings.target_camera_fov = clamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
+            SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
     end
 
@@ -129,11 +97,11 @@ function tactical_tick(delta)
         camera_transform_new.pos = VecAdd(GetPlayerPos(), Vec(0, 100, 0))
         local reset_fov = CAMERA_DEFAULT_FOV
         SetValue("CAMERA_CURRENT_FOV", reset_fov, "easeout", 0.3)
-        STATES_TACMARK.camera_settings.target_camera_fov = reset_fov
+        STATES.tactical.camera_settings.target_camera_fov = reset_fov
     end
 
-    STATES_TACMARK.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
-    SetCameraTransform(camera_transform_new, STATES_TACMARK.camera_settings.current_camera_fov)
+    STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
+    SetCameraTransform(camera_transform_new, STATES.tactical.camera_settings.current_camera_fov)
 end
 
 local function drawGrid(metres, width, world_depth, opacity)
@@ -146,7 +114,7 @@ local function drawGrid(metres, width, world_depth, opacity)
     local alpha = opacity or 1
 
     local ui_width, ui_height = UiWidth(), UiHeight()
-    local point_below = Vec(STATES_TACMARK.camera_settings.camera_transform.pos[1], 0, STATES_TACMARK.camera_settings.camera_transform.pos[3])
+    local point_below = Vec(STATES.tactical.camera_settings.camera_transform.pos[1], 0, STATES.tactical.camera_settings.camera_transform.pos[3])
 
     local current_point, current_point_inverted = {}, {}
     local wx, wz = math.ceil(point_below[1] / step) * step, math.ceil(point_below[3] / step) * step
@@ -207,7 +175,7 @@ local function drawPlayer()
 end
 
 local function drawCursor()
-    if not STATES_TACMARK.hitscan.hit then return end
+    if not STATES.tactical.hitscan.hit then return end
 
     local opacity = mapToRange(
         clamp(STATES.selected_attack_angle, 20, 84),
@@ -215,7 +183,7 @@ local function drawCursor()
         1, 0.65
     )
 
-    drawHUDMarker(STATES_TACMARK.hitscan.pos, 7, getRGBA(COLOUR["yellow_dark"], opacity))
+    drawHUDMarker(STATES.tactical.hitscan.pos, 7, getRGBA(COLOUR["yellow_dark"], opacity))
 end
 
 ---@param display qs_display
@@ -246,7 +214,7 @@ local function drawQueuedSalvo(display)
 
     for i, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
-        rect_size = clamp(rect_size * (1 * (100 / (dist * (STATES_TACMARK.camera_settings.current_camera_fov / 75)))), 5, 15)
+        rect_size = clamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
 
         UiPush()
             UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
@@ -267,14 +235,14 @@ function tactical_draw()
 
         UiPush()
             if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) then
-                STATES_TACMARK.mouse_pos = {UiGetMousePos()}
+                STATES.tactical.mouse_pos = {UiGetMousePos()}
             end
 
-            local m_pos = STATES_TACMARK.mouse_pos
+            local m_pos = STATES.tactical.mouse_pos
 
-            STATES_TACMARK.hitscan.pos,
-            STATES_TACMARK.hitscan.hit,
-            STATES_TACMARK.hitscan.dist = getMousePosInWorld()
+            STATES.tactical.hitscan.pos,
+            STATES.tactical.hitscan.hit,
+            STATES.tactical.hitscan.dist = getMousePosInWorld()
 
             dWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
@@ -283,8 +251,8 @@ function tactical_draw()
 
         if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
             local world_depth = 0
-            if InputDown('space') and STATES_TACMARK.hitscan.hit then
-                world_depth = STATES_TACMARK.hitscan.pos[2]
+            if InputDown('space') and STATES.tactical.hitscan.hit then
+                world_depth = STATES.tactical.hitscan.pos[2]
             end
 
             drawGrid(10, 1, world_depth, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))

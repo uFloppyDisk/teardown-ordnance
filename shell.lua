@@ -111,8 +111,6 @@ function shell_fire(self)
 
     local range = ((v*v) * (2 * math.sin(pitch) * math.cos(pitch))) / math.abs(G_VEC_GRAVITY[2])
     range = range / 2
-    dPrint(self.destination[2])
-    dPrint(hmax)
 
     local hrad = math.rad((self.heading + 90) % 360)
     local hx = math.sin(hrad)
