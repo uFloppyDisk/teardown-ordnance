@@ -1,5 +1,7 @@
 #include "constants.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "utils.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "classes/Option.lua"
 
 MENU = {
