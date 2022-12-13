@@ -29,6 +29,17 @@ COLOUR = {
 
 -- #endregion
 
+-- #region Enums
+
+---@enum QS_DISPLAY
+QS_DISPLAY = {
+    hidden = 0,
+    visible = 1,
+    minimal = 2,
+}
+
+-- #endregion
+
 -- #region Config Definitions
 
 CONFIG_KEYBIND_FRIENDLYNAMES = {
@@ -187,6 +198,12 @@ CONFIG_VARIABLES = {
 
         value_type = "string",
         value_default = "rmb"
+    },
+    ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".quicksalvo.toggle_markers",
+
+        value_type = "string",
+        value_default = "J"
     },
     ["KEYBIND_PRIMARY_FIRE"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".primary_fire",
@@ -427,6 +444,13 @@ CONFIG_OPTIONS = {
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_CENTER_PLAYER"],
         name = "Tactical: Center Player"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
+        name = "Toggle Quick Salvo Marker Visibility"
     },
     -- {
     --     category = "keybind",

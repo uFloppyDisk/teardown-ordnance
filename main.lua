@@ -1,5 +1,7 @@
 #include "constants.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "shell.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "tactical.lua"
 
 SHELLS_prev_length = 0
@@ -52,7 +54,11 @@ function init()
 
         input_attack_invert = false,
 
-        shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
+        shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY"),
+
+        quicksalvo = {
+            markers = QS_DISPLAY.visible,
+        },
     }
 
     DELAYS = {
@@ -88,6 +94,7 @@ function tick(delta)
     dWatch("state(ENABLED)", STATES.enabled)
     dWatch("state(FIRE)", STATES.fire)
     dWatch("state(QUICK SALVO)", STATES.quick_salvo)
+    dWatch("state(QUICK SALVO MARKERS)", STATES.quicksalvo.markers)
     dWatch("state(SELECTED SHELL)", STATES.selected_shell)
     dWatch("state(SELECTED VARIANT)", STATES.selected_variant)
     dWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_FLIGHT_TIME"))
@@ -99,22 +106,7 @@ function tick(delta)
         SHELLS_prev_length = #SHELLS
     end
 
-    local queue_length = #QUICK_SALVO
-    if queue_length > 0 then
-        for i=1, queue_length do
-            local shell = QUICK_SALVO[i]
-
-            drawShellImpactGizmo(
-                {
-                    shell.destination,
-                    shell.heading,
-                    shell.pitch
-                },
-                shell.inaccuracy, 32, COLOUR["red"], 2
-            )
-
-        end
-    end
+    draw_quicksalvo_markers(STATES.quicksalvo.markers)
 
     for i, shell in ipairs(SHELLS) do
         shell_tick(shell, delta)
@@ -299,14 +291,17 @@ function tick(delta)
         end
     end
 
+    if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS")) then
+        STATES.quicksalvo.markers = (STATES.quicksalvo.markers - 1) % 3
+        PlaySound(SND_UI["select"], sound_pos, 0.6)
+    end
+
     local aim_pos = getAimPos()
     if STATES_TACMARK.enabled then
         tactical_tick(delta)
         aim_pos = tactical_hitscan()
 
-        if not STATES_TACMARK.hitscan.hit then
-            return
-        end
+        if not STATES_TACMARK.hitscan.hit then return end
     end
 
     UI_HELPERS.shell_telemetry.combined_transform,
@@ -450,3 +445,29 @@ function draw()
 end
 
 -- #endregion Main
+
+-- #region functions
+
+---@param display QS_DISPLAY
+function draw_quicksalvo_markers(display)
+    if display == QS_DISPLAY.hidden then return end
+
+    local queue_length = #QUICK_SALVO
+    if queue_length <= 0 then return end
+
+    for i=1, queue_length do
+        local shell = QUICK_SALVO[i]
+
+        if display == QS_DISPLAY.minimal then
+            local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
+            drawCircle(pos, 0.2, 8, COLOUR["red"])
+        else
+            drawShellImpactGizmo(
+                {shell.destination, shell.heading, shell.pitch},
+                shell.inaccuracy, 32, COLOUR["red"], 2
+            )
+        end
+    end
+end
+
+-- #endregion functions

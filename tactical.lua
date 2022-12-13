@@ -207,43 +207,55 @@ local function drawPlayer()
 end
 
 local function drawCursor()
-    if not STATES_TACMARK.hitscan.hit then
-        return
-    end
+    if not STATES_TACMARK.hitscan.hit then return end
 
-    drawHUDMarker(STATES_TACMARK.hitscan.pos, 10, COLOUR["yellow_dark"])
+    local opacity = mapToRange(
+        clamp(STATES.selected_attack_angle, 20, 84),
+        78, 84,
+        1, 0.65
+    )
+
+    drawHUDMarker(STATES_TACMARK.hitscan.pos, 7, getRGBA(COLOUR["yellow_dark"], opacity))
 end
 
-local function drawQueuedSalvo()
-    if #QUICK_SALVO > 0 then
-        for i, shell in ipairs(QUICK_SALVO) do
-            local x, y, dist = UiWorldToPixel(shell.destination)
-            local rect_size = 10
-            rect_size = clamp(rect_size * (1 * (100 / (dist * (STATES_TACMARK.camera_settings.current_camera_fov / 75)))), 5, 15)
-            local rect_w, rect_h = rect_size, rect_size
+---@param display QS_DISPLAY
+local function drawQueuedSalvo(display)
+    if display == QS_DISPLAY.hidden then return end
+    if #QUICK_SALVO <= 0 then return end
 
-            local shell_type = SHELL_VALUES[shell.type]
+    local rect_size = 10
+    local rect_w, rect_h = rect_size, rect_size
 
-            UiPush()
-                UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
+    local function draw_shell_info(shell)
+        if display ~= QS_DISPLAY.visible then return end
+        if not CONFIG_getConfValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
 
-                if CONFIG_getConfValue("TACTICAL_SHELL_LABELS_TOGGLE") then
-                    UiPush()
-                        UiTranslate(rect_size * 1.33, 0)
-                        UiColor(1, 1, 1)
-                        UiAlign("left")
-                        UiFont("regular.ttf", 18)
-                        UiTextShadow(0, 0, 0, 1, 1, 1)
+        local shell_type = SHELL_VALUES[shell.type]
 
-                        UiText(shell_type.name, true)
-                        UiText(shell_type.variants[shell.variant].name)
-                    UiPop()
-                end
+        UiPush()
+            UiTranslate(rect_size * 1.33, 0)
+            UiColor(1, 1, 1)
+            UiAlign("left")
+            UiFont("regular.ttf", 18)
+            UiTextShadow(0, 0, 0, 1, 1, 1)
 
-                UiColor(unpack(getRGBA(COLOUR["red"], 0.75)))
-                UiRect(rect_w, rect_h)
-            UiPop()
-        end
+            UiText(shell_type.name, true)
+            UiText(shell_type.variants[shell.variant].name)
+        UiPop()
+    end
+
+    for i, shell in ipairs(QUICK_SALVO) do
+        local x, y, dist = UiWorldToPixel(shell.destination)
+        rect_size = clamp(rect_size * (1 * (100 / (dist * (STATES_TACMARK.camera_settings.current_camera_fov / 75)))), 5, 15)
+
+        UiPush()
+            UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
+
+            draw_shell_info(shell)
+
+            UiColor(unpack(getRGBA(COLOUR["red"], 0.75)))
+            UiRect(rect_w, rect_h)
+        UiPop()
     end
 end
 
@@ -281,7 +293,7 @@ function tactical_draw()
 
         drawPlayer()
         drawCursor()
-        drawQueuedSalvo()
+        drawQueuedSalvo(STATES.quicksalvo.markers)
 
         UiPush()
             UiTranslate(80, UiMiddle() / 6)
