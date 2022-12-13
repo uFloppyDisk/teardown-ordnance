@@ -31,11 +31,11 @@ COLOUR = {
 
 -- #region Enums
 
----@enum QS_DISPLAY
-QS_DISPLAY = {
-    hidden = 0,
-    visible = 1,
-    minimal = 2,
+---@enum qs_display
+qs_display = {
+    HIDDEN = 0,
+    VISIBLE = 1,
+    MINIMAL = 2,
 }
 
 -- #endregion

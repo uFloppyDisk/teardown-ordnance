@@ -218,16 +218,16 @@ local function drawCursor()
     drawHUDMarker(STATES_TACMARK.hitscan.pos, 7, getRGBA(COLOUR["yellow_dark"], opacity))
 end
 
----@param display QS_DISPLAY
+---@param display qs_display
 local function drawQueuedSalvo(display)
-    if display == QS_DISPLAY.hidden then return end
+    if display == qs_display.HIDDEN then return end
     if #QUICK_SALVO <= 0 then return end
 
     local rect_size = 10
     local rect_w, rect_h = rect_size, rect_size
 
     local function draw_shell_info(shell)
-        if display ~= QS_DISPLAY.visible then return end
+        if display ~= qs_display.VISIBLE then return end
         if not CONFIG_getConfValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
 
         local shell_type = SHELL_VALUES[shell.type]

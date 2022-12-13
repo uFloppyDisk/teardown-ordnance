@@ -57,7 +57,7 @@ function init()
         shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY"),
 
         quicksalvo = {
-            markers = QS_DISPLAY.visible,
+            markers = qs_display.VISIBLE,
         },
     }
 
@@ -72,6 +72,7 @@ function init()
         ["KEYBIND_ADJUST_ATTACK"] = CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK"),
         ["KEYBIND_ADJUST_INACCURACY"] = CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY"),
         ["KEYBIND_GENERAL_CANCEL"] = CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL"),
+        ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS"),
     }
 
     UI_HELPERS = {
@@ -398,7 +399,7 @@ function draw()
     end
 
     UiPush()
-        UiTranslate(80, UiMiddle() + UiMiddle() / 1.75)
+        UiTranslate(80, UiMiddle() + UiMiddle() / 1.85)
         UiColor(0.4, 0.4, 0.4)
         UiAlign("left")
         UiFont("regular.ttf", 26)
@@ -429,6 +430,7 @@ function draw()
 
                 UiColor(1, 1, 1)
                 UiText("<Left Mouse> | Mark location for salvo", true)
+                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..enum_value(qs_display, STATES.quicksalvo.markers).."]", true)
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
@@ -453,9 +455,9 @@ end
 
 -- #region functions
 
----@param display QS_DISPLAY
+---@param display qs_display
 function draw_quicksalvo_markers(display)
-    if display == QS_DISPLAY.hidden then return end
+    if display == qs_display.HIDDEN then return end
 
     local queue_length = #QUICK_SALVO
     if queue_length <= 0 then return end
@@ -463,7 +465,7 @@ function draw_quicksalvo_markers(display)
     for i=1, queue_length do
         local shell = QUICK_SALVO[i]
 
-        if display == QS_DISPLAY.minimal then
+        if display == qs_display.MINIMAL then
             local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
             drawCircle(pos, 0.2, 8, COLOUR["red"])
         else

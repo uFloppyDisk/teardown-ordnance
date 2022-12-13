@@ -451,3 +451,14 @@ function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, mat
     dPrint("Hit shape with material '"..material.."'")
     return getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end
+
+---@param enum { [string]: integer }
+---@param value integer
+---@return string
+function enum_value(enum, value)
+    for k, v in pairs(enum) do
+        if (v == value) then return k end
+    end
+
+    return "UNKNOWN"
+end
