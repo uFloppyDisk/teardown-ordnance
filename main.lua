@@ -1,6 +1,6 @@
 #include "constants.lua"
 ---@diagnostic disable-next-line: exp-in-action
-#include "shell.lua"
+#include "funcs/shell/main.lua"
 ---@diagnostic disable-next-line: exp-in-action
 #include "tactical.lua"
 
