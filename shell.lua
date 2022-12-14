@@ -219,11 +219,7 @@ local function detonate(self, pos)
 end
 
 local function tick_secondary(self, delta, variant)
-    if self.secondary.timer < 0 then
-        self.state = shell_states.DETONATED
-        self.secondary.active = false
-        return
-    end
+    if self.secondary.timer < 0 then return true end
 
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
@@ -390,16 +386,21 @@ local function tick_secondary(self, delta, variant)
             local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
             local transform_new = Transform(position_new, sub.transform.rot)
 
-            addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, COLOUR["orange"]})
-
             local look_rotation = QuatRotateQuat(QuatLookAt(sub.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0, 0, 1), 180))
             local draw_pos = Transform(sub.transform.pos, look_rotation)
             DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
 
             local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
-            if not hit then return transform_new end
+            if not hit then
+                addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
+
+                return transform_new
+            end
 
             local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
+
+            addToDebugTable(DEBUG_LINES, {sub.transform.pos, position_hit, COLOUR["orange"]})
+            addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
 
             -- Random roll if submunition is a dud
             if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
@@ -457,7 +458,12 @@ local function tick_secondary(self, delta, variant)
         ["CL"] = tick_secondary_cluster,
     }
 
-    disp_tick_secondary[variant.id]()
+    local success, err = pcall(disp_tick_secondary[variant.id])
+
+    if not success then
+        dPrint("Shell secondary handler function is not defined.")
+        return true
+    end
 
     self.secondary.timer = self.secondary.timer - delta
 end
@@ -718,7 +724,11 @@ function shell_tick(self, delta)
     end
 
     if self.secondary.active then
-        tick_secondary(self, delta, variant)
+        local finished = tick_secondary(self, delta, variant)
+        if finished then
+            self.state = shell_states.DETONATED
+            self.secondary.active = false
+        end
     end
 
     if self.state == shell_states.ACTIVE then
