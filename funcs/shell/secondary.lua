@@ -229,6 +229,122 @@ local function tick_secondary_cluster(self, delta, variant)
     end
 end
 
+local function tick_secondary_incendiary(self, delta, variant)
+    local function init_sub()
+        -- self.secondary.inertia = VecScale(self.secondary.inertia, 0.5)
+        self.secondary.submunitions = {}
+
+        local amount_submunitions = CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
+        for i = 1, amount_submunitions, 1 do
+            local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
+            local transform = Transform(self.position, rotation)
+
+            local sub = objectNew({
+                transform = TransformCopy(transform),
+                velocity = Vec(math.random() * 10 + 0.5, 0, 0)
+            }, DEFAULT_SUBMUNITION)
+
+            local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
+            vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
+            sub.velocity = VecAdd(sub.velocity, vel_to_sub)
+
+            table.insert(self.secondary.submunitions, sub)
+        end
+
+        dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
+    end
+
+    local function tick_sub(sub)
+        local timer_ratio = self.secondary.timer / variant.secondary.timer
+
+        local gravity = math.abs(G_VEC_GRAVITY[2])
+        local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
+
+        sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
+
+        local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
+        local transform_new = Transform(position_new, sub.transform.rot)
+
+        local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
+        if not hit then
+            local iterations = 3
+            local lerp = 1 / iterations
+
+            local cur = 0
+            repeat
+                local range = clamp(mapToRange(timer_ratio, 0.05, 0.1, 0, 2), 0, 2)
+                local rt_start = math.random() * range
+
+                ParticleReset()
+                ParticleRadius(rt_start, rt_start, "smooth", 0, 0.1)
+                ParticleAlpha(1, 0, "smooth")
+                ParticleStretch(1)
+                ParticleCollide(1)
+
+
+                local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+
+                SpawnParticle(
+                    pos, Vec(-0.1, 0.03, 0.02),
+                    math.random()
+                    * clamp(mapToRange(timer_ratio, 0.1, 0.2, 0, 5), 0, 5)
+                    + clamp(mapToRange(timer_ratio, 0, 0.05, 0, 5), 0, 5)
+                )
+
+                cur = cur + lerp
+            until cur >= 1
+
+            PointLight(sub.transform.pos, getUnpackedRGBA(COLOUR["white"], 2))
+            ParticleReset()
+            ParticleRadius(0.1, 1, "smooth")
+            ParticleAlpha(1, 0, "smooth")
+            ParticleStretch(1)
+            ParticleCollide(1)
+            ParticleEmissive(1, 0, "smooth", 0.05, 0.1)
+            SpawnParticle(sub.transform.pos, Vec(-0.1, 0.03, 0.02), 0.1)
+
+            addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
+
+            return transform_new
+        end
+
+        local position_hit = VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
+
+        addToDebugTable(DEBUG_LINES, {sub.transform.pos, position_hit, COLOUR["orange"]})
+        addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
+
+        ParticleReset()
+        ParticleRadius(1, 4.5, "smooth", 0, 0.2)
+        ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
+        ParticleStretch(0)
+        ParticleCollide(1)
+
+        SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 30 + 20)
+
+        SpawnFire(position_hit)
+
+        return nil
+    end
+
+    if self.secondary.timer < 0 then return true end
+
+    if not assertTableKeys(self, "secondary", "submunitions") then
+        init_sub()
+    end
+
+    if #self.secondary.submunitions == 0 then return true end
+
+    for index, sub in ipairs(self.secondary.submunitions) do
+        local transform_new = tick_sub(sub)
+
+        sub.transform = transform_new
+
+        if transform_new == nil then
+            table.remove(self.secondary.submunitions, index)
+        end
+    end
+end
+
 function trigger_secondary(self, parameters, detonate)
     local isDetonated = true
 
@@ -284,20 +400,23 @@ end
 function tick_secondary(self, delta, variant)
     if self.secondary.timer < 0 then return true end
 
-    local timer_ratio = self.secondary.timer / variant.secondary.timer
-
     local disp_tick_secondary = {
         ["SM"] = tick_secondary_smoke,
         ["PF"] = tick_secondary_parachuted_flare,
         ["CL"] = tick_secondary_cluster,
+        ["IN"] = tick_secondary_incendiary,
     }
 
-    local success, err = pcall(disp_tick_secondary[variant.id], self, delta, variant)
+    disp_tick_secondary[variant.id](self, delta, variant)
 
-    if not success then
-        dPrint("Shell secondary handler function is not defined.")
-        return true
-    end
+    -- local success, result = pcall(disp_tick_secondary[variant.id], self, delta, variant)
+
+    -- if not success then
+    --     dPrint("Shell secondary handler function is not defined.")
+    --     return true
+    -- end
+
+    -- if result then return true end
 
     self.secondary.timer = self.secondary.timer - delta
 end

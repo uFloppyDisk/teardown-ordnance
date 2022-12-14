@@ -739,6 +739,20 @@ SHELL_VALUES = {
                     trigger_height = 450,
                     particle_radius = 10
                 }
+            },
+            {
+                id = "IN",
+                name = "Incendiary",
+                silent = true,
+                size_explosion = 0,
+                size_makehole = {0.1, 0, 0},
+                secondary = {
+                    timer = 10,
+                    trigger_sound = LoadSound("MOD/snd/155mm_shell_cluster_secondary_trigger.ogg"),
+                    trigger_sound_volume = 900,
+                    trigger_height = 450,
+                    particle_radius = 10
+                }
             }
         },
         sprite = {
