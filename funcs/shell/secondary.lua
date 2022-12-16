@@ -241,7 +241,9 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             local sub = objectNew({
                 transform = TransformCopy(transform),
-                velocity = Vec(math.random() * 10 + 0.5, 0, 0)
+                velocity = Vec(math.random() * 20 + 10, 0, 0),
+                ignite_delay = math.random() * 0.1,
+                smoke_radius = math.random() * 1 + 0.5,
             }, DEFAULT_SUBMUNITION)
 
             local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
@@ -256,52 +258,63 @@ local function tick_secondary_incendiary(self, delta, variant)
 
     local function tick_sub(sub)
         local timer_ratio = self.secondary.timer / variant.secondary.timer
+        local timer_elapsed = variant.secondary.timer - self.secondary.timer
 
         local gravity = math.abs(G_VEC_GRAVITY[2])
+        local wind = Vec(-0.4, 0.03, 0.07)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
+        if VecLength(sub.velocity) > 50 then
+            sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 40 * delta))
+        end
 
         local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
         local transform_new = Transform(position_new, sub.transform.rot)
 
-        local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
-        if not hit then
-            local iterations = 3
-            local lerp = 1 / iterations
+        if IsPointInWater(position_new) then return nil end
 
+        local hit, hit_distance, normal = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
+        if not hit then
+            if timer_elapsed < sub.ignite_delay then return transform_new end
+
+            local step = 1 / 5
             local cur = 0
             repeat
-                local range = clamp(mapToRange(timer_ratio, 0.05, 0.1, 0, 2), 0, 2)
-                local rt_start = math.random() * range
-
+                local rand_radius = sub.smoke_radius - (math.random() * 1)
                 ParticleReset()
-                ParticleRadius(rt_start, rt_start, "smooth", 0, 0.1)
+                ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
                 ParticleAlpha(1, 0, "smooth")
+                ParticleColor(1, 1, 1, 1, 1, 1)
                 ParticleStretch(1)
                 ParticleCollide(1)
 
-
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
-                SpawnParticle(
-                    pos, Vec(-0.1, 0.03, 0.02),
-                    math.random()
-                    * clamp(mapToRange(timer_ratio, 0.1, 0.2, 0, 5), 0, 5)
-                    + clamp(mapToRange(timer_ratio, 0, 0.05, 0, 5), 0, 5)
-                )
+                SpawnParticle(pos, wind, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
 
-                cur = cur + lerp
+                -- SpawnParticle(
+                --     pos, wind,
+                --     math.random()
+                --     * clamp(mapToRange(timer_ratio, 0.1, 0.2, 0, 5), 0, 5)
+                --     + clamp(mapToRange(timer_ratio, 0, 0.05, 0, 5), 0, 5)
+                -- )
+
+                cur = cur + step
             until cur >= 1
 
-            PointLight(sub.transform.pos, getUnpackedRGBA(COLOUR["white"], 2))
+            PointLight(sub.transform.pos, getUnpackedRGBA({1, 0.82, 0.639}, 2))
             ParticleReset()
             ParticleRadius(0.1, 1, "smooth")
             ParticleAlpha(1, 0, "smooth")
             ParticleStretch(1)
             ParticleCollide(1)
-            ParticleEmissive(1, 0, "smooth", 0.05, 0.1)
-            SpawnParticle(sub.transform.pos, Vec(-0.1, 0.03, 0.02), 0.1)
+            ParticleColor(
+                1, 0.82, 0.639
+                -- 1, 0.706, 0.024
+            )
+            ParticleEmissive(10, 0, "smooth", 0, 0.5)
+            SpawnParticle(sub.transform.pos, wind, 0.25)
 
             addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
 
@@ -313,15 +326,40 @@ local function tick_secondary_incendiary(self, delta, variant)
         addToDebugTable(DEBUG_LINES, {sub.transform.pos, position_hit, COLOUR["orange"]})
         addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
 
-        ParticleReset()
-        ParticleRadius(1, 4.5, "smooth", 0, 0.2)
-        ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
-        ParticleStretch(0)
-        ParticleCollide(1)
+        local step = 1 / 3
+        local cur = 0
+        repeat
+            local radius = math.random() * 2 + 1
+            ParticleReset()
+            ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
+            ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
+            ParticleStretch(0)
+            -- ParticleCollide(0.02)
 
-        SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 30 + 20)
+            SpawnParticle(position_hit, wind, math.random() * 30 + 20)
+
+            cur = cur + step
+        until cur >= 1
+
+        local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.5), sub.rotation)
+
+        body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
+
+        SetBodyDynamic(body, true)
+        SetBodyActive(body, true)
+
+        local direction = VecNormalize(VecCopy(sub.velocity))
+        local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
+        SetBodyVelocity(body, VecScale(velocity, 15))
+        -- ApplyBodyImpulse(body, transform_spawn.pos, Vec(100, 0, 0))
 
         SpawnFire(position_hit)
+        SpawnFire(transform_spawn.pos)
+        PointLight(position_hit, 1, 0.851, 0.714, 100)
+
+        if math.random() > 0.5 then
+            MakeHole(position_hit, 0.15, 0.05, 0, false)
+        end
 
         return nil
     end
