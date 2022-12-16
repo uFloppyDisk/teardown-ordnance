@@ -150,8 +150,6 @@ local function tick_secondary_cluster(self, delta, variant)
 
             table.insert(self.secondary.submunitions, sub)
         end
-
-        dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
     end
 
     local function tick_sub(sub)
@@ -240,8 +238,9 @@ local function tick_secondary_incendiary(self, delta, variant)
             local transform = Transform(self.position, rotation)
 
             local sub = objectNew({
+                active = true,
                 transform = TransformCopy(transform),
-                velocity = Vec(math.random() * 20 + 10, 0, 0),
+                velocity = Vec(math.random() * 20 + 15, 0, 0),
                 ignite_delay = math.random() * 0.1,
                 smoke_radius = math.random() * 1 + 0.5,
             }, DEFAULT_SUBMUNITION)
@@ -265,7 +264,7 @@ local function tick_secondary_incendiary(self, delta, variant)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
-        if VecLength(sub.velocity) > 100 then
+        if VecLength(sub.velocity) > 200 then
             sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 400 * delta))
         end
 
@@ -287,7 +286,7 @@ local function tick_secondary_incendiary(self, delta, variant)
                 ParticleAlpha(1, 0, "smooth")
                 ParticleColor(1, 1, 1, 1, 1, 1)
                 ParticleStretch(1)
-                ParticleCollide(1)
+                ParticleCollide(0, 0.1, "linear", 0.5)
 
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
@@ -303,12 +302,12 @@ local function tick_secondary_incendiary(self, delta, variant)
                 cur = cur + step
             until cur >= 1
 
-            PointLight(sub.transform.pos, getUnpackedRGBA({1, 0.82, 0.639}, 2))
+            PointLight(sub.transform.pos, getUnpackedRGBA({1, 0.82, 0.639}, 25))
             ParticleReset()
             ParticleRadius(0.1, 1, "smooth")
             ParticleAlpha(1, 0, "smooth")
             ParticleStretch(1)
-            ParticleCollide(1)
+            ParticleCollide(0.01)
             ParticleColor(
                 1, 0.82, 0.639
                 -- 1, 0.706, 0.024
@@ -334,7 +333,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
             ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
             ParticleStretch(0)
-            -- ParticleCollide(0.02)
+            ParticleCollide(0, 0.1, "constant", 0.2)
 
             SpawnParticle(position_hit, wind, math.random() * 30 + 20)
 
@@ -343,25 +342,31 @@ local function tick_secondary_incendiary(self, delta, variant)
 
         local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.5), sub.rotation)
 
-        body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
+        sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
 
-        SetBodyDynamic(body, true)
-        SetBodyActive(body, true)
+        SetBodyDynamic(sub.body, true)
+        SetBodyActive(sub.body, true)
 
         local direction = VecNormalize(VecCopy(sub.velocity))
         local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
-        SetBodyVelocity(body, VecScale(velocity, 20))
+        SetBodyVelocity(sub.body, VecScale(velocity, 20))
 
         SpawnFire(position_hit)
         SpawnFire(transform_spawn.pos)
-        PointLight(position_hit, 1, 0.733, 0.471, 100)
+
+        if math.random() > 0.75 then
+            PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 250 + 250)
+        end
+
+        if math.random() > 0.35 then
+            MakeHole(position_hit, 0.15, 0.05, 0, false)
+        end
 
         step = 1 / 5
         cur = 0
         repeat
-            QueryRejectBody(body)
+            QueryRejectBody(sub.body)
             hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 2)
-
             if not hit then break end
 
             addToDebugTable(DEBUG_POSITIONS, {point, COLOUR["orange"]})
@@ -371,10 +376,6 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             cur = cur + step
         until cur >= 1
-
-        if math.random() > 0.5 then
-            MakeHole(position_hit, 0.15, 0.05, 0, false)
-        end
 
         return nil
     end
@@ -388,13 +389,28 @@ local function tick_secondary_incendiary(self, delta, variant)
     if #self.secondary.submunitions == 0 then return true end
 
     for index, sub in ipairs(self.secondary.submunitions) do
-        local transform_new = tick_sub(sub)
+        if sub.active then
+            local transform_new = tick_sub(sub)
 
-        sub.transform = transform_new
+            sub.transform = transform_new
 
-        if transform_new == nil then
-            table.remove(self.secondary.submunitions, index)
+            if transform_new == nil then
+                sub.active = false
+            end
         end
+    end
+
+    dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
+end
+
+function end_secondary_incendiary(self, variant)
+    for index, sub in ipairs(self.secondary.submunitions) do
+        shapes = GetBodyShapes(sub.body)
+        for _, shape in ipairs(shapes) do
+            SetShapeEmissiveScale(shape, 0)
+        end
+
+        table.remove(self.secondary.submunitions, index)
     end
 end
 
@@ -451,7 +467,7 @@ function trigger_secondary(self, parameters, detonate)
 end
 
 function tick_secondary(self, delta, variant)
-    if self.secondary.timer < 0 then return true end
+    if self.secondary.timer <= 0 then return true end
 
     local disp_tick_secondary = {
         ["SM"] = tick_secondary_smoke,

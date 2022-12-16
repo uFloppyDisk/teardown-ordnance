@@ -1,12 +1,9 @@
-<!-- <vox>
-    <voxbox size="1 1 1" prop="true" material="wood"/>
-    <light pos="0.0 0.2 0.0" rot="90.0 0.0 0.0" color="0.93 0.92 0.76" scale="3" size="0.1" unshadowed="0.5"/>
-</vox> -->
 <prefab>
-	<group>
-        <vox>
-            <voxbox size="1 1 1" prop="true" material="wood"/>
-            <!-- <light pos="0.0 0.2 0.0" rot="90.0 0.0 0.0" color="0.93 0.92 0.76" scale="3" size="0.1" unshadowed="0.5"/> -->
-        </vox>
+	<group open_="true" name="instance=MOD/assets/white_phosphorus.xml">
+		<vox open_="true" pos="0.0 0.0 0.0" rot="0.0 0.0 0.0" prop="true">
+            <voxbox size="1 1 1" prop="true" material="wood">
+                <light scale="10" tags="fd_ord_wp" type="sphere" color="1 0.82 0.639" angle="180" sound="MOD/snd/salvo_mark.ogg 0" glare="1" unshadowed="0.75" silent="true"/>
+            </voxbox>
+		</vox>
 	</group>
 </prefab>

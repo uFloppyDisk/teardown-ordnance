@@ -368,6 +368,21 @@ function update(delta)
         end
 	end
 
+    -- local active_phosphorus = FindBodies('fd_ord_wp', true)
+    -- if #active_phosphorus > 0 then
+    --     dWatch("ACTIVE WP", true)
+    --     dWatch("WP AMOUNT", #active_phosphorus)
+    --     for index, body in ipairs(active_phosphorus) do
+    --         local point = GetBodyCenterOfMass(body)
+
+    --         ParticleReset()
+    --         ParticleRadius(5)
+    --         ParticleColor(1, 0, 0)
+    --         ParticleEmissive(100)
+    --         SpawnParticle(point, Vec(0, 0, 0), 5)
+    --     end
+    -- end
+
     local shells_length = #SHELLS
     if shells_length < G_MAX_SHELLS then return end
 
