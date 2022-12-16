@@ -114,16 +114,6 @@ function tick(delta)
     -- Draw HUD markers for quick salvo shell targets
     draw_quicksalvo_markers(STATES.quicksalvo.markers)
 
-    -- Run shell tick for each shell not detonated, remove shell if detonated
-    for i, shell in ipairs(SHELLS) do
-        shell_tick(shell, delta)
-
-        if shell.state == shell_states.DETONATED then
-            dPrint("Shell "..i.." detonated. Removing...")
-            table.remove(SHELLS, i)
-        end
-	end
-
     -- Fire remaining quick salvo shells with delay if currently not in quick salvo mode
     if not STATES.quicksalvo.enabled and #QUICK_SALVO > 0 then
         DELAYS.quick_salvo = DELAYS.quick_salvo - delta
@@ -367,7 +357,17 @@ function tick(delta)
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
 end
 
-function update()
+function update(delta)
+    -- Run shell tick for each shell not detonated, remove shell if detonated
+    for i, shell in ipairs(SHELLS) do
+        shell_tick(shell, delta)
+
+        if shell.state == shell_states.DETONATED then
+            dPrint("Shell "..i.." detonated. Removing...")
+            table.remove(SHELLS, i)
+        end
+	end
+
     local shells_length = #SHELLS
     if shells_length < G_MAX_SHELLS then return end
 

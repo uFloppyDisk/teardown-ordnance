@@ -362,10 +362,14 @@ local function fire(self)
         self.destination = TransformToParentPoint(transform, distance)
     end
 
+    addToDebugTable(DEBUG_POSITIONS, {self.destination, getRGBA(COLOUR["green"])})
+
     local h_offset = 0
     if variant.id == "PF" then
         h_offset = variant.secondary.trigger_height
     end
+
+    h_offset = h_offset + 1.20
 
     local v = 827 / 2
     if assertTableKeys(values, "muzzle_velocity") then
