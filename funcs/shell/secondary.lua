@@ -265,8 +265,8 @@ local function tick_secondary_incendiary(self, delta, variant)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
-        if VecLength(sub.velocity) > 50 then
-            sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 40 * delta))
+        if VecLength(sub.velocity) > 100 then
+            sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 400 * delta))
         end
 
         local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
@@ -350,12 +350,27 @@ local function tick_secondary_incendiary(self, delta, variant)
 
         local direction = VecNormalize(VecCopy(sub.velocity))
         local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
-        SetBodyVelocity(body, VecScale(velocity, 15))
-        -- ApplyBodyImpulse(body, transform_spawn.pos, Vec(100, 0, 0))
+        SetBodyVelocity(body, VecScale(velocity, 20))
 
         SpawnFire(position_hit)
         SpawnFire(transform_spawn.pos)
-        PointLight(position_hit, 1, 0.851, 0.714, 100)
+        PointLight(position_hit, 1, 0.733, 0.471, 100)
+
+        step = 1 / 5
+        cur = 0
+        repeat
+            QueryRejectBody(body)
+            hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 2)
+
+            if not hit then break end
+
+            addToDebugTable(DEBUG_POSITIONS, {point, COLOUR["orange"]})
+            SpawnFire(point)
+
+            QueryRejectShape(shape)
+
+            cur = cur + step
+        until cur >= 1
 
         if math.random() > 0.5 then
             MakeHole(position_hit, 0.15, 0.05, 0, false)
