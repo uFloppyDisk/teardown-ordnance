@@ -1,7 +1,7 @@
 <prefab>
 	<group open_="true" name="instance=MOD/assets/white_phosphorus.xml">
 		<vox open_="true" pos="0.0 0.0 0.0" rot="0.0 0.0 0.0" prop="true">
-            <voxbox size="1 1 1" prop="true" material="wood">
+            <voxbox size="2 2 2" prop="true" material="wood">
                 <light scale="10" tags="fd_ord_wp" type="sphere" color="1 0.82 0.639" angle="180" sound="MOD/snd/salvo_mark.ogg 0" glare="1" unshadowed="0.75" silent="true"/>
             </voxbox>
 		</vox>

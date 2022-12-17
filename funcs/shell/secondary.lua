@@ -239,6 +239,7 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             local sub = objectNew({
                 active = true,
+                brightness = 0,
                 transform = TransformCopy(transform),
                 velocity = Vec(math.random() * 20 + 15, 0, 0),
                 ignite_delay = math.random() * 0.1,
@@ -252,6 +253,8 @@ local function tick_secondary_incendiary(self, delta, variant)
             table.insert(self.secondary.submunitions, sub)
         end
 
+        PointLight(self.position, 1, 1, 1, 300)
+
         dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
     end
 
@@ -264,7 +267,7 @@ local function tick_secondary_incendiary(self, delta, variant)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
-        if VecLength(sub.velocity) > 200 then
+        if VecLength(sub.velocity) > 150 then
             sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 400 * delta))
         end
 
@@ -275,36 +278,24 @@ local function tick_secondary_incendiary(self, delta, variant)
 
         local hit, hit_distance, normal = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
         if not hit then
-            if timer_elapsed < sub.ignite_delay then return transform_new end
+            if timer_ratio < 0.5 then return nil end -- If WP has been deployed for too long without hitting anything, extinguish it
 
-            local step = 1 / 5
-            local cur = 0
+            addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
+
+            sub.brightness = clamp((sub.brightness + ((math.random() * 1 + 0.2))), 0, 20)
+
+            step = 1 / 2
+            cur = 0
             repeat
-                local rand_radius = sub.smoke_radius - (math.random() * 1)
-                ParticleReset()
-                ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
-                ParticleAlpha(1, 0, "smooth")
-                ParticleColor(1, 1, 1, 1, 1, 1)
-                ParticleStretch(1)
-                ParticleCollide(0, 0.1, "linear", 0.5)
-
-                local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
-
-                SpawnParticle(pos, wind, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
-
-                -- SpawnParticle(
-                --     pos, wind,
-                --     math.random()
-                --     * clamp(mapToRange(timer_ratio, 0.1, 0.2, 0, 5), 0, 5)
-                --     + clamp(mapToRange(timer_ratio, 0, 0.05, 0, 5), 0, 5)
-                -- )
-
                 cur = cur + step
+
+                local lerp_light = VecLerp(sub.transform.pos, transform_new.pos, cur)
+
+                PointLight(lerp_light, getUnpackedRGBA({1, 1, 1}, sub.brightness * cur))
             until cur >= 1
 
-            PointLight(sub.transform.pos, getUnpackedRGBA({1, 0.82, 0.639}, 25))
             ParticleReset()
-            ParticleRadius(0.1, 1, "smooth")
+            ParticleRadius(1, 0.1, "smooth")
             ParticleAlpha(1, 0, "smooth")
             ParticleStretch(1)
             ParticleCollide(0.01)
@@ -312,10 +303,30 @@ local function tick_secondary_incendiary(self, delta, variant)
                 1, 0.82, 0.639
                 -- 1, 0.706, 0.024
             )
-            ParticleEmissive(10, 0, "smooth", 0, 0.5)
-            SpawnParticle(sub.transform.pos, wind, 0.25)
+            ParticleEmissive(mapToRange(sub.brightness, 0, 20, 0, 1), 0, "smooth", 0, 0.5)
+            SpawnParticle(sub.transform.pos, wind, 0.1)
 
-            addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
+
+            if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
+
+            ParticleReset()
+            ParticleAlpha(1, 0, "smooth")
+            ParticleColor(1, 1, 1, 1, 1, 1)
+            ParticleStretch(1)
+            ParticleCollide(0, 0.1, "linear", 0.5)
+
+            local step = 1 / 5
+            local cur = 0
+            repeat
+                local rand_radius = (sub.smoke_radius - (math.random() * 1)) * clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1.5), 0, 1.5)
+                ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
+
+                local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+
+                SpawnParticle(pos, wind, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
+
+                cur = cur + step
+            until cur >= 1
 
             return transform_new
         end
@@ -325,15 +336,16 @@ local function tick_secondary_incendiary(self, delta, variant)
         addToDebugTable(DEBUG_LINES, {sub.transform.pos, position_hit, COLOUR["orange"]})
         addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
 
+        ParticleReset()
+        ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
+        ParticleStretch(0)
+        ParticleCollide(0, 0.1, "constant", 0.2)
+
         local step = 1 / 3
         local cur = 0
         repeat
             local radius = math.random() * 2 + 1
-            ParticleReset()
             ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
-            ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
-            ParticleStretch(0)
-            ParticleCollide(0, 0.1, "constant", 0.2)
 
             SpawnParticle(position_hit, wind, math.random() * 30 + 20)
 
@@ -348,25 +360,35 @@ local function tick_secondary_incendiary(self, delta, variant)
         SetBodyActive(sub.body, true)
 
         local direction = VecNormalize(VecCopy(sub.velocity))
-        local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
-        SetBodyVelocity(sub.body, VecScale(velocity, 20))
+        -- local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
+        SetBodyVelocity(sub.body, VecScale(direction, math.random() * 15 + 15))
 
         SpawnFire(position_hit)
         SpawnFire(transform_spawn.pos)
 
-        if math.random() > 0.75 then
-            PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 250 + 250)
+        if math.random() > 0.66 then
+            ParticleCollide(0)
+
+            ParticleRadius(5, 7, "linear")
+            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), wind, math.random() * 40 + 30)
+
+            ParticleRadius(4, 1, "linear")
+            ParticleColor(1, 0.82, 0.639)
+            ParticleEmissive(1, 0, "linear", 0, 1)
+            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), wind, 0.1)
+
+            PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 500 + 250)
         end
 
-        if math.random() > 0.35 then
-            MakeHole(position_hit, 0.15, 0.05, 0, false)
+        if math.random() > 0 then
+            MakeHole(position_hit, 0.5, 0.25, 0.125, false)
         end
 
         step = 1 / 5
         cur = 0
         repeat
             QueryRejectBody(sub.body)
-            hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 2)
+            hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 5)
             if not hit then break end
 
             addToDebugTable(DEBUG_POSITIONS, {point, COLOUR["orange"]})
