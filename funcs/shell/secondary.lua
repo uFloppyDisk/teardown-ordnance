@@ -315,7 +315,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleStretch(1)
             ParticleCollide(0, 0.1, "linear", 0.5)
 
-            local step = 1 / 5
+            local step = 1 / 3
             local cur = 0
             repeat
                 local rand_radius = (sub.smoke_radius - (math.random() * 1)) * clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1.5), 0, 1.5)
@@ -355,6 +355,12 @@ local function tick_secondary_incendiary(self, delta, variant)
         local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.5), sub.rotation)
 
         sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
+        table.insert(BODIES, {
+            valid = true,
+            created_at = ELAPSED_TIME,
+            type = "IN",
+            handle = sub.body
+        })
 
         SetBodyDynamic(sub.body, true)
         SetBodyActive(sub.body, true)
@@ -425,14 +431,43 @@ local function tick_secondary_incendiary(self, delta, variant)
     dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
 end
 
-function end_secondary_incendiary(self, variant)
-    for index, sub in ipairs(self.secondary.submunitions) do
-        shapes = GetBodyShapes(sub.body)
-        for _, shape in ipairs(shapes) do
-            SetShapeEmissiveScale(shape, 0)
-        end
+function manage_bodies(body)
+    local function manage_incendiary(shapes)
+        if IsShapeBroken(shapes[1]) then return true end
 
-        table.remove(self.secondary.submunitions, index)
+        local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+        PointLight(pos, 1, 1, 1, 15)
+
+        if IsPointInWater(pos) then return false end
+
+        SpawnFire(pos)
+
+        if math.random() > 0.05 then return false end
+
+        QueryRejectBody(body.handle)
+        local hit, pos_fire = QueryClosestPoint(pos, 5)
+        if not hit then return false end
+
+        addToDebugTable(DEBUG_POSITIONS, {pos_fire, COLOUR["orange"]})
+        SpawnFire(pos_fire)
+    end
+
+    if not IsHandleValid(body.handle) then return true end
+
+    local disp_manage = {
+        ["IN"] = manage_incendiary
+    }
+
+    local shapes = GetBodyShapes(body.handle)
+    return disp_manage[body.type](shapes)
+end
+
+function manage_bodies_cleanup()
+    for i, body in ipairs(BODIES) do
+        if not body.valid then
+            dPrint("Removing body "..body.handle)
+            table.remove(BODIES, i)
+        end
     end
 end
 

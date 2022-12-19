@@ -4,7 +4,10 @@
 ---@diagnostic disable-next-line: exp-in-action
 #include "tactical.lua"
 
+ELAPSED_TIME = 0
+
 SHELLS = {}
+BODIES = {}
 QUICK_SALVO = {}
 
 DEBUG_LINES = {}
@@ -105,6 +108,8 @@ function init()
 end
 
 function tick(delta)
+    ELAPSED_TIME = ELAPSED_TIME + delta
+
     dWatch("state(ENABLED)", STATES.enabled)
     dWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
     dWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_FLIGHT_TIME"))
@@ -367,6 +372,22 @@ function update(delta)
             table.remove(SHELLS, i)
         end
 	end
+
+    dWatch("BODIES", #BODIES)
+    for i, body in ipairs(BODIES) do
+        if body.valid == true and manage_bodies(body) then
+            body.valid = false
+        end
+
+        if body.valid == true and (ELAPSED_TIME - body.created_at) > 20 then
+            Delete(body.handle)
+            body.valid = false
+        end
+
+        if not body.valid then
+            table.remove(BODIES, i)
+        end
+    end
 
     -- local active_phosphorus = FindBodies('fd_ord_wp', true)
     -- if #active_phosphorus > 0 then
