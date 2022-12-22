@@ -372,6 +372,7 @@ local function tick_secondary_incendiary(self, delta, variant)
         SpawnFire(position_hit)
         SpawnFire(transform_spawn.pos)
 
+        -- TODO - Introduce more bounce variation when surface normal closely matches submunition approach direction (i.e. when shells fall at a 90 degree angle)
         local direction = VecNormalize(VecSub(position_hit, sub.transform.pos))
         local reflected_direction = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
 
@@ -379,13 +380,9 @@ local function tick_secondary_incendiary(self, delta, variant)
         if math.random() < 0.5 then
             cross_direction = VecSub(cross_direction, VecScale(cross_direction, 2))
         end
-        local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.7))
+        local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.5))
 
         SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.07 + 0.05)))
-
-        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(normal, 2)), getRGBA(COLOUR["red"])})
-        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(send_direction, 2)), getRGBA(COLOUR["yellow_dark"])})
-        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(reflected_direction, 2)), getRGBA(COLOUR["green"])})
 
         if math.random() > 0.66 then
             ParticleCollide(0)
@@ -448,7 +445,7 @@ function manage_bodies(body)
         if IsShapeBroken(shapes[1]) then return true end
 
         local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
-        PointLight(pos, 1, 1, 1, 15)
+        PointLight(pos, 1, 0.933, 0.89, 15)
 
         if IsPointInWater(pos) then return false end
 
