@@ -341,7 +341,7 @@ local function tick_secondary_incendiary(self, delta, variant)
         ParticleStretch(0)
         ParticleCollide(0, 0.1, "constant", 0.2)
 
-        local step = 1 / 3
+        local step = 1 / 1
         local cur = 0
         repeat
             local radius = math.random() * 2 + 1
@@ -445,15 +445,15 @@ function manage_bodies(body)
         if IsShapeBroken(shapes[1]) then return true end
 
         local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
-        PointLight(pos, 1, 0.933, 0.89, 15)
+        PointLight(pos, 1, 0.933, 0.89, 10)
 
-        if IsPointInWater(pos) then return false end
+        if not IsBodyActive(body.handle) then
+            if math.random() > 0.05 then return false end
+        else
+            if IsPointInWater(pos) then return false end
+        end
 
         SpawnFire(pos)
-
-        if not IsBodyActive(body.handle) and math.random() < 0.75 then
-            return false
-        end
 
         if math.random() < 0.20 then
             ParticleReset()
@@ -468,7 +468,7 @@ function manage_bodies(body)
             SpawnParticle(pos, wind, math.random() * 10 + 10)
         end
 
-        if math.random() < 0.85 then return false end
+        if math.random() > 0.05 then return false end
 
         QueryRejectBody(body.handle)
         local hit, pos_fire = QueryClosestPoint(pos, 5)
