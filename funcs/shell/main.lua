@@ -175,6 +175,7 @@ local function tick_active(self, delta)
     self.distance_ground = VecLength(VecSub(self.position, self.destination))
     dWatch("Distance to Target", self.distance_ground)
 
+    -- TODO - More intelligent out of bounds detection
     -- Mark shell for deletion as the shell has gone out of bounds.
     if (self.distance_ground > 5000) then
         self.state = shell_states.DETONATED
@@ -213,8 +214,7 @@ local function tick_active(self, delta)
 
     -- Stop increasing kinetic energy after first hit
     if not self.hit_once then
-        self.kinetic_energy = clamp((values.weight * math.pow(math.abs(self.vel_current[2]), 2)) / 1000, 0, 5000)
-        -- TODO: Change energy calculation to use whole velocity vector
+        self.kinetic_energy = clamp((values.weight * math.pow(math.abs(VecLength(self.vel_current)), 2)) / 1000, 0, 5000)
     end
 
     dWatch("shell(CURRENT VELOCITY)", self.vel_current)
@@ -371,6 +371,7 @@ local function fire(self)
 
     h_offset = h_offset + 1.20
 
+    -- TODO - Use muzzle velocity based on shell/gun fired
     local v = 827 / 2
     if assertTableKeys(values, "muzzle_velocity") then
         v = values.muzzle_velocity
