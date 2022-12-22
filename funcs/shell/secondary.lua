@@ -352,7 +352,11 @@ local function tick_secondary_incendiary(self, delta, variant)
             cur = cur + step
         until cur >= 1
 
-        local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.5), sub.rotation)
+        if math.random() > 0 then
+            MakeHole(position_hit, 0.5, 0.25, 0.125, false)
+        end
+
+        local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.25), sub.rotation)
 
         sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
         table.insert(BODIES, {
@@ -365,12 +369,23 @@ local function tick_secondary_incendiary(self, delta, variant)
         SetBodyDynamic(sub.body, true)
         SetBodyActive(sub.body, true)
 
-        local direction = VecNormalize(VecCopy(sub.velocity))
-        -- local velocity = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
-        SetBodyVelocity(sub.body, VecScale(direction, math.random() * 15 + 15))
-
         SpawnFire(position_hit)
         SpawnFire(transform_spawn.pos)
+
+        local direction = VecNormalize(VecSub(position_hit, sub.transform.pos))
+        local reflected_direction = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
+
+        local cross_direction = VecCross(normal, reflected_direction)
+        if math.random() < 0.5 then
+            cross_direction = VecSub(cross_direction, VecScale(cross_direction, 2))
+        end
+        local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.7))
+
+        SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.07 + 0.05)))
+
+        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(normal, 2)), getRGBA(COLOUR["red"])})
+        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(send_direction, 2)), getRGBA(COLOUR["yellow_dark"])})
+        addToDebugTable(DEBUG_LINES, {position_hit, VecAdd(position_hit, VecScale(reflected_direction, 2)), getRGBA(COLOUR["green"])})
 
         if math.random() > 0.66 then
             ParticleCollide(0)
@@ -384,10 +399,6 @@ local function tick_secondary_incendiary(self, delta, variant)
             SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), wind, 0.1)
 
             PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 500 + 250)
-        end
-
-        if math.random() > 0 then
-            MakeHole(position_hit, 0.5, 0.25, 0.125, false)
         end
 
         step = 1 / 5
@@ -432,6 +443,7 @@ local function tick_secondary_incendiary(self, delta, variant)
 end
 
 function manage_bodies(body)
+    local wind = Vec(-0.4, 0.03, 0.07)
     local function manage_incendiary(shapes)
         if IsShapeBroken(shapes[1]) then return true end
 
@@ -442,7 +454,24 @@ function manage_bodies(body)
 
         SpawnFire(pos)
 
-        if math.random() > 0.05 then return false end
+        if not IsBodyActive(body.handle) and math.random() < 0.75 then
+            return false
+        end
+
+        if math.random() < 0.20 then
+            ParticleReset()
+
+            local radius = math.random() * 0.75 + 0.25
+            ParticleRadius(radius, radius + (math.random() * 3), "linear")
+
+            ParticleType("plain")
+            ParticleCollide(0)
+            ParticleStretch(1)
+
+            SpawnParticle(pos, wind, math.random() * 10 + 10)
+        end
+
+        if math.random() < 0.85 then return false end
 
         QueryRejectBody(body.handle)
         local hit, pos_fire = QueryClosestPoint(pos, 5)
