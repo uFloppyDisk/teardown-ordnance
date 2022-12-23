@@ -409,10 +409,8 @@ function draw()
 
     if STATES.tactical.enabled then
         tactical_draw()
-    end
-
-    if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
-        if not STATES.tactical.enabled then
+    else
+        if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
             drawUIShellImpactGizmo()
         end
     end

@@ -308,34 +308,54 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
     return transform_aim_shell_both, pos_pitch_end, pos_heading_end
 end
 
-function drawUIShellImpactGizmo(static, colour, x, y)
+---@param static boolean
+---@param colour table {R, G, B, a}
+---@param x number
+---@param y number
+---@param align table Align right/top, respectively. {boolean, boolean}
+function drawUIShellImpactGizmo(static, colour, x, y, align)
     if static == nil then static = false end
 
     local heading = math.abs(math.ceil((((STATES.selected_attack_heading + 270) % 360) * -1) + 359))
 
+    -- displays static UI gizmo component and returns
     if static then
-        -- TODO: Static UI display
+        -- TODO: Display compass on HUD with markers in relation to shell heading
         if x == nil then x = 0 end
         if y == nil then y = 0 end
         if colour == nil then colour = {0, 0, 0, 1} end
+        if align == nil or type(align) ~= "table" then align = {false, false} end
 
         local length = 100
         local pitch = STATES.selected_attack_angle
         local length_base = math.cos(math.rad(pitch)) * length
         local length_vert = math.sin(math.rad(pitch)) * length
 
+        local margins = {5, 5}
+        local extra = {0, 0}
+
+        local translate_x = x
+        local translate_y = y
+
+        if align[1] then
+            translate_x = translate_x - (length + (margins[1] * 2))
+        end
+
+        if align[2] then
+            translate_y = translate_y + (length + (margins[2] * 2))
+        end
+
         pitch = round(pitch)
         heading = round(heading)
 
         UiPush()
-            UiTranslate(x * 0.7, y * 5)
+            UiTranslate(translate_x, translate_y)
+            -- UiTranslate(x * 0.7, y * 5)
 
             UiPush()
-                local margins = {5, 5}
-                local extra = {0, 0}
                 UiTranslate(-margins[1], -(margins[2] + length))
 
-                UiColor(0, 0, 0, 0.1)
+                UiColor(0, 0, 0, 0.25)
                 UiRect(length + (margins[1] * 2) + extra[1], length + (margins[2] * 2) + extra[2])
             UiPop()
 
@@ -366,6 +386,7 @@ function drawUIShellImpactGizmo(static, colour, x, y)
                 UiPop()
             end
 
+            -- Hypotenuse
             UiPush()
                 UiRotate(STATES.selected_attack_angle)
 
@@ -386,73 +407,73 @@ function drawUIShellImpactGizmo(static, colour, x, y)
         return
     end
 
+    -- prints values for heading/pitch following drawn lines
     UiPush()
         UiMakeInteractive()
+        -- TODO: Add text offset based on distance to prevent overcrowding
+        local ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
 
-        if not STATES.tactical.enabled then -- TODO: Add text offset based on distance to prevent overcrowding
-            UiTranslate(UiWidth() / 2, UiHeight() / 2)
-
-            local ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
-
-            if ui_pos_root[3] > 65 then
-                UiPop()
-                return
-            end
-
-            UiAlign("left")
-            UiFont("regular.ttf", 26)
-            UiTextShadow(0, 0, 0, 2, 1, 1)
-
-            local ui_pos_pitch = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_pitch_pos)}
-
-            UiPush()
-                UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
-                UiText(round(STATES.selected_attack_angle).."°", true)
+        if ui_pos_root[3] > 65 then
+            -- TODO - HUD display for pitch and heading when distance from camera is too great
             UiPop()
-
-            if UI_HELPERS.shell_telemetry.arrow_heading_pos == nil then
-                UiPop()
-                return
-            end
-
-            local ui_pos_heading = nil
-            local pos_diff = {100, 100}
-
-            if UI_HELPERS.shell_telemetry.arrow_heading_pos ~= nil then
-                ui_pos_heading = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_heading_pos)}
-                pos_diff = {math.abs(ui_pos_pitch[1] - ui_pos_heading[1]), math.abs(ui_pos_pitch[2] - ui_pos_heading[2])}
-            end
-
-            UiPush()
-                if ui_pos_root[3] < 23 then
-                    local offset_x, offset_y = 15, -12
-                    local size_x, size_y = UiGetTextSize(heading.."°")
-
-                    if pos_diff[1] > size_x or pos_diff[2] > size_y then
-                        if ui_pos_heading[1] < 0 then
-                            UiAlign('right')
-                            offset_x = -offset_x
-                        end
-                    else
-                        offset_y = -offset_y + size_y
-
-                        offset_x = 0
-                        UiAlign('center')
-                    end
-
-                    UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
-                    UiText(heading.."°", true)
-                else
-                    local offset_extra = mapToRange(ui_pos_root[3], 25, 150, 0, 7)
-                    UiTranslate(0, 25 + offset_extra)
-
-                    UiAlign('center')
-                    UiText(heading.."°", true)
-                end
-            UiPop()
-        else
-            -- TODO: Tactical mark pitch/heading value display
+            return
         end
+
+        UiTranslate(UiWidth() / 2, UiHeight() / 2)
+
+        ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
+
+        UiAlign("left")
+        UiFont("regular.ttf", 26)
+        UiTextShadow(0, 0, 0, 2, 1, 1)
+
+        local ui_pos_pitch = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_pitch_pos)}
+
+        UiPush()
+            UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
+            UiText(round(STATES.selected_attack_angle).."°", true)
+        UiPop()
+
+        if UI_HELPERS.shell_telemetry.arrow_heading_pos == nil then
+            UiPop()
+            return
+        end
+
+        local ui_pos_heading = nil
+        local pos_diff = {100, 100}
+
+        if UI_HELPERS.shell_telemetry.arrow_heading_pos ~= nil then
+            ui_pos_heading = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_heading_pos)}
+            pos_diff = {math.abs(ui_pos_pitch[1] - ui_pos_heading[1]), math.abs(ui_pos_pitch[2] - ui_pos_heading[2])}
+        end
+
+        UiPush()
+            if ui_pos_root[3] < 23 then
+                local offset_x, offset_y = 15, -12
+                local size_x, size_y = UiGetTextSize(heading.."°")
+
+                if pos_diff[1] > size_x or pos_diff[2] > size_y then
+                    if ui_pos_heading[1] < 0 then
+                        UiAlign('right')
+                        offset_x = -offset_x
+                    end
+                else
+                    offset_y = -offset_y + size_y
+
+                    offset_x = 0
+                    UiAlign('center')
+                end
+
+                UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
+                UiText(heading.."°", true)
+            else
+                local offset_extra = mapToRange(ui_pos_root[3], 25, 150, 0, 7)
+                UiTranslate(0, 25 + offset_extra)
+
+                UiAlign('center')
+                UiText(heading.."°", true)
+            end
+        UiPop()
     UiPop()
 end
 

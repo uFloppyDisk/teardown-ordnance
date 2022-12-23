@@ -280,10 +280,13 @@ function tactical_draw()
             UiTextShadow(0, 0, 0, 1, 1, 1)
 
             local ui_title = "Tactical Ordnance Mode"
-
-            drawUIShellImpactGizmo(true, COLOUR["yellow_dark"], UiGetTextSize(ui_title))
-
             UiText(ui_title, true)
+
+            UiPush()
+                local x = UiGetTextSize(ui_title)
+                UiTranslate(x, 0)
+                drawUIShellImpactGizmo(true, COLOUR["yellow_dark"], 0, 0, {true, true})
+            UiPop()
 
             UiFont("regular.ttf", 22)
             UiPush()
@@ -310,7 +313,6 @@ function tactical_draw()
                 UiText("Quick Salvo target", true)
             UiPop()
             UiTranslate(0, 48)
-
             UiPush()
                 UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
                 UiTranslate(24, 0)
