@@ -194,7 +194,7 @@ local function tick_secondary_cluster(self, delta, variant)
         ParticleStretch(0)
         ParticleCollide(0)
 
-        SpawnParticle(position_hit, Vec(-0.1, 0.03, 0.02), math.random() * 7 + 3)
+        SpawnParticle(position_hit, G_VEC_WIND, math.random() * 7 + 3)
 
         return nil
     end
@@ -263,7 +263,6 @@ local function tick_secondary_incendiary(self, delta, variant)
         local timer_elapsed = variant.secondary.timer - self.secondary.timer
 
         local gravity = math.abs(G_VEC_GRAVITY[2])
-        local wind = Vec(-0.4, 0.03, 0.07)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
@@ -304,7 +303,7 @@ local function tick_secondary_incendiary(self, delta, variant)
                 -- 1, 0.706, 0.024
             )
             ParticleEmissive(mapToRange(sub.brightness, 0, 20, 0, 1), 0, "smooth", 0, 0.5)
-            SpawnParticle(sub.transform.pos, wind, 0.1)
+            SpawnParticle(sub.transform.pos, G_VEC_WIND, 0.1)
 
 
             if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
@@ -323,7 +322,7 @@ local function tick_secondary_incendiary(self, delta, variant)
 
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
-                SpawnParticle(pos, wind, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
+                SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
 
                 cur = cur + step
             until cur >= 1
@@ -347,7 +346,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             local radius = math.random() * 2 + 1
             ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
 
-            SpawnParticle(position_hit, wind, math.random() * 30 + 20)
+            SpawnParticle(position_hit, G_VEC_WIND, math.random() * 30 + 20)
 
             cur = cur + step
         until cur >= 1
@@ -388,12 +387,12 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleCollide(0)
 
             ParticleRadius(5, 7, "linear")
-            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), wind, math.random() * 40 + 30)
+            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), G_VEC_WIND, math.random() * 40 + 30)
 
             ParticleRadius(4, 1, "linear")
             ParticleColor(1, 0.82, 0.639)
             ParticleEmissive(1, 0, "linear", 0, 1)
-            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), wind, 0.1)
+            SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), G_VEC_WIND, 0.1)
 
             PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 500 + 250)
         end
@@ -440,7 +439,6 @@ local function tick_secondary_incendiary(self, delta, variant)
 end
 
 function manage_bodies(body)
-    local wind = Vec(-0.4, 0.03, 0.07)
     local function manage_incendiary(shapes)
         if IsShapeBroken(shapes[1]) then return true end
 
@@ -465,7 +463,7 @@ function manage_bodies(body)
             ParticleCollide(0)
             ParticleStretch(1)
 
-            SpawnParticle(pos, wind, math.random() * 10 + 10)
+            SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + 10)
         end
 
         if math.random() > 0.05 then return false end
@@ -534,7 +532,7 @@ function trigger_secondary(self, parameters, detonate)
 
         local particle_origin = VecAdd(self.position, Vec(0, self.sprite.width * self.sprite.scaling_factor, 0))
 
-        SpawnParticle(particle_origin, Vec(-0.1, 0, 0.02), 20)
+        SpawnParticle(particle_origin, G_VEC_WIND, 20)
     end
 
     if assertTableKeys(parameters, "trigger_detonate") then
