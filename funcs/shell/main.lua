@@ -402,8 +402,16 @@ local function fire(self)
         self.state = shell_states.ACTIVE
     end
 
+    local snd_pos = Vec(100, 0, 100)
+    if self.pitch < 90 then
+        local length = VecLength(snd_pos)
+
+        local transform = Transform(Vec(0, 0, 0), QuatEuler(0, self.heading, 0))
+        snd_pos = TransformToParentVec(transform, VecScale(Vec(1, 0, 0), length))
+    end
+
     local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
-    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, Vec(100, 0, 100)), 20)
+    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, snd_pos), 20)
 end
 
 
