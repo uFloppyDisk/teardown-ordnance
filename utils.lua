@@ -246,7 +246,7 @@ end
 ---@param lines integer Amount of vertical lines to draw.
 ---@return table position # Ending position of the line based on distance, pitch, and heading.
 ---@return table position_horizontal # Ending position of the line based only on the heading and distance.
-function drawPitchHeadingLine(transform, length, colour, lines)
+function drawPitchHeadingLine(transform, length, colour, lines, quick_salvo)
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
     length = length or 1
     colour = colour or {1, 1, 1, 1}
@@ -254,8 +254,11 @@ function drawPitchHeadingLine(transform, length, colour, lines)
 
     local pos_start = transform.pos
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
-    DrawLine(pos_start, pos_end, unpack(colour))
-    DebugLine(transform.pos, pos_end, unpack(colour))
+
+    if quick_salvo or InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) or ({GetQuatEuler(transform.rot)})[3] ~= 90 then
+        DrawLine(pos_start, pos_end, unpack(colour))
+        DebugLine(transform.pos, pos_end, unpack(colour))
+    end
 
     local pos_horizontal_end = nil
     for i = 1, lines, 1 do
@@ -273,7 +276,7 @@ function drawPitchHeadingLine(transform, length, colour, lines)
     return pos_end, pos_horizontal_end
 end
 
-function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
+function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_salvo)
     telemetry = telemetry or {
         Vec(0, 0, 0), 0, 90
     }
@@ -286,7 +289,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines)
     local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
 
     if telemetry[3] == 90 then lines = 0 end
-    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, 2.25, colour, lines)
+    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, 2.25, colour, lines, quick_salvo)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 

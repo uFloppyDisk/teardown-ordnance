@@ -505,7 +505,7 @@ function draw_quicksalvo_markers(display)
         else
             drawShellImpactGizmo(
                 {shell.destination, shell.heading, shell.pitch},
-                shell.inaccuracy, 32, COLOUR["red"], 2
+                shell.inaccuracy, 32, COLOUR["red"], 2, true
             )
         end
     end
