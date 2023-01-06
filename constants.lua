@@ -782,35 +782,35 @@ SHELL_VALUES = {
                 size_explosion = 1.5,
                 size_makehole = {35, 15, 3}
             },
-            {
-                id = "PF",
-                name = "Parachuted Flare",
-                sprite = {
-                    img = LoadSprite("MOD/img/".."60mm_ILL"..".png"),
-                    scaling_factor = 5.25,
-                    width = 0.06 * 2
-                },
-                silent = true,
-                size_explosion = 0,
-                size_makehole = {0.1, 0, 0},
-                secondary = {
-                    timer = 30,
-                    trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
-                    trigger_height = 75
-                }
-            },
-            {
-                id = "SM",
-                name = "Smoke",
-                silent = false,
-                size_explosion = 0.1,
-                size_makehole = {2, 1, 0.5},
-                secondary = {
-                    timer = 30,
-                    radius = 6,
-                    trigger_detonate = true
-                }
-            }
+            -- {
+            --     id = "PF",
+            --     name = "Parachuted Flare",
+            --     sprite = {
+            --         img = LoadSprite("MOD/img/".."60mm_ILL"..".png"),
+            --         scaling_factor = 5.25,
+            --         width = 0.06 * 2
+            --     },
+            --     silent = true,
+            --     size_explosion = 0,
+            --     size_makehole = {0.1, 0, 0},
+            --     secondary = {
+            --         timer = 30,
+            --         trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
+            --         trigger_height = 75
+            --     }
+            -- },
+            -- {
+            --     id = "SM",
+            --     name = "Smoke",
+            --     silent = false,
+            --     size_explosion = 0.1,
+            --     size_makehole = {2, 1, 0.5},
+            --     secondary = {
+            --         timer = 30,
+            --         radius = 6,
+            --         trigger_detonate = true
+            --     }
+            -- }
         },
         sprite = {
             img = LoadSprite("MOD/img/".."60mm_HE"..".png"),
