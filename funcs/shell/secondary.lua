@@ -239,11 +239,11 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             local sub = objectNew({
                 active = true,
-                brightness = 0,
+                brightness = 2,
                 transform = TransformCopy(transform),
                 velocity = Vec(math.random() * 20 + 15, 0, 0),
                 ignite_delay = math.random() * 0.1,
-                smoke_radius = math.random() * 1 + 0.5,
+                smoke_radius = math.random() * 0.7 + 0.1,
             }, DEFAULT_SUBMUNITION)
 
             local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
@@ -253,7 +253,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             table.insert(self.secondary.submunitions, sub)
         end
 
-        PointLight(self.position, 1, 1, 1, 300)
+        PointLight(self.position, 1, 0.706, 0.42, 600)
 
         dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
     end
@@ -281,29 +281,30 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
 
-            sub.brightness = clamp((sub.brightness + ((math.random() * 1 + 0.2))), 0, 20)
+            sub.brightness = clamp((sub.brightness + ((math.random() * 1 + 0.2))), 0, 7)
 
             step = 1 / 2
             cur = 0
             repeat
                 cur = cur + step
 
-                local lerp_light = VecLerp(sub.transform.pos, transform_new.pos, cur)
+                local lerp_pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+                local lerp_color = VecLerp(Vec(1, 0.537, 0.071), Vec(1, 0.706, 0.42), cur)
 
-                PointLight(lerp_light, getUnpackedRGBA({1, 1, 1}, sub.brightness * cur))
+                PointLight(lerp_pos, getUnpackedRGBA({lerp_color[1], lerp_color[2], lerp_color[3]}, sub.brightness * cur))
             until cur >= 1
 
             ParticleReset()
-            ParticleRadius(1, 0.1, "smooth")
+            ParticleRadius(0.3, 0.1, "smooth")
             ParticleAlpha(1, 0, "smooth")
             ParticleStretch(1)
             ParticleCollide(0.01)
             ParticleColor(
-                1, 0.82, 0.639
-                -- 1, 0.706, 0.024
+                1, 1, 1,
+                1, 0.706, 0.42
             )
-            ParticleEmissive(mapToRange(sub.brightness, 0, 20, 0, 1), 0, "smooth", 0, 0.5)
-            SpawnParticle(sub.transform.pos, G_VEC_WIND, 0.1)
+            ParticleEmissive(20)
+            SpawnParticle(sub.transform.pos, Vec(0, 0, 0), 0.05)
 
 
             if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
@@ -314,10 +315,10 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleStretch(1)
             ParticleCollide(0, 0.1, "linear", 0.5)
 
-            local step = 1 / 3
+            local step = 1 / 5
             local cur = 0
             repeat
-                local rand_radius = (sub.smoke_radius - (math.random() * 1)) * clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1.5), 0, 1.5)
+                local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) * clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
                 ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
 
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
@@ -374,14 +375,15 @@ local function tick_secondary_incendiary(self, delta, variant)
         -- TODO - Introduce more bounce variation when surface normal closely matches submunition approach direction (i.e. when shells fall at a 90 degree angle)
         local direction = VecNormalize(VecSub(position_hit, sub.transform.pos))
         local reflected_direction = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
+        reflected_direction = VecLerp(reflected_direction, normal, math.random() * 0.5)
 
         local cross_direction = VecCross(normal, reflected_direction)
         if math.random() < 0.5 then
             cross_direction = VecSub(cross_direction, VecScale(cross_direction, 2))
         end
-        local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.5))
+        local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.4))
 
-        SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.07 + 0.05)))
+        SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)))
 
         if math.random() > 0.66 then
             ParticleCollide(0)
@@ -394,7 +396,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleEmissive(1, 0, "linear", 0, 1)
             SpawnParticle(VecLerp(position_hit, sub.transform.pos, 0.1), G_VEC_WIND, 0.1)
 
-            PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 500 + 250)
+            PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 200 + 150)
         end
 
         step = 1 / 5
@@ -443,12 +445,12 @@ function manage_bodies(body)
         if IsShapeBroken(shapes[1]) then return true end
 
         local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
-        PointLight(pos, 1, 0.933, 0.89, 10)
+        PointLight(pos, 1, 0.706, 0.42, 10)
+
+        if IsPointInWater(pos) then return false end
 
         if not IsBodyActive(body.handle) then
             if math.random() > 0.05 then return false end
-        else
-            if IsPointInWater(pos) then return false end
         end
 
         SpawnFire(pos)
@@ -456,7 +458,7 @@ function manage_bodies(body)
         if math.random() < 0.20 then
             ParticleReset()
 
-            local radius = math.random() * 0.75 + 0.25
+            local radius = math.random() * 0.60 + 0.15
             ParticleRadius(radius, radius + (math.random() * 3), "linear")
 
             ParticleType("plain")
