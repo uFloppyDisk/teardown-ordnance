@@ -311,11 +311,11 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
     return transform_aim_shell_both, pos_pitch_end, pos_heading_end
 end
 
----@param static boolean
----@param colour table {R, G, B, a}
----@param x number
----@param y number
----@param align table Align right/top, respectively. {boolean, boolean}
+---@param static? boolean
+---@param colour? table {R, G, B, a}
+---@param x? number
+---@param y? number
+---@param align? table Align right/top, respectively. {boolean, boolean}
 function drawUIShellImpactGizmo(static, colour, x, y, align)
     if static == nil then static = false end
 
