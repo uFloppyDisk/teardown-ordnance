@@ -196,9 +196,22 @@ local function tick_active(self, delta)
         PlayLoop(self.snd_whistle, self.position, 100)
     end
 
+    local velocity_new = VecCopy(self.vel_current)
+    local position_new = VecCopy(self.position)
+
     -- Provide default behaviours until secondary is active
     if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
-        self.vel_current = VecAdd(self.vel_current, (VecScale(G_VEC_GRAVITY, delta))) -- Calculation of gravity's effect on shell velocity
+        -- TODO: Option to change iteration amount
+        local iterations = 16
+        local iter_delta = delta / iterations
+
+        -- Calculation of gravity's effect on shell velocity and position over N iterations
+        for _ = 0, iterations, 1 do
+            velocity_new = VecAdd(velocity_new, VecScale(G_VEC_GRAVITY, iter_delta))
+            position_new = VecAdd(position_new, VecScale(velocity_new, iter_delta))
+        end
+
+        self.vel_current = VecCopy(velocity_new)
 
         ParticleReset()
         ParticleRadius(0.2)
@@ -219,9 +232,6 @@ local function tick_active(self, delta)
 
     dWatch("shell(CURRENT VELOCITY)", self.vel_current)
     dWatch("shell(KINETIC ENERGY)", self.kinetic_energy)
-
-    -- Predicted position after the current tick
-    local position_new = VecAdd(self.position, VecScale(self.vel_current, delta))
 
     addToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 0.5}})
 
@@ -336,8 +346,7 @@ local function tick_active(self, delta)
         return
     end
 
-    self.vel_previous = VecCopy(self.vel_current)
-    self.position = position_new
+    self.position = VecCopy(position_new)
 end
 
 local function shell_play_sound_fire(self)
@@ -409,6 +418,7 @@ local function fire(self)
     local velocity_3d = VecScale(heading_3d, velocity_horizontal)
 
     -- ETA compensation
+    -- TODO: Option to change ETA time
     local at_time = 3
     if at_time >= eta_from_apogee then
         self.flight_time = at_time - eta_from_apogee
@@ -418,9 +428,9 @@ local function fire(self)
     local x_at_t = VecAdd(VecScale(velocity_3d, at_time), VecCopy(self.destination))
     local y_at_t = -0.5 * (math.abs(G_VEC_GRAVITY[2]) * (at_time*at_time)) -- -1/2gt^2
     y_at_t = y_at_t + (velocity_vertical * at_time) + self.destination[2] -- + (vy0)t + y0
+
     self.position = Vec(x_at_t[1], y_at_t, x_at_t[3])
     -- self.position = VecAdd(VecCopy(self.destination), Vec(0, 2, 0)) -- Testing
-
     self.vel_current = Vec(-velocity_3d[1], -velocity_vertical - (G_VEC_GRAVITY[2] * at_time), -velocity_3d[3])
 
     if self.flight_time <= 0 then
