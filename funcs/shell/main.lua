@@ -340,6 +340,22 @@ local function tick_active(self, delta)
     self.position = position_new
 end
 
+local function shell_play_sound_fire(self)
+    local values = SHELL_VALUES[self.type]
+    local variant = values.variants[self.variant]
+
+    local snd_pos = Vec(100, 0, 100)
+    if self.pitch < 90 then
+        local length = VecLength(snd_pos)
+
+        local transform = Transform(Vec(0, 0, 0), QuatEuler(0, self.heading, 0))
+        snd_pos = TransformToParentVec(transform, VecScale(Vec(1, 0, 0), length))
+    end
+
+    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
+    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, snd_pos), 20)
+end
+
 local function fire(self)
     DEBUG_POSITIONS = {}
     DEBUG_LINES = {}
@@ -384,9 +400,6 @@ local function fire(self)
     local eta_from_apogee = (velocity * math.sin(pitch_in_rad)) / math.abs(G_VEC_GRAVITY[2])
 
     local velocity_horizontal, velocity_vertical = velocity * math.cos(pitch_in_rad), velocity * math.sin(pitch_in_rad)
-    local apogee = ((velocity_vertical*velocity_vertical) / (2 * math.abs(G_VEC_GRAVITY[2]))) + height_offset
-
-    local horizontal_distance = ((velocity*velocity) * (2 * math.sin(pitch_in_rad) * math.cos(pitch_in_rad))) / math.abs(G_VEC_GRAVITY[2])
 
     local heading_in_rad = math.rad((self.heading + 90) % 360)
     local heading_x = math.sin(heading_in_rad)
@@ -395,29 +408,30 @@ local function fire(self)
     local heading_3d = Vec(heading_x, 0, heading_z)
     local velocity_3d = VecScale(heading_3d, velocity_horizontal)
 
-    horizontal_distance = horizontal_distance / 2
+    -- ETA compensation
+    local at_time = 3
+    if at_time >= eta_from_apogee then
+        self.flight_time = at_time - eta_from_apogee
+        at_time = eta_from_apogee
+    end
 
-    local horizontal_distance_3d = VecScale(heading_3d, horizontal_distance)
-    self.position = VecAdd(VecCopy(self.destination), Vec(horizontal_distance_3d[1], apogee, horizontal_distance_3d[3]))
+    local x_at_t = VecAdd(VecScale(velocity_3d, at_time), VecCopy(self.destination))
+    local y_at_t = -0.5 * (math.abs(G_VEC_GRAVITY[2]) * (at_time*at_time)) -- -1/2gt^2
+    y_at_t = y_at_t + (velocity_vertical * at_time) + self.destination[2] -- + (vy0)t + y0
+    self.position = Vec(x_at_t[1], y_at_t, x_at_t[3])
     -- self.position = VecAdd(VecCopy(self.destination), Vec(0, 2, 0)) -- Testing
 
-    self.vel_current = Vec(-velocity_3d[1], 0, -velocity_3d[3])
+    self.vel_current = Vec(-velocity_3d[1], -velocity_vertical - (G_VEC_GRAVITY[2] * at_time), -velocity_3d[3])
+
+    if self.flight_time <= 0 then
+        self.state = shell_states.ACTIVE
+        shell_play_sound_fire(self)
+        return
+    end
 
     self.state = shell_states.IN_FLIGHT
-    if self.flight_time < 0.2 then
-        self.state = shell_states.ACTIVE
-    end
 
-    local snd_pos = Vec(100, 0, 100)
-    if self.pitch < 90 then
-        local length = VecLength(snd_pos)
-
-        local transform = Transform(Vec(0, 0, 0), QuatEuler(0, self.heading, 0))
-        snd_pos = TransformToParentVec(transform, VecScale(Vec(1, 0, 0), length))
-    end
-
-    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
-    PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, snd_pos), 20)
+    shell_play_sound_fire(self)
 end
 
 
