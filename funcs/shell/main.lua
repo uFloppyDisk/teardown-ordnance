@@ -364,38 +364,44 @@ local function fire(self)
 
     addToDebugTable(DEBUG_POSITIONS, {self.destination, getRGBA(COLOUR["green"])})
 
-    local h_offset = 0
+    local height_offset = 0
     if variant.id == "PF" then
-        h_offset = variant.secondary.trigger_height
+        height_offset = variant.secondary.trigger_height
     end
 
-    h_offset = h_offset + 1.20
+    height_offset = height_offset + 1.20 -- Manual adjustment for accuracy
 
     -- TODO - Use muzzle velocity based on shell/gun fired
-    local v = 827 / 2
+    local velocity = 827 / 2
     if assertTableKeys(values, "muzzle_velocity") then
-        v = values.muzzle_velocity
+        velocity = values.muzzle_velocity
     end
 
-    local pitch = math.rad(self.pitch)
-    local vx, vy = v * math.cos(pitch), v * math.sin(pitch)
-    local hmax = ((vy*vy) / (2 * math.abs(G_VEC_GRAVITY[2]))) + h_offset
+    local pitch_in_rad = math.rad(self.pitch)
 
-    local range = ((v*v) * (2 * math.sin(pitch) * math.cos(pitch))) / math.abs(G_VEC_GRAVITY[2])
-    range = range / 2
+    -- Flight Time Calculation
+    local eta_from_origin = (2 * velocity * math.sin(pitch_in_rad)) / math.abs(G_VEC_GRAVITY[2])
+    local eta_from_apogee = (velocity * math.sin(pitch_in_rad)) / math.abs(G_VEC_GRAVITY[2])
 
-    local hrad = math.rad((self.heading + 90) % 360)
-    local hx = math.sin(hrad)
-    local hz = math.cos(hrad)
+    local velocity_horizontal, velocity_vertical = velocity * math.cos(pitch_in_rad), velocity * math.sin(pitch_in_rad)
+    local apogee = ((velocity_vertical*velocity_vertical) / (2 * math.abs(G_VEC_GRAVITY[2]))) + height_offset
 
-    local hvec = Vec(hx, 0, hz)
+    local horizontal_distance = ((velocity*velocity) * (2 * math.sin(pitch_in_rad) * math.cos(pitch_in_rad))) / math.abs(G_VEC_GRAVITY[2])
 
-    local rangevec = VecScale(hvec, range)
-    self.position = VecAdd(VecCopy(self.destination), Vec(rangevec[1], hmax, rangevec[3]))
+    local heading_in_rad = math.rad((self.heading + 90) % 360)
+    local heading_x = math.sin(heading_in_rad)
+    local heading_z = math.cos(heading_in_rad)
+
+    local heading_3d = Vec(heading_x, 0, heading_z)
+    local velocity_3d = VecScale(heading_3d, velocity_horizontal)
+
+    horizontal_distance = horizontal_distance / 2
+
+    local horizontal_distance_3d = VecScale(heading_3d, horizontal_distance)
+    self.position = VecAdd(VecCopy(self.destination), Vec(horizontal_distance_3d[1], apogee, horizontal_distance_3d[3]))
     -- self.position = VecAdd(VecCopy(self.destination), Vec(0, 2, 0)) -- Testing
 
-    local velvec = VecScale(hvec, vx)
-    self.vel_current = Vec(-velvec[1], 0, -velvec[3])
+    self.vel_current = Vec(-velocity_3d[1], 0, -velocity_3d[3])
 
     self.state = shell_states.IN_FLIGHT
     if self.flight_time < 0.2 then
