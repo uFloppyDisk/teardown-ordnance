@@ -88,11 +88,11 @@ CONFIG_VARIABLES = {
         value_type = "boolean",
         value_default = false
     },
-    ["G_FLIGHT_TIME"] = {
-        variable = G_CONFIG_ROOT..".flight_time",
+    ["G_TIME_OF_FLIGHT"] = {
+        variable = G_CONFIG_ROOT..".time_of_flight",
 
         value_type = "float",
-        value_default = 0.0
+        value_default = 3.0
     },
     ["G_SHELL_INACCURACY"] = {
         variable = G_CONFIG_ROOT..".shell_inaccuracy",
@@ -296,12 +296,14 @@ CONFIG_OPTIONS = {
     },
     {
         type = "slider",
-        mapping = CONFIG_VARIABLES["G_FLIGHT_TIME"],
-        name = "Flight Time",
-        value_unit = "second(s)",
+        mapping = CONFIG_VARIABLES["G_TIME_OF_FLIGHT"],
+        name = "Shell Time of Flight",
 
-        value_min = 0,
-        value_max = 25
+        value_unit = "second(s)",
+        value_digits = 1,
+
+        value_min = 1.5,
+        value_max = 30
     },
     {
         type = "slider",
@@ -841,6 +843,7 @@ DEFAULT_SHELL = {
     inaccuracy = 0,
 
     destination = nil,
+    eta = nil,
     pitch = 90,
     heading = 0,
 

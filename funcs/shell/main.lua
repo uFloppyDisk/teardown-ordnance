@@ -419,7 +419,7 @@ local function fire(self)
 
     -- ETA compensation
     -- TODO: Option to change ETA time
-    local at_time = 3
+    local at_time = self.eta
     if at_time >= eta_from_apogee then
         self.flight_time = at_time - eta_from_apogee
         at_time = eta_from_apogee
