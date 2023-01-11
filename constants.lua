@@ -287,24 +287,8 @@ CONFIG_VARIABLES = {
 CONFIG_OPTIONS = {
     {
         type = "textbutton",
-        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
-        name = "Debug Mode"
-    },
-    {
-        type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"],
         name = "Simulate Ballistics [BETA]"
-    },
-    {
-        type = "slider",
-        mapping = CONFIG_VARIABLES["G_PHYSICS_ITERATIONS"],
-        name = "Physics Iterations",
-        value_unit = "iterations(s)",
-
-        value_min = 0,
-        value_max = 6,
-
-        value_display_exp = 2
     },
     {
         type = "textbutton",
@@ -359,12 +343,6 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_FRAGMENTATION"],
         name = "Simulate Fragmentation"
-    },
-    {
-        category = "fragmentation",
-        type = "textbutton",
-        mapping = CONFIG_VARIABLES["G_FRAGMENTATION_DEBUG"],
-        name = "Debug Mode"
     },
     {
         category = "fragmentation",
@@ -444,7 +422,7 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_INACCURACY"],
-        name = "Adjust Inaccuracy In-game (Hold)"
+        name = "Adjust Inaccuracy (Hold)"
     },
     {
         category = "keybind",
@@ -530,6 +508,30 @@ CONFIG_OPTIONS = {
     --     mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
     --     name = "Fire/Mark Shell"
     -- },
+    {
+        category = "advanced",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
+        name = "Debug Mode"
+    },
+    {
+        category = "advanced",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_FRAGMENTATION_DEBUG"],
+        name = "Debug Fragmentation"
+    },
+    {
+        category = "advanced",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["G_PHYSICS_ITERATIONS"],
+        name = "Physics Iterations",
+        value_unit = "iterations(s)",
+
+        value_min = 0,
+        value_max = 6,
+
+        value_display_exp = 2
+    },
 }
 
 CONFIG_MENUS = {
@@ -549,6 +551,10 @@ CONFIG_MENUS = {
         title = "Keybindings",
         filter = "keybind"
     },
+    [5] = {
+        title = "Advanced",
+        filter = "advanced"
+    }
 }
 
 -- #endregion

@@ -359,6 +359,20 @@ function renderMenu()
         -- Options
         UiFont("regular.ttf", 28)
 
+        if CONFIG_MENUS[STATES.menu].filter == "advanced" then
+            UiPush()
+                UiFont("bold.ttf", 24)
+                UiColor(getUnpackedRGBA(COLOUR["red"]))
+
+                local text = "WARNING: The following options are not intended for most users;\nChange at your own risk!"
+                local width, height = UiGetTextSize(text)
+
+                UiText(text)
+            UiPop()
+
+            UiTranslate(0, height + 20)
+        end
+
         for i, option in ipairs(OPTIONS) do
             if CONFIG_MENUS[STATES.menu].filter ~= nil then
                 if option.category == CONFIG_MENUS[STATES.menu].filter then
