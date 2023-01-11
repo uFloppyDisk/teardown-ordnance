@@ -27,6 +27,12 @@ function wrapSlider(option)
         wrapOption(option)
         local value = drawSlider(option)
 
+        if option.value_display_exp > 1 then
+            value = option.value_display_exp ^ value
+        elseif option.value_display_factor > 1 then
+            value = value * option.value_display_factor
+        end
+
         UiAlign("left")
         UiTranslate(option.width + (MENU.spacing_option * 2), 0);
         UiText(value.." "..option.value_unit);

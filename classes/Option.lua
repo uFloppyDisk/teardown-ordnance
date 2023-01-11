@@ -9,6 +9,9 @@ OPTION = {
     value_max = 1,
     value = nil,
 
+    value_display_factor = 0,
+    value_display_exp = 0,
+
     width = 100,
     height = 30
 }

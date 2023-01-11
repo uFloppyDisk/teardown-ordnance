@@ -201,8 +201,7 @@ local function tick_active(self, delta)
 
     -- Provide default behaviours until secondary is active
     if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
-        -- TODO: Option to change iteration amount
-        local iterations = 16
+        local iterations = G_PHYSICS_ITERATIONS
         local iter_delta = delta / iterations
 
         -- Calculation of gravity's effect on shell velocity and position over N iterations
@@ -418,7 +417,6 @@ local function fire(self)
     local velocity_3d = VecScale(heading_3d, velocity_horizontal)
 
     -- ETA compensation
-    -- TODO: Option to change ETA time
     local at_time = self.eta
     if at_time >= eta_from_apogee then
         self.flight_time = at_time - eta_from_apogee

@@ -82,6 +82,12 @@ CONFIG_VARIABLES = {
         value_type = "boolean",
         value_default = true
     },
+    ["G_PHYSICS_ITERATIONS"] = {
+        variable = G_CONFIG_ROOT..".physics_iterations",
+
+        value_type = "int",
+        value_default = 4
+    },
     ["G_SIMULATE_UXO"] = {
         variable = G_CONFIG_ROOT..".simulate_uxo",
 
@@ -288,6 +294,17 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"],
         name = "Simulate Ballistics [BETA]"
+    },
+    {
+        type = "slider",
+        mapping = CONFIG_VARIABLES["G_PHYSICS_ITERATIONS"],
+        name = "Physics Iterations",
+        value_unit = "iterations(s)",
+
+        value_min = 0,
+        value_max = 6,
+
+        value_display_exp = 2
     },
     {
         type = "textbutton",

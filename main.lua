@@ -34,6 +34,7 @@ function init()
 
     G_DEV = CONFIG_getConfValue("G_DEBUG_MODE") or false
     G_QUICK_SALVO_DELAY = CONFIG_getConfValue("G_QUICK_SALVO_DELAY") or 0.5
+    G_PHYSICS_ITERATIONS = 2 ^ (CONFIG_getConfValue("G_PHYSICS_ITERATIONS") or 4)
     DEFAULT_SHELL.eta = CONFIG_getConfValue("G_TIME_OF_FLIGHT")
     DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
 
@@ -113,6 +114,7 @@ function tick(delta)
     dWatch("state(ENABLED)", STATES.enabled)
     dWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
     dWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_TIME_OF_FLIGHT"))
+    dWatch("option(PHYSICS ITERATIONS)", G_PHYSICS_ITERATIONS)
     dWatch("Shells", #SHELLS)
     dWatch("Salvo", #QUICK_SALVO)
     dWatch("BODIES", #BODIES)
