@@ -281,19 +281,6 @@ local function tick_secondary_incendiary(self, delta, variant)
 
             addToDebugTable(DEBUG_LINES, {sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15)})
 
-            sub.brightness = clamp((sub.brightness + ((math.random() * 1 + 0.2))), 0, 7)
-
-            step = 1 / 2
-            cur = 0
-            repeat
-                cur = cur + step
-
-                local lerp_pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
-                local lerp_color = VecLerp(Vec(1, 0.537, 0.071), Vec(1, 0.706, 0.42), cur)
-
-                PointLight(lerp_pos, getUnpackedRGBA({lerp_color[1], lerp_color[2], lerp_color[3]}, sub.brightness * cur))
-            until cur >= 1
-
             ParticleReset()
             ParticleRadius(0.3, 0.1, "smooth")
             ParticleAlpha(1, 0, "smooth")
@@ -303,9 +290,19 @@ local function tick_secondary_incendiary(self, delta, variant)
                 1, 1, 1,
                 1, 0.706, 0.42
             )
-            ParticleEmissive(20)
-            SpawnParticle(sub.transform.pos, Vec(0, 0, 0), 0.05)
 
+            step = 1 / 5
+            cur = 0
+            repeat
+                cur = cur + step
+
+                local lerp_pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+
+                ParticleEmissive(100 * cur)
+                SpawnParticle(lerp_pos, Vec(0, 0, 0), 0.1)
+            until cur >= 1
+
+            PointLight(sub.transform.pos, getUnpackedRGBA({1, 0.706, 0.42}, sub.brightness))
 
             if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
 
