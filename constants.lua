@@ -525,7 +525,7 @@ CONFIG_OPTIONS = {
         type = "slider",
         mapping = CONFIG_VARIABLES["G_PHYSICS_ITERATIONS"],
         name = "Physics Iterations",
-        value_unit = "iterations(s)",
+        value_unit = "iteration(s)",
 
         value_min = 0,
         value_max = 6,
