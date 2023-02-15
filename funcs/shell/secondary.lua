@@ -241,7 +241,7 @@ local function tick_secondary_incendiary(self, delta, variant)
                 active = true,
                 brightness = 2,
                 transform = TransformCopy(transform),
-                velocity = Vec(math.random() * 20 + 15, 0, 0),
+                velocity = Vec(math.random() * 20 + 35, 0, 0),
                 ignite_delay = math.random() * 0.1,
                 smoke_radius = math.random() * 0.7 + 0.1,
             }, DEFAULT_SUBMUNITION)
@@ -266,9 +266,12 @@ local function tick_secondary_incendiary(self, delta, variant)
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
         sub.velocity = VecAdd(sub.velocity, VecScale(world_down, gravity * delta))
-        if VecLength(sub.velocity) > 150 then
-            sub.velocity = VecSub(sub.velocity, VecScale(VecNormalize(sub.velocity), 400 * delta))
-        end
+
+        local velocity_magnitude = VecLength(sub.velocity)
+        local drag_magnitude = 0.0125 * velocity_magnitude * velocity_magnitude
+        local drag_vector = VecNormalize(VecScale(sub.velocity, -1))
+
+        sub.velocity = VecAdd(sub.velocity, VecScale(drag_vector, drag_magnitude * delta))
 
         local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
         local transform_new = Transform(position_new, sub.transform.rot)
@@ -312,7 +315,7 @@ local function tick_secondary_incendiary(self, delta, variant)
             ParticleStretch(1)
             ParticleCollide(0, 0.1, "linear", 0.5)
 
-            local step = 1 / 5
+            local step = 1 / (math.floor(mapToRange(velocity_magnitude, 50, 150, 1, 5)))
             local cur = 0
             repeat
                 local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) * clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
