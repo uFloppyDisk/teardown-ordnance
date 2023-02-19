@@ -2,6 +2,7 @@
 
 G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
+G_VEC_WIND = Vec(-0.4, 0.03, 0.07)
 
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
@@ -10,11 +11,12 @@ G_CONFIG_ROOT = "savegame.mod.config"
 G_CONFIG_KEYBINDS_ROOT = G_CONFIG_ROOT..".keybind"
 G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT..".tactical"
 
-SHELL_STATES = {
-    queued = 0,
-    in_flight = 1,
-    active = 2,
-    detonated = 3
+---@enum shell_states
+shell_states = {
+    QUEUED = 0,
+    IN_FLIGHT = 1,
+    ACTIVE = 2,
+    DETONATED = 3
 }
 
 -- #region Colours
@@ -24,7 +26,19 @@ COLOUR = {
     ["red"]             = {1, 0.2, 0.2, 1},
     ["yellow"]          = {1, 1, 0, 1},
     ["yellow_dark"]     = {1, 0.8, 0, 1},
-    ["orange"]          = {1, 0.6, 0.2, 1}
+    ["orange"]          = {1, 0.6, 0.2, 1},
+    ["green"]           = {0.2, 1, 0.2, 1},
+}
+
+-- #endregion
+
+-- #region Enums
+
+---@enum qs_display
+qs_display = {
+    HIDDEN = 0,
+    VISIBLE = 1,
+    MINIMAL = 2,
 }
 
 -- #endregion
@@ -68,17 +82,23 @@ CONFIG_VARIABLES = {
         value_type = "boolean",
         value_default = true
     },
+    ["G_PHYSICS_ITERATIONS"] = {
+        variable = G_CONFIG_ROOT..".physics_iterations",
+
+        value_type = "int",
+        value_default = 4
+    },
     ["G_SIMULATE_UXO"] = {
         variable = G_CONFIG_ROOT..".simulate_uxo",
 
         value_type = "boolean",
         value_default = false
     },
-    ["G_FLIGHT_TIME"] = {
-        variable = G_CONFIG_ROOT..".flight_time",
+    ["G_TIME_OF_FLIGHT"] = {
+        variable = G_CONFIG_ROOT..".time_of_flight",
 
         value_type = "float",
-        value_default = 0.0
+        value_default = 3.0
     },
     ["G_SHELL_INACCURACY"] = {
         variable = G_CONFIG_ROOT..".shell_inaccuracy",
@@ -164,6 +184,12 @@ CONFIG_VARIABLES = {
         value_type = "string",
         value_default = "N"
     },
+    ["KEYBIND_ADJUST_ATTACK"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_attack",
+
+        value_type = "string",
+        value_default = "G"
+    },
     ["KEYBIND_ADJUST_INACCURACY"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".adjust_inaccuracy",
 
@@ -181,6 +207,12 @@ CONFIG_VARIABLES = {
 
         value_type = "string",
         value_default = "rmb"
+    },
+    ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT..".quicksalvo.toggle_markers",
+
+        value_type = "string",
+        value_default = "J"
     },
     ["KEYBIND_PRIMARY_FIRE"] = {
         variable = G_CONFIG_KEYBINDS_ROOT..".primary_fire",
@@ -255,11 +287,6 @@ CONFIG_VARIABLES = {
 CONFIG_OPTIONS = {
     {
         type = "textbutton",
-        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
-        name = "Debug Mode"
-    },
-    {
-        type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_BALLISTICS"],
         name = "Simulate Ballistics [BETA]"
     },
@@ -270,12 +297,14 @@ CONFIG_OPTIONS = {
     },
     {
         type = "slider",
-        mapping = CONFIG_VARIABLES["G_FLIGHT_TIME"],
-        name = "Flight Time",
-        value_unit = "second(s)",
+        mapping = CONFIG_VARIABLES["G_TIME_OF_FLIGHT"],
+        name = "Shell Time of Flight",
 
-        value_min = 0,
-        value_max = 25
+        value_unit = "second(s)",
+        value_digits = 1,
+
+        value_min = 1.5,
+        value_max = 30
     },
     {
         type = "slider",
@@ -314,12 +343,6 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_FRAGMENTATION"],
         name = "Simulate Fragmentation"
-    },
-    {
-        category = "fragmentation",
-        type = "textbutton",
-        mapping = CONFIG_VARIABLES["G_FRAGMENTATION_DEBUG"],
-        name = "Debug Mode"
     },
     {
         category = "fragmentation",
@@ -391,8 +414,15 @@ CONFIG_OPTIONS = {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_ATTACK"],
+        name = "Adjust Shell Pitch/Heading (Hold)"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_INACCURACY"],
-        name = "Adjust Inaccuracy In-game (Hold)"
+        name = "Adjust Inaccuracy (Hold)"
     },
     {
         category = "keybind",
@@ -414,6 +444,13 @@ CONFIG_OPTIONS = {
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_CENTER_PLAYER"],
         name = "Tactical: Center Player"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
+        name = "Toggle Quick Salvo Marker Visibility"
     },
     -- {
     --     category = "keybind",
@@ -471,6 +508,30 @@ CONFIG_OPTIONS = {
     --     mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
     --     name = "Fire/Mark Shell"
     -- },
+    {
+        category = "advanced",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_DEBUG_MODE"],
+        name = "Debug Mode"
+    },
+    {
+        category = "advanced",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_FRAGMENTATION_DEBUG"],
+        name = "Debug Fragmentation"
+    },
+    {
+        category = "advanced",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["G_PHYSICS_ITERATIONS"],
+        name = "Physics Iterations",
+        value_unit = "iteration(s)",
+
+        value_min = 0,
+        value_max = 6,
+
+        value_display_exp = 2
+    },
 }
 
 CONFIG_MENUS = {
@@ -490,6 +551,10 @@ CONFIG_MENUS = {
         title = "Keybindings",
         filter = "keybind"
     },
+    [5] = {
+        title = "Advanced",
+        filter = "advanced"
+    }
 }
 
 -- #endregion
@@ -671,6 +736,7 @@ SHELL_VALUES = {
         name = "155mm Howitzer",
         caliber = "155mm",
         weight = 43.2,
+        muzzle_velocity = 827 / 2,
         variants = {
             {
                 id = "HE",
@@ -695,7 +761,22 @@ SHELL_VALUES = {
                 secondary = {
                     timer = 10,
                     trigger_sound = LoadSound("MOD/snd/155mm_shell_cluster_secondary_trigger.ogg"),
-                    trigger_height = 150,
+                    trigger_sound_volume = 900,
+                    trigger_height = 450,
+                    particle_radius = 10
+                }
+            },
+            {
+                id = "IN",
+                name = "Incendiary",
+                silent = true,
+                size_explosion = 0,
+                size_makehole = {0.1, 0, 0},
+                secondary = {
+                    timer = 10,
+                    trigger_sound = LoadSound("MOD/snd/155mm_shell_cluster_secondary_trigger.ogg"),
+                    trigger_sound_volume = 900,
+                    trigger_height = 100,
                     particle_radius = 10
                 }
             }
@@ -726,35 +807,35 @@ SHELL_VALUES = {
                 size_explosion = 1.5,
                 size_makehole = {35, 15, 3}
             },
-            {
-                id = "PF",
-                name = "Parachuted Flare",
-                sprite = {
-                    img = LoadSprite("MOD/img/".."60mm_ILL"..".png"),
-                    scaling_factor = 5.25,
-                    width = 0.06 * 2
-                },
-                silent = true,
-                size_explosion = 0,
-                size_makehole = {0.1, 0, 0},
-                secondary = {
-                    timer = 30,
-                    trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
-                    trigger_height = 75
-                }
-            },
-            {
-                id = "SM",
-                name = "Smoke",
-                silent = false,
-                size_explosion = 0.1,
-                size_makehole = {2, 1, 0.5},
-                secondary = {
-                    timer = 30,
-                    radius = 6,
-                    trigger_detonate = true
-                }
-            }
+            -- {
+            --     id = "PF",
+            --     name = "Parachuted Flare",
+            --     sprite = {
+            --         img = LoadSprite("MOD/img/".."60mm_ILL"..".png"),
+            --         scaling_factor = 5.25,
+            --         width = 0.06 * 2
+            --     },
+            --     silent = true,
+            --     size_explosion = 0,
+            --     size_makehole = {0.1, 0, 0},
+            --     secondary = {
+            --         timer = 30,
+            --         trigger_sound = LoadSound("MOD/snd/60mm_ILL_secondary_pop_distant.ogg"),
+            --         trigger_height = 75
+            --     }
+            -- },
+            -- {
+            --     id = "SM",
+            --     name = "Smoke",
+            --     silent = false,
+            --     size_explosion = 0.1,
+            --     size_makehole = {2, 1, 0.5},
+            --     secondary = {
+            --         timer = 30,
+            --         radius = 6,
+            --         trigger_detonate = true
+            --     }
+            -- }
         },
         sprite = {
             img = LoadSprite("MOD/img/".."60mm_HE"..".png"),
@@ -776,6 +857,7 @@ DEFAULT_SHELL = {
         timer = 0,
         intensity = 1000,
         particle_spread = Vec(0, 0, 0),
+        inertia = Vec(0, 0, 0),
     },
 
     type = 1,
@@ -784,6 +866,10 @@ DEFAULT_SHELL = {
     inaccuracy = 0,
 
     destination = nil,
+    eta = nil,
+    pitch = 90,
+    heading = 0,
+
     position = nil,
 
     vel_previous = nil,

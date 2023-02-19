@@ -1,5 +1,7 @@
 #include "constants.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "utils.lua"
+---@diagnostic disable-next-line: exp-in-action
 #include "classes/Option.lua"
 
 MENU = {
@@ -24,6 +26,12 @@ function wrapSlider(option)
     UiPush()
         wrapOption(option)
         local value = drawSlider(option)
+
+        if option.value_display_exp > 1 then
+            value = option.value_display_exp ^ value
+        elseif option.value_display_factor > 1 then
+            value = value * option.value_display_factor
+        end
 
         UiAlign("left")
         UiTranslate(option.width + (MENU.spacing_option * 2), 0);
@@ -350,6 +358,20 @@ function renderMenu()
 
         -- Options
         UiFont("regular.ttf", 28)
+
+        if CONFIG_MENUS[STATES.menu].filter == "advanced" then
+            UiPush()
+                UiFont("bold.ttf", 24)
+                UiColor(getUnpackedRGBA(COLOUR["red"]))
+
+                local text = "WARNING: The following options are not intended for most users;\nChange at your own risk!"
+                local width, height = UiGetTextSize(text)
+
+                UiText(text)
+            UiPop()
+
+            UiTranslate(0, height + 20)
+        end
 
         for i, option in ipairs(OPTIONS) do
             if CONFIG_MENUS[STATES.menu].filter ~= nil then
