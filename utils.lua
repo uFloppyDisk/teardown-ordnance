@@ -520,7 +520,7 @@ function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, mat
 
     QueryRequire('large')
     QueryRequire("physical")
-    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos), shell_radius))
+    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
     if not hit then
         return materials, hit_pos, false
     end

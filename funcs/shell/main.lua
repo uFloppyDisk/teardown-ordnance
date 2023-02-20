@@ -242,7 +242,7 @@ local function tick_active(self, delta)
     local shell_radius = self.sprite.width / 2
     QueryRequire('large')
     QueryRequire("physical")
-    local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)), shell_radius)
+    local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)))
 
     ---@return boolean|nil detonate Detonation state
     ---@return table|nil position Position to trigger detonation at.
@@ -277,6 +277,8 @@ local function tick_active(self, delta)
 
         -- Perform recursive check for materials encountered during this tick
         local hit_materials, hit_positions, reached_max_depth = getMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 6)
+
+        local position_detonation
         if hit_positions ~= nil then
             position_detonation = hit_positions[#hit_positions]
         else
@@ -332,6 +334,10 @@ local function tick_active(self, delta)
 
         if bottom_material ~= "rock" and bottom_material ~= "none" then
             return false
+        end
+
+        if #hit_positions == 1 then
+            return true, hit_positions[1]
         end
 
         dPrint("Bottom material is impenetrable")
