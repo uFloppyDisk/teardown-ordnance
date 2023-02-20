@@ -241,13 +241,15 @@ end
 
 --- Draw line using pitch and heading.
 ---@param transform table
+---@param pitch number
 ---@param length number
 ---@param colour table
 ---@param lines integer Amount of vertical lines to draw.
 ---@return table position # Ending position of the line based on distance, pitch, and heading.
 ---@return table position_horizontal # Ending position of the line based only on the heading and distance.
-function drawPitchHeadingLine(transform, length, colour, lines, quick_salvo)
+function drawPitchHeadingLine(transform, pitch, length, colour, lines, quick_salvo)
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
+    pitch = pitch or 90
     length = length or 1
     colour = colour or {1, 1, 1, 1}
     lines = lines or 6
@@ -255,7 +257,7 @@ function drawPitchHeadingLine(transform, length, colour, lines, quick_salvo)
     local pos_start = transform.pos
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
 
-    if quick_salvo or InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) or ({GetQuatEuler(transform.rot)})[3] ~= 90 then
+    if quick_salvo or InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) or pitch < 90 then
         DrawLine(pos_start, pos_end, unpack(colour))
         DebugLine(transform.pos, pos_end, unpack(colour))
     end
@@ -288,8 +290,11 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
 
     local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
 
-    if telemetry[3] == 90 then lines = 0 end
-    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, 2.25, colour, lines, quick_salvo)
+    local isopleth_cull_start = 88
+    if telemetry[3] >= isopleth_cull_start then
+        lines = math.ceil(mapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
+    end
+    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour, lines, quick_salvo)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 
@@ -515,7 +520,7 @@ function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, mat
 
     QueryRequire('large')
     QueryRequire("physical")
-    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos), shell_radius))
+    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
     if not hit then
         return materials, hit_pos, false
     end
