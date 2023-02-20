@@ -290,7 +290,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
 
     local transform_aim_shell_both = Transform(telemetry[1], QuatEuler(0, telemetry[2], telemetry[3]))
 
-    local isopleth_cull_start = 86
+    local isopleth_cull_start = 88
     if telemetry[3] >= isopleth_cull_start then
         lines = math.ceil(mapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
     end
