@@ -276,7 +276,7 @@ local function tick_active(self, delta)
         dPrint("Initial material is '"..material_initial.."'")
 
         -- Perform recursive check for materials encountered during this tick
-        local hit_materials, hit_positions, reached_max_depth = getMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 3)
+        local hit_materials, hit_positions, reached_max_depth = getMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 6)
         if hit_positions ~= nil then
             position_detonation = hit_positions[#hit_positions]
         else
