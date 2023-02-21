@@ -134,6 +134,17 @@ function tick(delta)
         end
     end
 
+    for i, shell in ipairs(SHELLS) do
+        local values = SHELL_VALUES[shell.type]
+        local variant = values.variants[shell.variant]
+
+        if variant.id == "PF" then
+            if shell.secondary.active then
+                PointLight(shell.position, 1, 1, 1, shell.secondary.intensity)
+            end
+        end
+    end
+
     -- Draw HUD markers for quick salvo shell targets
     draw_quicksalvo_markers(STATES.quicksalvo.markers)
 
