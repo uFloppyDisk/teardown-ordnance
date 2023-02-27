@@ -1,7 +1,7 @@
 local function tick_secondary_smoke(self, delta, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
-    local velocity = 2.5
+    local velocity = 2
 
     -- Temp settings stockpile
     -- ParticleGravity(1, 0, 'linear', 0.2)
@@ -76,7 +76,7 @@ local function tick_secondary_smoke(self, delta, variant)
 
         ParticleType("plain")
 
-        ParticleRadius(radius, radius * 1.5, "linear", 0.05, 0.2)
+        ParticleRadius(radius, radius * 1.5, "linear", 0.005, 0.2)
         ParticleCollide(0)
         ParticleGravity(-range / variant.secondary.timer)
 
@@ -132,6 +132,8 @@ local function tick_secondary_smoke(self, delta, variant)
             doMushroomHead(range, size, {pitch, heading}, distance)
         end
     end
+
+    if timer_ratio < 0.10 then return end
 
     if math.random() > 0.95 then
         doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.33))
