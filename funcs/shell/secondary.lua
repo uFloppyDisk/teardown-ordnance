@@ -3,8 +3,45 @@ local function tick_secondary_smoke(self, delta, variant)
 
     local velocity = 2
 
-    -- Temp settings stockpile
-    -- ParticleGravity(1, 0, 'linear', 0.2)
+    local function init_sub()
+        self.secondary.submunitions = {}
+
+        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) / 2)
+
+        local position_origin = VecAdd(self.position, Vec(0, 0.5, 0))
+        for i = 1, amount_submunitions, 1 do
+            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 10, 80))
+            local position_spawn = TransformToParentPoint(Transform(position_origin, rotation), Vec(variant.secondary.radius / 3, 0, 0))
+            local transform = Transform(position_spawn, rotation)
+
+            local sub = objectNew({
+                transform = TransformCopy(transform),
+                velocity = Vec(mapToRange(math.random(), 0, 1, 5, 13), 0, 0)
+            }, DEFAULT_SUBMUNITION)
+
+            addToDebugTable(DEBUG_POSITIONS, {transform.pos, getRGBA(COLOUR["white"])})
+            addToDebugTable(DEBUG_LINES, {position_origin, transform.pos, getRGBA(COLOUR["white"])})
+
+            local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
+            vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
+            sub.velocity = VecAdd(sub.velocity, vel_to_sub)
+
+            sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform)[2]
+            table.insert(BODIES, {
+                valid = true,
+                created_at = ELAPSED_TIME,
+                type = "SM",
+                handle = sub.body
+            })
+
+            SetBodyDynamic(sub.body, true)
+            SetBodyActive(sub.body, true)
+
+            local direction = VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0)))
+
+            SetBodyVelocity(sub.body, VecScale(direction, VecLength(sub.velocity)))
+        end
+    end
 
     local function doIgnitedWP()
         ParticleReset()
@@ -18,7 +55,7 @@ local function tick_secondary_smoke(self, delta, variant)
         local particle_cfg = {
             VecCopy(self.position),
             VecCopy(self.secondary.velocity),
-            0.33
+            0.45
         }
 
         local i = 6
@@ -116,6 +153,8 @@ local function tick_secondary_smoke(self, delta, variant)
 
         PointLight(self.position, 1, 0.5447, 0.2005, 100)
 
+        init_sub()
+
         doIgnitedWP()
         doBodyPrimary()
 
@@ -135,8 +174,8 @@ local function tick_secondary_smoke(self, delta, variant)
 
     if timer_ratio < 0.10 then return end
 
-    if math.random() > 0.95 then
-        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.33))
+    if math.random() > 0.96 then
+        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.33) * timer_ratio)
     end
 end
 
@@ -498,6 +537,36 @@ local function tick_secondary_incendiary(self, delta, variant)
 end
 
 function manage_bodies(body)
+    local function manage_smoke(shapes)
+        if IsShapeBroken(shapes[1]) then return true end
+
+        local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+        PointLight(pos, 1, 0.706, 0.42, 1)
+
+        if IsPointInWater(pos) then return false end
+
+        if not IsBodyActive(body.handle) then
+            if math.random() > 0.05 then return false end
+        end
+
+        -- SpawnFire(pos)
+
+        if math.random() < 0.20 then
+            ParticleReset()
+
+            local radius = math.random() * 0.3 + 0.05
+            ParticleRadius(radius, radius + (math.random() * 3), "linear")
+
+            ParticleType("plain")
+            ParticleCollide(0)
+            ParticleStretch(1)
+
+            SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + 10)
+        end
+
+        if math.random() > 0.05 then return false end
+    end
+
     local function manage_incendiary(shapes)
         if IsShapeBroken(shapes[1]) then return true end
 
@@ -538,7 +607,8 @@ function manage_bodies(body)
     if not IsHandleValid(body.handle) then return true end
 
     local disp_manage = {
-        ["IN"] = manage_incendiary
+        ["IN"] = manage_incendiary,
+        ["SM"] = manage_smoke
     }
 
     local shapes = GetBodyShapes(body.handle)
