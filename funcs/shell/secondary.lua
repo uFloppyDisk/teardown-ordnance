@@ -26,7 +26,7 @@ local function tick_secondary_smoke(self, delta, variant)
             vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
             sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
-            sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform)[2]
+            sub.body = Spawn("MOD/assets/white_phosphorus_small.xml", transform)[2]
             table.insert(BODIES, {
                 valid = true,
                 created_at = ELAPSED_TIME,
