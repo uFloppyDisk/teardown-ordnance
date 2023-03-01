@@ -6,17 +6,17 @@ local function tick_secondary_smoke(self, delta, variant)
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) / 2)
+        local amount_submunitions = (CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) * 2
 
-        local position_origin = VecAdd(self.position, Vec(0, 0.5, 0))
+        local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
         for i = 1, amount_submunitions, 1 do
-            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 10, 80))
-            local position_spawn = TransformToParentPoint(Transform(position_origin, rotation), Vec(variant.secondary.radius / 3, 0, 0))
+            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 12, 70))
+            local position_spawn = TransformToParentPoint(Transform(position_origin, rotation), Vec(variant.secondary.radius / 8, 0, 0))
             local transform = Transform(position_spawn, rotation)
 
             local sub = objectNew({
                 transform = TransformCopy(transform),
-                velocity = Vec(mapToRange(math.random(), 0, 1, 5, 13), 0, 0)
+                velocity = Vec(mapToRange(math.random(), 0, 1, 20, 45), 0, 0)
             }, DEFAULT_SUBMUNITION)
 
             addToDebugTable(DEBUG_POSITIONS, {transform.pos, getRGBA(COLOUR["white"])})
@@ -31,7 +31,8 @@ local function tick_secondary_smoke(self, delta, variant)
                 valid = true,
                 created_at = ELAPSED_TIME,
                 type = "SM",
-                handle = sub.body
+                handle = sub.body,
+                ttl = mapToRange(math.random(), 0, 1, 0.1, 0.8)
             })
 
             SetBodyDynamic(sub.body, true)
@@ -74,8 +75,9 @@ local function tick_secondary_smoke(self, delta, variant)
         SpawnParticle(self.position, G_VEC_WIND, variant.secondary.timer)
     end
 
-    local function doBodyPrimary(radius)
+    local function doBodyPrimary(radius, offset)
         radius = radius or variant.secondary.radius
+        offset = offset or Vec(0, 0, 0)
 
         ParticleReset()
 
@@ -147,6 +149,7 @@ local function tick_secondary_smoke(self, delta, variant)
         end
     end
 
+    -- Initialize smoke effects
     if not assertTableKeys(self.secondary, "init") then
         self.secondary.init = true
         self.secondary.velocity = VecAdd(Vec(0, velocity, 0), G_VEC_WIND)
@@ -541,7 +544,8 @@ function manage_bodies(body)
         if IsShapeBroken(shapes[1]) then return true end
 
         local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
-        PointLight(pos, 1, 0.706, 0.42, 1)
+        local velocity = GetBodyVelocity(body.handle)
+        PointLight(pos, 1, 0.4668, 0.1229, 0.7)
 
         if IsPointInWater(pos) then return false end
 
@@ -551,17 +555,28 @@ function manage_bodies(body)
 
         -- SpawnFire(pos)
 
-        if math.random() < 0.20 then
+        do
             ParticleReset()
 
-            local radius = math.random() * 0.3 + 0.05
-            ParticleRadius(radius, radius + (math.random() * 3), "linear")
+            local radius = mapToRange(math.random(), 0, 1, 0.05, 0.3)
+            ParticleRadius(radius / 2, radius * (mapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
 
             ParticleType("plain")
             ParticleCollide(0)
-            ParticleStretch(1)
+            ParticleStretch(10)
 
-            SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + 10)
+            local iterations = 12
+            for i = 0, iterations, 1 do
+                ParticleAlpha(math.random() * 0.6, 0, 'linear', 0, 0.7)
+
+                local spawn_pos = VecLerp(
+                    VecAdd(pos, VecScale(velocity, 1 / 60)),
+                    VecAdd(pos, VecScale(velocity, -1 / 60)),
+                    i / iterations
+                )
+
+                SpawnParticle(spawn_pos, G_VEC_WIND, math.random() * 10 + 20)
+            end
         end
 
         if math.random() > 0.05 then return false end

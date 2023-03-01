@@ -124,7 +124,8 @@ function tick(delta)
             body.valid = false
         end
 
-        if body.valid == true and (ELAPSED_TIME - body.created_at) > 20 then
+        local ttl = body.ttl or 20
+        if body.valid == true and (ELAPSED_TIME - body.created_at) > ttl then
             Delete(body.handle)
             body.valid = false
         end
