@@ -2,7 +2,7 @@
 
 G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
-G_VEC_WIND = Vec(-0.4, 0.03, 0.07)
+G_VEC_WIND = Vec(-0.15, 0.03, 0.06)
 
 G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
