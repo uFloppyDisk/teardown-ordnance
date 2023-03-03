@@ -1,22 +1,21 @@
 local function tick_secondary_smoke(self, delta, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
-    local velocity = 2
+    local velocity = 1.25
 
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = (CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) * 2
+        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) / 2)
 
         local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
         for i = 1, amount_submunitions, 1 do
-            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 12, 70))
-            local position_spawn = TransformToParentPoint(Transform(position_origin, rotation), Vec(variant.secondary.radius / 8, 0, 0))
-            local transform = Transform(position_spawn, rotation)
+            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 20, 80))
+            local transform = Transform(position_origin, rotation)
 
             local sub = objectNew({
                 transform = TransformCopy(transform),
-                velocity = Vec(mapToRange(math.random(), 0, 1, 20, 45), 0, 0)
+                velocity = Vec(mapToRange(math.random(), 0, 1, 10, 25), 0, 0)
             }, DEFAULT_SUBMUNITION)
 
             addToDebugTable(DEBUG_POSITIONS, {transform.pos, getRGBA(COLOUR["white"])})
@@ -32,7 +31,7 @@ local function tick_secondary_smoke(self, delta, variant)
                 created_at = ELAPSED_TIME,
                 type = "SM",
                 handle = sub.body,
-                ttl = mapToRange(math.random(), 0, 1, 0.1, 0.8)
+                ttl = mapToRange(math.random(), 0, 1, 0.1, 3)
             })
 
             SetBodyDynamic(sub.body, true)
@@ -98,13 +97,14 @@ local function tick_secondary_smoke(self, delta, variant)
         end
     end
 
-    local function doMushroomHead(range, radius, angles, offset_distance)
+    local function doMushroomHead(range, radius, angles, offset_position, offset_distance)
         range = range or velocity
         radius = radius or (variant.secondary.radius / 2)
         angles = angles or {0, 0}
+        offset_position = offset_position or Vec(0, 0, 0)
         offset_distance = offset_distance or 0
 
-        local position_original = VecCopy(self.position)
+        local position_original = VecAdd(VecCopy(self.position), offset_position)
         if offset_distance > 0 then
             local rot = QuatEuler(0, angles[2], 0)
             local transform = Transform(position_original, rot)
@@ -120,6 +120,7 @@ local function tick_secondary_smoke(self, delta, variant)
         ParticleGravity(-range / variant.secondary.timer)
 
         ParticleColor(1, 1, 1)
+        -- ParticleAlpha(1, 0, 'linear', 0, 0.995)
 
         local particle_cfg = {
             VecCopy(position_original),
@@ -137,9 +138,10 @@ local function tick_secondary_smoke(self, delta, variant)
             addToDebugTable(DEBUG_POSITIONS, {position_spawn, getRGBA(COLOUR["red"])})
             addToDebugTable(DEBUG_LINES, {position_original, position_spawn, getRGBA(COLOUR["red"])})
 
-            ParticleRotation(0.8, 0)
+            local par_rot = 0.6 * (range / velocity)
+            ParticleRotation(par_rot, 0)
             if (i >= (instances / 2)) then
-                ParticleRotation(-0.8, 0)
+                ParticleRotation(-par_rot, 0)
             end
 
             local j = 2
@@ -161,7 +163,7 @@ local function tick_secondary_smoke(self, delta, variant)
         doIgnitedWP()
         doBodyPrimary()
 
-        doMushroomHead()
+        doMushroomHead(nil, nil, nil, Vec(0, 6, 0))
 
         local heads = 10
         for i = 1, heads, 1 do
@@ -171,14 +173,14 @@ local function tick_secondary_smoke(self, delta, variant)
             local heading = math.random() * 360
             local distance = math.random() * 5
 
-            doMushroomHead(range, size, {pitch, heading}, distance)
+            doMushroomHead(range, size, {pitch, heading}, nil, distance)
         end
     end
 
     if timer_ratio < 0.10 then return end
 
     if math.random() > 0.96 then
-        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.33) * timer_ratio)
+        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
     end
 end
 
@@ -558,14 +560,15 @@ function manage_bodies(body)
         do
             ParticleReset()
 
-            local radius = mapToRange(math.random(), 0, 1, 0.05, 0.3)
+            local radius = mapToRange(math.random(), 0, 1, 0.05, 0.2)
+            if math.random() > 0.8 then radius = radius * mapToRange(math.random(), 0, 1, 1.5, 5) end
             ParticleRadius(radius / 2, radius * (mapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
 
             ParticleType("plain")
             ParticleCollide(0)
             ParticleStretch(10)
 
-            local iterations = 12
+            local iterations = 4
             for i = 0, iterations, 1 do
                 ParticleAlpha(math.random() * 0.6, 0, 'linear', 0, 0.7)
 
@@ -575,7 +578,7 @@ function manage_bodies(body)
                     i / iterations
                 )
 
-                SpawnParticle(spawn_pos, G_VEC_WIND, math.random() * 10 + 20)
+                SpawnParticle(spawn_pos, G_VEC_WIND, mapToRange(math.random(), 0, 1, 5, 30))
             end
         end
 
