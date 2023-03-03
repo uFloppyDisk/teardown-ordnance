@@ -139,6 +139,10 @@ function tick(delta)
         local values = SHELL_VALUES[shell.type]
         local variant = values.variants[shell.variant]
 
+        if (shell.secondary.active and variant.secondary.draw) or not shell.secondary.active then
+            draw_sprite(shell, shell.position)
+        end
+
         if variant.id == "PF" then
             if shell.secondary.active then
                 PointLight(shell.position, 1, 1, 1, shell.secondary.intensity)

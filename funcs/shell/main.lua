@@ -1,6 +1,6 @@
 #include "secondary.lua"
 
-local function draw_sprite(self, pos)
+function draw_sprite(self, pos)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
     local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
@@ -220,8 +220,6 @@ local function tick_active(self, delta)
         local veln = VecNormalize(self.vel_current)
         local vx, vy, vz = dist * veln[1], dist * veln[2], dist * veln[3]
         SpawnParticle(VecAdd(self.position, Vec(vx, vy, vz)), Vec(0, 0, 0), 0.2)
-
-        draw_sprite(self, self.position)
     end
 
     -- Stop increasing kinetic energy after first hit
