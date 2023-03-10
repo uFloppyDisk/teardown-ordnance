@@ -201,25 +201,31 @@ local function tick_active(self, delta)
 
     -- Provide default behaviours until secondary is active
     if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
-        local iterations = G_PHYSICS_ITERATIONS
-        local iter_delta = delta / iterations
+        local physics_iterations = G_PHYSICS_ITERATIONS
+        local iter_delta = delta / physics_iterations
 
         -- Calculation of gravity's effect on shell velocity and position over N iterations
-        for _ = 0, iterations, 1 do
+        for _ = 0, physics_iterations, 1 do
             velocity_new = VecAdd(velocity_new, VecScale(G_VEC_GRAVITY, iter_delta))
             position_new = VecAdd(position_new, VecScale(velocity_new, iter_delta))
         end
 
         self.vel_current = VecCopy(velocity_new)
 
-        ParticleReset()
-        ParticleRadius(0.2)
-        ParticleStretch(1.0)
+        if math.abs(VecLength(VecSub(self.position, GetCameraTransform().pos))) < 100 then
+            ParticleReset()
+            ParticleRadius(0.2, 0)
+            ParticleStretch(1.0)
 
-        local dist = self.sprite.width * self.sprite.scaling_factor
-        local veln = VecNormalize(self.vel_current)
-        local vx, vy, vz = dist * veln[1], dist * veln[2], dist * veln[3]
-        SpawnParticle(VecAdd(self.position, Vec(vx, vy, vz)), Vec(0, 0, 0), 0.2)
+            do -- Fill flight particles
+                local iterations = 16
+
+                for i = 1, iterations, 1 do
+                    local spawn_pos = VecLerp(self.position, position_new, i / iterations)
+                    SpawnParticle(spawn_pos, G_VEC_WIND, 0.2)
+                end
+            end
+        end
     end
 
     -- Stop increasing kinetic energy after first hit
