@@ -51,8 +51,8 @@ local function tick_secondary_smoke(self, delta, variant)
                     VecLength(sub.velocity) * clamp(mapToRange(
                         random_pitch / pitch.max,
                         0.5, 1,
-                        0.5, 5
-                    ), 0.5, 5)
+                        0.5, 4
+                    ), 0.5, 4)
                 )
             )
         end
