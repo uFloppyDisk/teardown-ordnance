@@ -362,7 +362,6 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
         if ui_pos_root[3] > 70 then
             local gizmo_size = 100
             local gizmo_offset = {50, -50}
-            -- TODO - HUD display for pitch and heading when distance from camera is too great
                 UiTranslate(ui_pos_root[1], ui_pos_root[2])
 
                 drawUIAttackHUD({pitch, heading}, gizmo_size, gizmo_offset)
@@ -519,8 +518,10 @@ function drawUIAttackHUD(attack, size, offset, colour)
         end
 
         do -- Hypotenuse
-            local size_adj = size + 5
+            local size_adj = size + 4
         UiPush()
+            UiAlign('bottom')
+            UiTranslate(size_hypo, size_hypo)
             UiRotate(STATES.selected_attack_angle)
 
             UiPush()
