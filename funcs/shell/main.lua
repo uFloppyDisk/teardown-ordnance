@@ -215,6 +215,7 @@ local function tick_active(self, delta)
         if math.abs(VecLength(VecSub(self.position, GetCameraTransform().pos))) < 100 then
             ParticleReset()
             ParticleRadius(0.2, 0)
+            ParticleAlpha(0.2)
             ParticleStretch(1.0)
 
             do -- Fill flight particles
@@ -222,7 +223,7 @@ local function tick_active(self, delta)
 
                 for i = 1, iterations, 1 do
                     local spawn_pos = VecLerp(self.position, position_new, i / iterations)
-                    SpawnParticle(spawn_pos, G_VEC_WIND, 0.2)
+                    SpawnParticle(spawn_pos, G_VEC_WIND, 0.1)
                 end
             end
         end
