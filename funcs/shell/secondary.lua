@@ -6,11 +6,14 @@ local function tick_secondary_smoke(self, delta, variant)
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50) / 2)
+        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
+        local pitch = { min = 10, max = 80}
+        local pitch_ratio_min = pitch.min / pitch.max
 
         local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
         for i = 1, amount_submunitions, 1 do
-            local rotation = QuatEuler(0, math.random() * 360, mapToRange(math.random(), 0, 1, 20, 80))
+            local random_pitch = mapToRange(math.random(), 0, 1, pitch.min, pitch.max)
+            local rotation = QuatEuler(0, math.random() * 360, random_pitch)
             local transform = Transform(position_origin, rotation)
 
             local sub = objectNew({
@@ -25,21 +28,39 @@ local function tick_secondary_smoke(self, delta, variant)
             vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
             sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
+            local temp_value = clamp(mapToRange(
+                random_pitch / pitch.max,
+                pitch_ratio_min, 0.8,
+                1, 0.01
+            ), 0.01, 1)
+
+            local time_to_live = 1 * temp_value -- mapToRange(math.random(), 0, 1, 0.1, 3) * temp_value
+
+            DebugPrint(temp_value.." at "..random_pitch.."deg resulting in "..time_to_live.."sec")
+
             sub.body = Spawn("MOD/assets/white_phosphorus_small.xml", transform)[2]
             table.insert(BODIES, {
                 valid = true,
                 created_at = ELAPSED_TIME,
                 type = "SM",
                 handle = sub.body,
-                ttl = mapToRange(math.random(), 0, 1, 0.1, 3)
+                ttl = 1 * temp_value
             })
 
             SetBodyDynamic(sub.body, true)
             SetBodyActive(sub.body, true)
 
-            local direction = VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0)))
-
-            SetBodyVelocity(sub.body, VecScale(direction, VecLength(sub.velocity)))
+            SetBodyVelocity(
+                sub.body,
+                VecScale(
+                    VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0))),
+                    VecLength(sub.velocity) * clamp(mapToRange(
+                        random_pitch / pitch.max,
+                        0.5, 1,
+                        0.5, 5
+                    ), 0.5, 5)
+                )
+            )
         end
     end
 
