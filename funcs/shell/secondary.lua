@@ -478,13 +478,18 @@ local function tick_secondary_incendiary(self, delta, variant)
         local reflected_direction = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
         reflected_direction = VecLerp(reflected_direction, normal, math.random() * 0.5)
 
+        local velocity_wp = VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)
+
+        -- Reduce WP velocity if reflected direction is too close to normal
+        velocity_wp = velocity_wp * clamp(mapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
+
         local cross_direction = VecCross(normal, reflected_direction)
         if math.random() < 0.5 then
             cross_direction = VecSub(cross_direction, VecScale(cross_direction, 2))
         end
         local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.4))
 
-        SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)))
+        SetBodyVelocity(sub.body, VecScale(send_direction, velocity_wp))
 
         if math.random() > 0.66 then
             ParticleCollide(0)
