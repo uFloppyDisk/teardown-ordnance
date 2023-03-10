@@ -28,23 +28,17 @@ local function tick_secondary_smoke(self, delta, variant)
             vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
             sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
-            local temp_value = clamp(mapToRange(
-                random_pitch / pitch.max,
-                pitch_ratio_min, 0.8,
-                1, 0.01
-            ), 0.01, 1)
-
-            local time_to_live = 1 * temp_value -- mapToRange(math.random(), 0, 1, 0.1, 3) * temp_value
-
-            DebugPrint(temp_value.." at "..random_pitch.."deg resulting in "..time_to_live.."sec")
-
             sub.body = Spawn("MOD/assets/white_phosphorus_small.xml", transform)[2]
             table.insert(BODIES, {
                 valid = true,
                 created_at = ELAPSED_TIME,
                 type = "SM",
                 handle = sub.body,
-                ttl = 1 * temp_value
+                ttl = mapToRange(math.random(), 0, 1, 0.3, 2) * clamp(mapToRange(
+                    random_pitch / pitch.max,
+                    pitch_ratio_min, 0.8,
+                    1, 0.01
+                ), 0.01, 1)
             })
 
             SetBodyDynamic(sub.body, true)
