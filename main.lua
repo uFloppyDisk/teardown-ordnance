@@ -22,7 +22,7 @@ PLAYER_LOCK_TRANSFORM = nil
 -- #region Main
 
 function init()
-    RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
+    RegisterTool("ordnance", "Ordnance [FD]", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
     if CONFIG_init() then
