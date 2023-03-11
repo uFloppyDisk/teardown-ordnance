@@ -1,104 +1,221 @@
 local function tick_secondary_smoke(self, delta, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
-    local radius = variant.secondary.radius
-    -- local radius_master = clamp(radius - (radius * (1 - timer_ratio)), radius - (radius / 3), radius)
 
-    local radius_master = radius
-    if timer_ratio < 0.3 then
-        radius_master = radius_master - (radius_master * (1 - (timer_ratio / 0.3)))
+    local velocity = 1.25
+
+    local function init_sub()
+        self.secondary.submunitions = {}
+
+        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
+        local pitch = { min = 10, max = 80}
+        local pitch_ratio_min = pitch.min / pitch.max
+
+        local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
+        for i = 1, amount_submunitions, 1 do
+            local random_pitch = mapToRange(math.random(), 0, 1, pitch.min, pitch.max)
+            local rotation = QuatEuler(0, math.random() * 360, random_pitch)
+            local transform = Transform(position_origin, rotation)
+
+            local sub = objectNew({
+                transform = TransformCopy(transform),
+                velocity = Vec(mapToRange(math.random(), 0, 1, 10, 25), 0, 0)
+            }, DEFAULT_SUBMUNITION)
+
+            addToDebugTable(DEBUG_POSITIONS, {transform.pos, getRGBA(COLOUR["white"])})
+            addToDebugTable(DEBUG_LINES, {position_origin, transform.pos, getRGBA(COLOUR["white"])})
+
+            local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
+            vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
+            sub.velocity = VecAdd(sub.velocity, vel_to_sub)
+
+            sub.body = Spawn("MOD/assets/white_phosphorus_small.xml", transform)[2]
+            table.insert(BODIES, {
+                valid = true,
+                created_at = ELAPSED_TIME,
+                type = "SM",
+                handle = sub.body,
+                ttl = mapToRange(math.random(), 0, 1, 0.3, 2) * clamp(mapToRange(
+                    random_pitch / pitch.max,
+                    pitch_ratio_min, 0.8,
+                    1, 0.01
+                ), 0.01, 1)
+            })
+
+            SetBodyDynamic(sub.body, true)
+            SetBodyActive(sub.body, true)
+
+            SetBodyVelocity(
+                sub.body,
+                VecScale(
+                    VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0))),
+                    VecLength(sub.velocity) * clamp(mapToRange(
+                        random_pitch / pitch.max,
+                        0.5, 1,
+                        0.5, 4
+                    ), 0.5, 4)
+                )
+            )
+        end
     end
 
-    -- Smoke plume
-    if (timer_ratio > 0.2 and timer_ratio < 0.99) and math.random() > 0.8 then
+    local function doIgnitedWP()
         ParticleReset()
-        ParticleType('plain')
-        ParticleAlpha(1, 0, "smooth", 0, 0.95)
-        ParticleStretch(1)
-        ParticleCollide(0, 1, "easein", 0.1, 1)
 
-        local segments = 8;
-        for i = 0, 360, (360 / segments) do
-            if math.random() > 0.9 then
-                break
+        ParticleCollide(0)
+
+        ParticleColor(1, 0.1718, 0)
+        ParticleAlpha(1, 0, 'linear', 0, 0)
+        ParticleEmissive(10)
+
+        local particle_cfg = {
+            VecCopy(self.position),
+            VecCopy(self.secondary.velocity),
+            0.45
+        }
+
+        local i = 6
+        repeat
+            local radius = variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.3, 1)
+            ParticleRadius(radius / 2, radius, 'linear', 0.1, 0.1)
+
+            SpawnParticle(unpack(particle_cfg))
+
+            i = i - 1
+        until i <= 0
+
+        ParticleColor(1, 1, 1)
+        ParticleEmissive(0)
+        ParticleRadius(variant.secondary.radius, variant.secondary.radius, "linear", 0, 0.01)
+        SpawnParticle(self.position, G_VEC_WIND, variant.secondary.timer)
+    end
+
+    local function doBodyPrimary(radius, offset)
+        radius = radius or variant.secondary.radius
+        offset = offset or Vec(0, 0, 0)
+
+        ParticleReset()
+
+        ParticleCollide(0)
+
+        ParticleColor(1, 1, 1)
+        ParticleAlpha(1, 0, 'linear', 0, 0)
+
+        local particle_cfg = {
+            VecCopy(self.position),
+            VecCopy(G_VEC_WIND),
+            self.secondary.timer
+        }
+
+        for i = 0, 6, 1 do
+            ParticleRadius(radius / mapToRange(math.random(), 0, 1, 1.1, 1.7), radius, 'linear', 0.02)
+            SpawnParticle(unpack(particle_cfg))
+        end
+    end
+
+    local function doMushroomHead(range, radius, angles, offset_position, offset_distance)
+        range = range or velocity
+        radius = radius or (variant.secondary.radius / 2)
+        angles = angles or {0, 0}
+        offset_position = offset_position or Vec(0, 0, 0)
+        offset_distance = offset_distance or 0
+
+        local position_original = VecAdd(VecCopy(self.position), offset_position)
+        if offset_distance > 0 then
+            local rot = QuatEuler(0, angles[2], 0)
+            local transform = Transform(position_original, rot)
+            position_original = TransformToParentPoint(transform, Vec(offset_distance, 0, 0))
+        end
+
+        ParticleReset()
+
+        ParticleType("plain")
+
+        ParticleRadius(radius, radius * 1.5, "linear", 0.005, 0.2)
+        ParticleCollide(0)
+        ParticleGravity(-range / variant.secondary.timer)
+
+        ParticleColor(1, 1, 1)
+        -- ParticleAlpha(1, 0, 'linear', 0, 0.995)
+
+        local particle_cfg = {
+            VecCopy(position_original),
+            VecAdd(Vec(0, range, 0), G_VEC_WIND),
+            self.secondary.timer
+        }
+
+        local instances = 6
+        for i = 1, instances, 1 do
+            local deg = 360 * (i / instances)
+            local rot = QuatEuler(0, deg, angles[1] * -(math.cos(math.rad(deg - angles[2]))))
+            local transform = Transform(position_original, rot)
+            local position_spawn = TransformToParentPoint(transform, Vec((radius / 2), 0, 0))
+
+            addToDebugTable(DEBUG_POSITIONS, {position_spawn, getRGBA(COLOUR["red"])})
+            addToDebugTable(DEBUG_LINES, {position_original, position_spawn, getRGBA(COLOUR["red"])})
+
+            local par_rot = 0.6 * (range / velocity)
+            ParticleRotation(par_rot, 0)
+            if (i >= (instances / 2)) then
+                ParticleRotation(-par_rot, 0)
             end
 
-            local particle_radius1 = math.random() * 0.5
-            local particle_radius2 = (math.random() * 0.2) + particle_radius1
-            ParticleRadius(particle_radius1, particle_radius2, "easein", 0.02, 0.95)
-
-            local rand_gravity = math.random() * 0.05
-            ParticleGravity(0, rand_gravity, "linear", 0, 1)
-
-            local rotation = QuatEuler(0, (i + (math.random() * (360 / segments))), 0)
-            local transform = Transform(self.position, rotation)
-
-            local vel_rand = math.random() * 0.2
-            local vel = Vec(vel_rand, 0, 0)
-            vel = TransformToParentVec(transform, vel)
-
-            local position_spawn = TransformToParentPoint(transform, Vec(radius_master * clamp(1 + math.random(), 1, 1.3), 0, 0))
-
-            SpawnParticle(position_spawn, vel, variant.secondary.timer)
+            local j = 2
+            for _ = 0, j, 1 do
+                SpawnParticle(position_spawn, particle_cfg[2], particle_cfg[3])
+            end
         end
     end
 
-    -- Smoke Body
-    if timer_ratio == 1 or math.random() > 0.8 then
-        local rotation = QuatEuler(0, 360 * math.random(), 0)
-        local distance = Vec((radius_master * 0.8) * math.random(), 0, 0)
-        local transform = Transform(VecCopy(self.position), rotation)
-        local position_spawn = TransformToParentPoint(transform, distance)
+    -- Initialize smoke effects
+    if not assertTableKeys(self.secondary, "init") then
+        self.secondary.init = true
+        self.secondary.velocity = VecAdd(Vec(0, velocity, 0), G_VEC_WIND)
 
-        ParticleReset()
-        ParticleType('plain')
-        ParticleRadius(radius_master * clamp(math.random(), 0.3, 0.7))
-        ParticleAlpha(1, 0, "smooth", 0, 0.8)
-        ParticleGravity(0.01)
-        -- ParticleStretch(1)
-        -- ParticleCollide(0, 1, "easein", 0.1, 1)
-        ParticleCollide(0)
+        PointLight(self.position, 1, 0.5447, 0.2005, 100)
 
-        SpawnParticle(position_spawn, Vec(0, 0.02, 0), variant.secondary.timer - (variant.secondary.timer / 4))
+        init_sub()
 
-        -- High Smoke
-        if math.random() > 0.5 then
-            rotation = QuatEuler(0, 360 * math.random(), 0)
-            distance = Vec((radius_master * 0.2) * math.random(), 0, 0)
-            transform = Transform(VecCopy(self.position), rotation)
-            position_spawn = TransformToParentPoint(transform, distance)
+        doIgnitedWP()
+        doBodyPrimary()
 
-            ParticleRadius(radius_master * clamp(math.random(), 0.3, 0.5))
-            ParticleCollide(0.2)
-            SpawnParticle(position_spawn, Vec(0, 0.02, 0), variant.secondary.timer - (variant.secondary.timer / 4))
+        doMushroomHead(nil, nil, nil, Vec(0, 6, 0))
+
+        local heads = 10
+        for i = 1, heads, 1 do
+            local range = velocity * (i / heads)
+            local size = variant.secondary.radius / mapToRange(math.random(), 0, 1, 2, 4)
+            local pitch = math.random() * 40
+            local heading = math.random() * 360
+            local distance = math.random() * 5
+
+            doMushroomHead(range, size, {pitch, heading}, nil, distance)
         end
     end
 
-    -- Smoke Mushroom
-    if timer_ratio < 1 and math.random() > 0.9 then
-        -- local particle_radius = clamp(radius - (radius * timer_ratio), radius / 2, (radius - (radius / 2.4)))
-        local particle_radius = radius - (math.random() * (radius * 0.25))
+    if timer_ratio < 0.10 then return end
 
-        ParticleReset()
-        ParticleType('plain')
-        -- ParticleRadius(particle_radius - (math.random() * (radius / 3)))
-        ParticleRadius(particle_radius * 0.9, particle_radius, "easeout", 0.001, 0.99)
-        ParticleAlpha(1, 0, "smooth", 0, 0.8)
-        ParticleGravity(-0.07)
-        ParticleStretch(1)
-        -- ParticleCollide(0, 1, "easein", 0.1, 1)
-        ParticleCollide(0)
-
-        SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.2, 0), variant.secondary.timer * 0.5)
-
-        -- Smoke Volume Assist
-        -- ParticleRadius(radius * 0.2)
-        -- SpawnParticle(VecAdd(self.position, Vec(0, 0, 0)), Vec(0, radius * 0.02, 0), variant.secondary.timer)
+    if math.random() > 0.96 then
+        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
     end
 end
 
 local function tick_secondary_parachuted_flare(self, delta, variant)
+    self.position = VecAdd(self.position, VecScale(self.vel_current, delta))
+
+    if QueryRaycast(self.position, Vec(0, -1, 0), 0.02) then
+        self.vel_current = Vec(0, 0, 0)
+    end
+
     local timer_ratio = self.secondary.timer / variant.secondary.timer
-    self.secondary.intensity = clamp((self.secondary.intensity + (5 * math.random(-1, 1))), 950, 1050)
+    self.secondary.intensity = clamp((self.secondary.intensity + (math.random(10, 20) * math.random(-1, 1))), 900, 1100)
+
+    if IsPointInWater(self.position) then
+        self.secondary.intensity = self.secondary.intensity * 0.5
+    end
+
+    if math.random() <= 0.04 then
+        self.secondary.intensity = self.secondary.intensity * 0.9
+    end
 
     if timer_ratio <= 0.15 then
         self.secondary.intensity = self.secondary.intensity * ((timer_ratio) / 0.15)
@@ -106,21 +223,20 @@ local function tick_secondary_parachuted_flare(self, delta, variant)
 
     dWatch("shell(SECONDARY_INTENSITY)", self.secondary.intensity)
 
-    PointLight(self.position, 1, 1, 1, self.secondary.intensity)
-
+    if timer_ratio <= 0.02 then return end
     if math.random() <= 0.5 then return end
 
     -- Spawn smoke particles
     ParticleReset()
-    ParticleRadius(0.3 * math.random())
-    ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.5)
+    ParticleRadius(0.3 * math.random(), 0, 'easeout', 0, 0.5)
+    ParticleAlpha(1.0, 0.0, "linear", 0.05, 0.5)
     ParticleStretch(0)
 
     local particle_origin = VecAdd(self.position, Vec(0, (self.sprite.width * self.sprite.scaling_factor), 0))
     self.secondary.particle_spread[1] = clamp(self.secondary.particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
     self.secondary.particle_spread[3] = clamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
 
-    SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0, 0.05), 20)
+    SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0.08, 0.05), 7 + (13 * timer_ratio))
 end
 
 local function tick_secondary_cluster(self, delta, variant)
@@ -377,13 +493,18 @@ local function tick_secondary_incendiary(self, delta, variant)
         local reflected_direction = VecSub(direction, VecScale(normal, VecDot(normal, direction) * 2))
         reflected_direction = VecLerp(reflected_direction, normal, math.random() * 0.5)
 
+        local velocity_wp = VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)
+
+        -- Reduce WP velocity if reflected direction is too close to normal
+        velocity_wp = velocity_wp * clamp(mapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
+
         local cross_direction = VecCross(normal, reflected_direction)
         if math.random() < 0.5 then
             cross_direction = VecSub(cross_direction, VecScale(cross_direction, 2))
         end
         local send_direction = VecNormalize(VecLerp(reflected_direction, cross_direction, math.random() * 0.4))
 
-        SetBodyVelocity(sub.body, VecScale(send_direction, VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)))
+        SetBodyVelocity(sub.body, VecScale(send_direction, velocity_wp))
 
         if math.random() > 0.66 then
             ParticleCollide(0)
@@ -441,6 +562,49 @@ local function tick_secondary_incendiary(self, delta, variant)
 end
 
 function manage_bodies(body)
+    local function manage_smoke(shapes)
+        if IsShapeBroken(shapes[1]) then return true end
+
+        local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+        local velocity = GetBodyVelocity(body.handle)
+        PointLight(pos, 1, 0.4668, 0.1229, 0.7)
+
+        if IsPointInWater(pos) then return false end
+
+        if not IsBodyActive(body.handle) then
+            if math.random() > 0.05 then return false end
+        end
+
+        -- SpawnFire(pos)
+
+        do
+            ParticleReset()
+
+            local radius = mapToRange(math.random(), 0, 1, 0.05, 0.2)
+            if math.random() > 0.8 then radius = radius * mapToRange(math.random(), 0, 1, 1.5, 5) end
+            ParticleRadius(radius / 2, radius * (mapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
+
+            ParticleType("plain")
+            ParticleCollide(0)
+            ParticleStretch(10)
+
+            local iterations = 4
+            for i = 0, iterations, 1 do
+                ParticleAlpha(math.random() * 0.6, 0, 'linear', 0, 0.7)
+
+                local spawn_pos = VecLerp(
+                    VecAdd(pos, VecScale(velocity, 1 / 60)),
+                    VecAdd(pos, VecScale(velocity, -1 / 60)),
+                    i / iterations
+                )
+
+                SpawnParticle(spawn_pos, G_VEC_WIND, mapToRange(math.random(), 0, 1, 5, 30))
+            end
+        end
+
+        if math.random() > 0.05 then return false end
+    end
+
     local function manage_incendiary(shapes)
         if IsShapeBroken(shapes[1]) then return true end
 
@@ -481,7 +645,8 @@ function manage_bodies(body)
     if not IsHandleValid(body.handle) then return true end
 
     local disp_manage = {
-        ["IN"] = manage_incendiary
+        ["IN"] = manage_incendiary,
+        ["SM"] = manage_smoke
     }
 
     local shapes = GetBodyShapes(body.handle)
@@ -508,7 +673,7 @@ function trigger_secondary(self, parameters, detonate)
         end
 
         self.secondary.active = true
-        self.secondary.inertia = self.vel_current
+        self.secondary.inertia = VecCopy(self.vel_current)
 
         self.vel_current = Vec(-0.1, -1, 0.02)
 

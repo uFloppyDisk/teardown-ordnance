@@ -325,6 +325,7 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
     if static == nil then static = false end
 
     local heading = math.abs(math.ceil((((STATES.selected_attack_heading + 270) % 360) * -1) + 359))
+    local pitch = STATES.selected_attack_angle
 
     -- displays static UI gizmo component and returns
     if static then
@@ -335,82 +336,19 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
         if align == nil or type(align) ~= "table" then align = {false, false} end
 
         local length = 100
-        local pitch = STATES.selected_attack_angle
-        local length_base = math.cos(math.rad(pitch)) * length
-        local length_vert = math.sin(math.rad(pitch)) * length
-
-        local margins = {5, 5}
-        local extra = {0, 0}
 
         local translate_x = x
         local translate_y = y
 
         if align[1] then
-            translate_x = translate_x - (length + (margins[1] * 2))
+            translate_x = translate_x - length
         end
 
         if align[2] then
-            translate_y = translate_y + (length + (margins[2] * 2))
+            translate_y = translate_y + length
         end
 
-        pitch = round(pitch)
-        heading = round(heading)
-
-        UiPush()
-            UiTranslate(translate_x, translate_y)
-            -- UiTranslate(x * 0.7, y * 5)
-
-            UiPush()
-                UiTranslate(-margins[1], -(margins[2] + length))
-
-                UiColor(0, 0, 0, 0.25)
-                UiRect(length + (margins[1] * 2) + extra[1], length + (margins[2] * 2) + extra[2])
-            UiPop()
-
-            UiAlign("left")
-            UiFont("regular.ttf", 26)
-            UiTextShadow(0, 0, 0, 1, 1, 1)
-            UiColor(unpack(getRGBA(colour, 0.5)))
-
-            if pitch ~= 90 then
-                UiPush()
-                    UiRect(length_base, 3)
-
-                    UiPush()
-                        local ui_text_heading = heading.."°"
-                        local _, size_y = UiGetTextSize(ui_text_heading)
-                        UiTranslate(length_base / 2, size_y + 2)
-
-                        UiAlign('center')
-                        UiColor(1, 1, 1, 1)
-
-                        UiText(heading.."°")
-                    UiPop()
-
-                    UiPush()
-                        UiTranslate(length_base, -length_vert)
-                        UiRect(2, length_vert)
-                    UiPop()
-                UiPop()
-            end
-
-            -- Hypotenuse
-            UiPush()
-                UiRotate(STATES.selected_attack_angle)
-
-                UiColor(unpack(colour))
-                UiRect(length, 5)
-            UiPop()
-
-            UiPush()
-                local ui_text_pitch = pitch.."°"
-                local _, size_y = UiGetTextSize(ui_text_pitch)
-                UiTranslate(length_base + 5, -(length_vert - (size_y * 0.8)))
-
-                UiColor(1, 1, 1, 1)
-                UiText(pitch.."°")
-            UiPop()
-        UiPop()
+        drawUIAttackHUD({pitch, heading}, 100, {translate_x, translate_y})
 
         return
     end
@@ -421,8 +359,12 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
         -- TODO: Add text offset based on distance to prevent overcrowding
         local ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
 
-        if ui_pos_root[3] > 65 then
-            -- TODO - HUD display for pitch and heading when distance from camera is too great
+        if ui_pos_root[3] > 70 then
+            local gizmo_size = 100
+            local gizmo_offset = {50, -50}
+                UiTranslate(ui_pos_root[1], ui_pos_root[2])
+
+                drawUIAttackHUD({pitch, heading}, gizmo_size, gizmo_offset)
             UiPop()
             return
         end
@@ -482,6 +424,117 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
                 UiText(heading.."°", true)
             end
         UiPop()
+    UiPop()
+end
+
+function drawUIAttackHUD(attack, size, offset, colour)
+    local pitch = round(attack[1])
+    local heading = round(attack[2])
+
+    if pitch == 90 then return end
+
+    size = size or 100
+    offset = offset or {0, 0}
+    colour = colour or getRGBA(COLOUR["yellow_dark"])
+
+    local length_base = math.cos(math.rad(pitch)) * size
+    local length_vert = math.sin(math.rad(pitch)) * size
+
+    local size_hypo = 5
+    local size_shadow = 3
+
+    UiPush()
+        UiTranslate(offset[1], offset[2])
+        -- UiTranslate(x * 0.7, y * 5)
+
+        UiAlign("left")
+        UiFont("regular.ttf", 26)
+        UiTextShadow(0, 0, 0, 1, 1, 1)
+        UiColor(unpack(getRGBA(colour, 0.5)))
+
+        UiPush()
+            UiTranslate(size_hypo, 0)
+
+            do -- shadows
+            UiPush()
+                UiColor(0, 0, 0, 0.125)
+
+                UiPush()
+                    UiTranslate(length_base, -length_vert)
+                    UiTranslate(size_shadow, 0)
+                    UiRect(size_shadow, length_vert + size_shadow + 4.5)
+                UiPop()
+                UiPush()
+                    UiTranslate(0, size_shadow + 1)
+                    UiRect(length_base + 3.5, size_shadow)
+                UiPop()
+            UiPop()
+            end
+
+            UiRect(length_base + 0.5, 3)
+
+            do
+            UiPush()
+                local ui_text_heading = heading.."°"
+                local size_x, size_y = UiGetTextSize(ui_text_heading)
+
+                UiTranslate(length_base / 2, 0)
+
+                UiAlign('center')
+                UiPush()
+                    UiTranslate(0, 7)
+                    UiColor(0, 0, 0, 0.125)
+                    UiRect(size_x, size_y)
+                UiPop()
+
+                UiTranslate(0, size_y + 2)
+                UiColor(1, 1, 1, 1)
+                UiText(heading.."°")
+            UiPop()
+
+            UiPush()
+                UiTranslate(length_base, -length_vert)
+                UiRect(3, length_vert + 3.5)
+            UiPop()
+            end
+        UiPop()
+
+        do
+        UiPush()
+            local ui_text_pitch = pitch.."°"
+            local size_x, size_y = UiGetTextSize(ui_text_pitch)
+
+            UiTranslate(length_base + size_hypo + 6, -length_vert)
+
+            UiPush()
+                UiColor(0, 0, 0, 0.125)
+                UiRect(size_x, size_y + 3)
+            UiPop()
+
+            UiTranslate(0, size_y * 0.8)
+            UiColor(1, 1, 1, 1)
+            UiText(pitch.."°")
+        UiPop()
+        end
+
+        do -- Hypotenuse
+            local size_adj = size + 4
+        UiPush()
+            UiAlign('bottom')
+            UiTranslate(size_hypo, size_hypo)
+            UiRotate(STATES.selected_attack_angle)
+
+            UiPush()
+                UiTranslate(0, size_shadow)
+                UiColor(0, 0, 0, 0.5)
+
+                UiRect(size_adj, size_shadow + 1)
+            UiPop()
+
+            UiColor(unpack(colour))
+            UiRect(size_adj, size_hypo)
+        UiPop()
+        end
     UiPop()
 end
 

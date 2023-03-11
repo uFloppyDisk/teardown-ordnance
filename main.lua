@@ -22,7 +22,7 @@ PLAYER_LOCK_TRANSFORM = nil
 -- #region Main
 
 function init()
-    RegisterTool("ordnance", "Ordnance", "MOD/vox/lasergun.vox")
+    RegisterTool("ordnance", "Ordnance [FD]", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
     if CONFIG_init() then
@@ -124,13 +124,29 @@ function tick(delta)
             body.valid = false
         end
 
-        if body.valid == true and (ELAPSED_TIME - body.created_at) > 20 then
+        local ttl = body.ttl or 20
+        if body.valid == true and (ELAPSED_TIME - body.created_at) > ttl then
             Delete(body.handle)
             body.valid = false
         end
 
         if not body.valid then
             table.remove(BODIES, i)
+        end
+    end
+
+    for i, shell in ipairs(SHELLS) do
+        local values = SHELL_VALUES[shell.type]
+        local variant = values.variants[shell.variant]
+
+        if (shell.secondary.active and variant.secondary.draw) or not shell.secondary.active then
+            draw_sprite(shell, shell.position)
+        end
+
+        if variant.id == "PF" then
+            if shell.secondary.active then
+                PointLight(shell.position, 1, 1, 1, shell.secondary.intensity)
+            end
         end
     end
 
