@@ -61,7 +61,10 @@ local function tick_secondary_smoke(self, delta, variant)
                 0.5, 4
             )
 
-            })
+            if wp_select == 2 then
+                managed_body.ttl = managed_body.ttl * 1.5
+                body_velocity = body_velocity * 1
+            end
 
             table.insert(BODIES, managed_body)
 
