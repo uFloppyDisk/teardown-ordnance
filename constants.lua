@@ -142,6 +142,12 @@ CONFIG_VARIABLES = {
         value_type = "int",
         value_default = 20
     },
+    ["SHELL_FRAGMENTATION_DISTANCE_SCALE"] = {
+        variable = G_CONFIG_ROOT..".fragmentation.distance_scale",
+
+        value_type = "float",
+        value_default = 1,
+    },
     ["TACTICAL_POSTPROCESSING_TOGGLE"] = {
         variable = G_CONFIG_ROOT..".tactical.postprocessing",
 
@@ -365,6 +371,18 @@ CONFIG_OPTIONS = {
 
         value_min = 10,
         value_max = 100
+    },
+    {
+        category = "fragmentation",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["SHELL_FRAGMENTATION_DISTANCE_SCALE"],
+        name = "Frag Distance Scale",
+
+        value_unit = "x",
+        value_digits = 1,
+
+        value_min = 0.5,
+        value_max = 4
     },
     {
         category = "tactical",

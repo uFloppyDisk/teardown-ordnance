@@ -121,7 +121,7 @@ local function detonate(self, pos)
 
         local FRAG_AMOUNT = CONFIG_getConfValue("SHELL_FRAGMENTATION_AMOUNT") or 250
         local FRAG_SIZE = (CONFIG_getConfValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
-        local FRAG_DISTANCE = variant.size_makehole[1] / 2
+        local FRAG_DISTANCE = (variant.size_makehole[1] / 2) * (CONFIG_getConfValue("SHELL_FRAGMENTATION_DISTANCE_SCALE") or 1)
 
         if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
             dWatch("Frag Size", FRAG_SIZE)
