@@ -28,8 +28,19 @@ local function tick_secondary_smoke(self, delta, variant)
             vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
             sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
-            sub.body = Spawn("MOD/assets/white_phosphorus_small.xml", transform)[2]
-            table.insert(BODIES, {
+            local wps = {
+                "MOD/assets/white_phosphorus_small.xml",
+                "MOD/assets/white_phosphorus.xml",
+            }
+
+            local wp_select = 1
+            if math.random() > 0.75 then
+                wp_select = 2
+            end
+
+            sub.body = Spawn(wps[wp_select], transform)[2]
+
+            local managed_body = {
                 valid = true,
                 created_at = ELAPSED_TIME,
                 type = "SM",
@@ -39,7 +50,20 @@ local function tick_secondary_smoke(self, delta, variant)
                     pitch_ratio_min, 0.8,
                     1, 0.01
                 ), 0.01, 1)
+            }
+
+            local body_velocity = VecLength(sub.velocity) *
+                clamp(mapToRange(
+                    random_pitch / pitch.max,
+                    0.5, 1,
+                    0.5, 4
+                ),
+                0.5, 4
+            )
+
             })
+
+            table.insert(BODIES, managed_body)
 
             SetBodyDynamic(sub.body, true)
             SetBodyActive(sub.body, true)
@@ -48,11 +72,7 @@ local function tick_secondary_smoke(self, delta, variant)
                 sub.body,
                 VecScale(
                     VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0))),
-                    VecLength(sub.velocity) * clamp(mapToRange(
-                        random_pitch / pitch.max,
-                        0.5, 1,
-                        0.5, 4
-                    ), 0.5, 4)
+                    body_velocity
                 )
             )
         end
