@@ -219,3 +219,41 @@ function tick_secondary_incendiary(self, delta, variant)
 
     dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
 end
+
+function manage_incendiary(shapes, body)
+    if IsShapeBroken(shapes[1]) then return true end
+
+    local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+    PointLight(pos, 1, 0.706, 0.42, 10)
+
+    if IsPointInWater(pos) then return false end
+
+    if not IsBodyActive(body.handle) then
+        if math.random() > 0.05 then return false end
+    end
+
+    SpawnFire(pos)
+
+    if math.random() < 0.20 then
+        ParticleReset()
+
+        local radius = math.random() * 0.60 + 0.15
+        ParticleRadius(radius, radius + (math.random() * 3), "linear")
+
+        ParticleType("plain")
+        ParticleCollide(0)
+        ParticleStretch(1)
+
+        SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + 10)
+    end
+
+    if math.random() > 0.05 then return false end
+
+    QueryRejectBody(body.handle)
+    local hit, pos_fire = QueryClosestPoint(pos, 5)
+    if not hit then return false end
+
+    addToDebugTable(DEBUG_POSITIONS, { pos_fire, COLOUR["orange"] })
+    SpawnFire(pos_fire)
+end
+

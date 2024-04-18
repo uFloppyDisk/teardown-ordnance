@@ -198,3 +198,47 @@ function tick_secondary_smoke(self, delta, variant)
         doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
     end
 end
+
+function manage_smoke(shapes, body)
+    if IsShapeBroken(shapes[1]) then return true end
+
+    local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+    local velocity = GetBodyVelocity(body.handle)
+    PointLight(pos, 1, 0.4668, 0.1229, 0.7)
+
+    if IsPointInWater(pos) then return false end
+
+    if not IsBodyActive(body.handle) then
+        if math.random() > 0.05 then return false end
+    end
+
+    -- SpawnFire(pos)
+
+    do
+        ParticleReset()
+
+        local radius = mapToRange(math.random(), 0, 1, 0.05, 0.2)
+        if math.random() > 0.8 then radius = radius * mapToRange(math.random(), 0, 1, 1.5, 5) end
+        ParticleRadius(radius / 2, radius * (mapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
+
+        ParticleType("plain")
+        ParticleCollide(0)
+        ParticleStretch(10)
+
+        local iterations = 4
+        for i = 0, iterations, 1 do
+            ParticleAlpha(math.random() * 0.6, 0, 'linear', 0, 0.7)
+
+            local spawn_pos = VecLerp(
+                VecAdd(pos, VecScale(velocity, 1 / 60)),
+                VecAdd(pos, VecScale(velocity, -1 / 60)),
+                i / iterations
+            )
+
+            SpawnParticle(spawn_pos, G_VEC_WIND, mapToRange(math.random(), 0, 1, 5, 30))
+        end
+    end
+
+    if math.random() > 0.05 then return false end
+end
+
