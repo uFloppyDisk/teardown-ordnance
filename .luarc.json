@@ -1,3 +1,4 @@
 {
-  "workspace.library": ["~/.config/nvim/lang/"]
+  "workspace.library": ["~/.config/nvim/lang/"],
+  "runtime.version": "Lua 5.1"
 }
