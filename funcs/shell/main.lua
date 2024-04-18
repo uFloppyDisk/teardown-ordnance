@@ -1,5 +1,3 @@
-#include "secondary.lua"
-
 function draw_sprite(self, pos)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 

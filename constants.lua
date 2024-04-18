@@ -1,5 +1,3 @@
-#include "classes/configmanager.lua"
-
 G_DEV = false
 G_VEC_GRAVITY = Vec(0, -39.2, 0)
 G_VEC_WIND = Vec(-0.15, 0.03, 0.06)

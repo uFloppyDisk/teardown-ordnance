@@ -1,8 +1,4 @@
-#include "constants.lua"
----@diagnostic disable-next-line: exp-in-action
-#include "funcs/shell/main.lua"
----@diagnostic disable-next-line: exp-in-action
-#include "tactical.lua"
+#include "load.lua"
 
 ELAPSED_TIME = 0
 
