@@ -1,0 +1,3 @@
+{
+  "workspace.library": ["~/.config/nvim/lang/"]
+}
