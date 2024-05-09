@@ -12,33 +12,7 @@ MENU = {
 
 -- #region Components
 
-function wrapOption(option)
-    UiAlign("right")
-    UiText("|")
-    UiPush()
-        UiTranslate(MENU.spacing_option * -1, 0)
-        UiText(option.name)
-    UiPop()
-end
-
-function wrapSlider(option)
-    UiPush()
-        wrapOption(option)
-        local value = drawSlider(option)
-
-        if option.value_display_exp > 1 then
-            value = option.value_display_exp ^ value
-        elseif option.value_display_factor > 1 then
-            value = value * option.value_display_factor
-        end
-
-        UiAlign("left")
-        UiTranslate(option.width + (MENU.spacing_option * 2), 0);
-        UiText(value.." "..option.value_unit);
-    UiPop()
-end
-
-function drawSlider(option)
+local function drawSlider(option)
     local value = option:getRegValue()
     local range = option.value_max - option.value_min
     value = (value - option.value_min) / (range)
@@ -60,15 +34,7 @@ function drawSlider(option)
     return value
 end
 
-function wrapButton(option, draw_function)
-    local func = draw_function or drawButton
-    UiPush()
-        wrapOption(option)
-        func(option)
-    UiPop()
-end
-
-function drawButton(option)
+local function drawButton(option)
     UiPush()
         UiAlign("left")
         UiTranslate(MENU.spacing_option, 0)
@@ -83,7 +49,41 @@ function drawButton(option)
     return value
 end
 
-function drawButtonKeybinding(option)
+local function wrapOption(option)
+    UiAlign("right")
+    UiText("|")
+    UiPush()
+        UiTranslate(MENU.spacing_option * -1, 0)
+        UiText(option.name)
+    UiPop()
+end
+
+local function wrapSlider(option)
+    UiPush()
+        wrapOption(option)
+        local value = drawSlider(option)
+
+        if option.value_display_exp > 1 then
+            value = option.value_display_exp ^ value
+        elseif option.value_display_factor > 1 then
+            value = value * option.value_display_factor
+        end
+
+        UiAlign("left")
+        UiTranslate(option.width + (MENU.spacing_option * 2), 0);
+        UiText(value.." "..option.value_unit);
+    UiPop()
+end
+
+local function wrapButton(option, draw_function)
+    local func = draw_function or drawButton
+    UiPush()
+        wrapOption(option)
+        func(option)
+    UiPop()
+end
+
+local function drawButtonKeybinding(option)
     UiPush()
         UiAlign("left")
         UiTranslate(MENU.spacing_option, 0)
@@ -99,7 +99,7 @@ function drawButtonKeybinding(option)
     return option.value
 end
 
-function modalSetKey(option)
+local function modalSetKey(option)
     UiBlur(0.5)
     UiPush()
         local margins = {}
@@ -172,7 +172,7 @@ function modalSetKey(option)
 
                     local duplicate_bind = false
                     local all_binds = ListKeys(G_CONFIG_KEYBINDS_ROOT)
-                    for index, variable in ipairs(all_binds) do
+                    for _, variable in ipairs(all_binds) do
                         if GetString(G_CONFIG_KEYBINDS_ROOT.."."..variable) == input then
                             STATES.set_keybind.msg_error_duplicate_bind = true
                             duplicate_bind = true
@@ -198,8 +198,8 @@ end
 
 -- #region Menus
 
-function renderMasthead(font_reg, font_selected)
-    function renderTab(index)
+local function renderMasthead(font_reg, font_selected)
+    local function renderTab(index)
         local menu = CONFIG_MENUS[index]
         UiPush()
             if index == STATES.menu then
@@ -215,7 +215,17 @@ function renderMasthead(font_reg, font_selected)
         UiTranslate(menu.button_width + MENU.spacing_tab, 0)
     end
 
-    function renderLeftSide(offsets)
+    local function renderMiddle(offsets)
+        UiPush()
+            UiAlign("left")
+            UiTranslate((offsets[2] / 2) * -1, 0)
+
+            local index = math.floor(#CONFIG_MENUS / 2) + 1
+            renderTab(index)
+        UiPop()
+    end
+
+    local function renderLeftSide(offsets)
         local total_translation = offsets[1]
         if offsets[2] > 0 then
             total_translation = total_translation + (MENU.spacing_tab * math.floor(#CONFIG_MENUS / 2))
@@ -238,17 +248,7 @@ function renderMasthead(font_reg, font_selected)
         end
     end
 
-    function renderMiddle(offsets)
-        UiPush()
-            UiAlign("left")
-            UiTranslate((offsets[2] / 2) * -1, 0)
-
-            local index = math.floor(#CONFIG_MENUS / 2) + 1
-            renderTab(index)
-        UiPop()
-    end
-
-    function renderRightSide(offsets)
+    local function renderRightSide(offsets)
         local total_translation = MENU.spacing_tab / 2
         local amount_menus_right = #CONFIG_MENUS / 2 + 1
         if offsets[2] > 0 then
@@ -302,7 +302,7 @@ function renderMasthead(font_reg, font_selected)
     UiPush()
         UiAlign("left")
         UiButtonHoverColor(0.7, 0.7, 0.7, 1)
-        UiButtonPressDist(4)
+        UiButtonPressDist(0, 4)
         renderLeftSide(masthead_offsets)
         renderRightSide(masthead_offsets)
     UiPop()
@@ -321,7 +321,7 @@ function renderMasthead(font_reg, font_selected)
     UiTranslate(0, (15 + line_height) * 2)
 end
 
-function renderOption(option)
+local function renderOption(option)
     if option.type == "textbutton" then
         if option.variant then
             if option.variant == "keybinding" then
@@ -340,10 +340,8 @@ function renderOption(option)
     end
 end
 
-function renderMenu()
+local function renderMenu()
     UiPush()
-        margins = {}
-        margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
         UiTranslate(UiCenter(), 250)
         UiAlign("center middle")
 
@@ -364,7 +362,7 @@ function renderMenu()
                 UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
 
                 local text = "WARNING: The following options are not intended for most users;\nChange at your own risk!"
-                local width, height = UiGetTextSize(text)
+                local _, height = UiGetTextSize(text)
 
                 UiText(text)
             UiPop()
@@ -372,7 +370,7 @@ function renderMenu()
             UiTranslate(0, height + 20)
         end
 
-        for i, option in ipairs(OPTIONS) do
+        for _, option in ipairs(OPTIONS) do
             if CONFIG_MENUS[STATES.menu].filter ~= nil then
                 if option.category == CONFIG_MENUS[STATES.menu].filter then
                     renderOption(option)
@@ -399,7 +397,7 @@ function renderMenu()
 
                 local width, height = UiGetTextSize("Restore Defaults")
                 if UiTextButton("Restore Defaults", width, height) then
-                    for index, option in ipairs(OPTIONS) do
+                    for _, option in ipairs(OPTIONS) do
                         if option.category == "keybind" then
                             CfgSetValue(option.mapping, option.mapping.value_default)
                         end
@@ -430,63 +428,13 @@ function renderMenu()
     UiPop()
 end
 
--- #endregion
-
--- #region Main
-
-function init()
-    STATES = {
-        menu = 1,
-        set_keybind = {
-            active = false,
-            target = nil,
-            msg_error_duplicate_bind = false,
-        },
-        confirm_reset = 0
-    }
-
-    if CfgInit() then
-        STATES.confirm_reset = 3
-    end
-
-    OPTIONS = {}
-    for index, data in ipairs(CONFIG_OPTIONS) do
-        local option = OPTION:new(data)
-
-        table.insert(OPTIONS, option)
-    end
-end
-
-function draw()
-    if InputDown("ctrl") and InputDown("alt") and InputPressed("C") then
-        CfgReset(true)
-        OPTIONS = {}
-        Menu()
-        return
-    end
-
-    if InputDown("shift") and InputPressed("C") then
-        STATES.confirm_reset = 2
-    end
-
-    renderMenu()
-
-    if STATES.set_keybind.active then
-        modalSetKey(STATES.set_keybind.target)
-    end
-
-    if STATES.confirm_reset > 0 then
-        if STATES.confirm_reset == 3 then reset(true) else reset() end
-    end
-end
-
-function reset(force_reset)
+local function reset(force_reset)
     UiBlur(0.5)
     UiPush()
-        margins = {}
+        local margins = {}
         margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
 
-        box = {}
+        local box = {}
         if force_reset then
             box = {
                 width = (margins.x1 - margins.x0) / 4,
@@ -570,7 +518,7 @@ function reset(force_reset)
                         end
 
                         if STATES.confirm_reset == 1 then
-                            for i, option in ipairs(OPTIONS) do
+                            for _, option in ipairs(OPTIONS) do
                                 option:setRegValue(option.mapping.value_default)
                             end
                         end
@@ -590,6 +538,57 @@ function reset(force_reset)
             end
         UiModalEnd()
     UiPop()
+end
+
+
+-- #endregion
+
+-- #region Main
+
+function init()
+    STATES = {
+        menu = 1,
+        set_keybind = {
+            active = false,
+            target = nil,
+            msg_error_duplicate_bind = false,
+        },
+        confirm_reset = 0
+    }
+
+    if CfgInit() then
+        STATES.confirm_reset = 3
+    end
+
+    OPTIONS = {}
+    for _, data in ipairs(CONFIG_OPTIONS) do
+        local option = OPTION:new(data)
+
+        table.insert(OPTIONS, option)
+    end
+end
+
+function draw()
+    if InputDown("ctrl") and InputDown("alt") and InputPressed("C") then
+        CfgReset(true)
+        OPTIONS = {}
+        Menu()
+        return
+    end
+
+    if InputDown("shift") and InputPressed("C") then
+        STATES.confirm_reset = 2
+    end
+
+    renderMenu()
+
+    if STATES.set_keybind.active then
+        modalSetKey(STATES.set_keybind.target)
+    end
+
+    if STATES.confirm_reset > 0 then
+        if STATES.confirm_reset == 3 then reset(true) else reset() end
+    end
 end
 
 -- #endregion
