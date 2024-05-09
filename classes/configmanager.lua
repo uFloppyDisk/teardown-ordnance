@@ -1,5 +1,3 @@
-#include "utils.lua"
-
 G_CONFIG_REGISTRY = "savegame.mod.version_config"
 
 CONFIG = {
@@ -61,7 +59,7 @@ end
 function CONFIG_checkIntegrity()
     for key, conf in pairs(CONFIG_VARIABLES) do
         if not HasKey(conf.variable) then
-            dPrint("Could not find variable '"..conf.variable.."'")
+            FdLog("Could not find variable '"..conf.variable.."'")
             return false
         end
     end
@@ -73,7 +71,7 @@ function CONFIG_reset(no_restore)
     ClearKey("savegame.mod")
 
     if no_restore then
-        dPrint("Config has been cleared.")
+        FdLog("Config has been cleared.")
         return
     end
 
@@ -83,5 +81,5 @@ function CONFIG_reset(no_restore)
 
     SetInt(G_CONFIG_REGISTRY, CONFIG.version)
 
-    dPrint("Config has been reset.")
+    FdLog("Config has been reset.")
 end

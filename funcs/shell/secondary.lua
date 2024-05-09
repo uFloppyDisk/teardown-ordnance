@@ -13,7 +13,7 @@ end
 function manage_bodies_cleanup()
     for i, body in ipairs(BODIES) do
         if not body.valid then
-            dPrint("Removing body " .. body.handle)
+            FdLog("Removing body " .. body.handle)
             table.remove(BODIES, i)
         end
     end
@@ -22,7 +22,7 @@ end
 function trigger_secondary(self, parameters, detonate)
     local isDetonated = true
 
-    if assertTableKeys(parameters, "trigger_height") then
+    if FdAssertTableKeys(parameters, "trigger_height") then
         if not detonate then isDetonated = false end
 
         if parameters.trigger_height < self.distance_ground then
@@ -34,9 +34,9 @@ function trigger_secondary(self, parameters, detonate)
 
         self.vel_current = Vec(-0.1, -1, 0.02)
 
-        if assertTableKeys(parameters, "trigger_sound") then
+        if FdAssertTableKeys(parameters, "trigger_sound") then
             local volume = 90
-            if assertTableKeys(parameters, "trigger_sound_volume") then
+            if FdAssertTableKeys(parameters, "trigger_sound_volume") then
                 volume = parameters.trigger_sound_volume
             end
 
@@ -45,7 +45,7 @@ function trigger_secondary(self, parameters, detonate)
 
         ParticleReset()
 
-        if assertTableKeys(parameters, "particle_radius") then
+        if FdAssertTableKeys(parameters, "particle_radius") then
             ParticleRadius(parameters.particle_radius)
         else
             ParticleRadius(2)
@@ -59,7 +59,7 @@ function trigger_secondary(self, parameters, detonate)
         SpawnParticle(particle_origin, G_VEC_WIND, 20)
     end
 
-    if assertTableKeys(parameters, "trigger_detonate") then
+    if FdAssertTableKeys(parameters, "trigger_detonate") then
         isDetonated = false
 
         if detonate then

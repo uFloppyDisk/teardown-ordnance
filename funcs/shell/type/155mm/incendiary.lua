@@ -8,7 +8,7 @@ function tick_secondary_incendiary(self, delta, variant)
             local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
             local transform = Transform(self.position, rotation)
 
-            local sub = objectNew({
+            local sub = FdObjectNew({
                 active = true,
                 brightness = 2,
                 transform = TransformCopy(transform),
@@ -26,7 +26,7 @@ function tick_secondary_incendiary(self, delta, variant)
 
         PointLight(self.position, 1, 0.706, 0.42, 600)
 
-        dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
+        FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
     end
 
     local function tick_sub(sub)
@@ -54,7 +54,7 @@ function tick_secondary_incendiary(self, delta, variant)
         if not hit then
             if timer_ratio < 0.5 then return nil end -- If WP has been deployed for too long without hitting anything, extinguish it
 
-            addToDebugTable(DEBUG_LINES, { sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15) })
+            FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
 
             ParticleReset()
             ParticleRadius(0.3, 0.1, "smooth")
@@ -77,7 +77,7 @@ function tick_secondary_incendiary(self, delta, variant)
                 SpawnParticle(lerp_pos, Vec(0, 0, 0), 0.1)
             until cur >= 1
 
-            PointLight(sub.transform.pos, getUnpackedRGBA({ 1, 0.706, 0.42 }, sub.brightness))
+            PointLight(sub.transform.pos, FdGetUnpackedRGBA({ 1, 0.706, 0.42 }, sub.brightness))
 
             if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
 
@@ -87,16 +87,16 @@ function tick_secondary_incendiary(self, delta, variant)
             ParticleStretch(1)
             ParticleCollide(0, 0.1, "linear", 0.5)
 
-            local step = 1 / (math.floor(mapToRange(velocity_magnitude, 50, 150, 1, 5)))
+            local step = 1 / (math.floor(FdMapToRange(velocity_magnitude, 50, 150, 1, 5)))
             local cur = 0
             repeat
                 local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) *
-                    clamp(mapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
+                    FdClamp(FdMapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
                 ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
 
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
-                SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + (clamp(timer_elapsed, 0, 1) * 20))
+                SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + (FdClamp(timer_elapsed, 0, 1) * 20))
 
                 cur = cur + step
             until cur >= 1
@@ -107,8 +107,8 @@ function tick_secondary_incendiary(self, delta, variant)
         local position_hit = VecAdd(sub.transform.pos,
             VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
-        addToDebugTable(DEBUG_LINES, { sub.transform.pos, position_hit, COLOUR["orange"] })
-        addToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
+        FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, position_hit, COLOUR["orange"] })
+        FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
 
         ParticleReset()
         ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
@@ -155,7 +155,7 @@ function tick_secondary_incendiary(self, delta, variant)
 
         -- Reduce WP velocity if reflected direction is too close to normal
         velocity_wp = velocity_wp *
-            clamp(mapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
+            FdClamp(FdMapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
 
         local cross_direction = VecCross(normal, reflected_direction)
         if math.random() < 0.5 then
@@ -186,7 +186,7 @@ function tick_secondary_incendiary(self, delta, variant)
             hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 5)
             if not hit then break end
 
-            addToDebugTable(DEBUG_POSITIONS, { point, COLOUR["orange"] })
+            FdAddToDebugTable(DEBUG_POSITIONS, { point, COLOUR["orange"] })
             SpawnFire(point)
 
             QueryRejectShape(shape)
@@ -199,7 +199,7 @@ function tick_secondary_incendiary(self, delta, variant)
 
     if self.secondary.timer < 0 then return true end
 
-    if not assertTableKeys(self, "secondary", "submunitions") then
+    if not FdAssertTableKeys(self, "secondary", "submunitions") then
         init_sub()
     end
 
@@ -217,7 +217,7 @@ function tick_secondary_incendiary(self, delta, variant)
         end
     end
 
-    dWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
+    FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
 end
 
 function manage_incendiary(shapes, body)
@@ -253,7 +253,7 @@ function manage_incendiary(shapes, body)
     local hit, pos_fire = QueryClosestPoint(pos, 5)
     if not hit then return false end
 
-    addToDebugTable(DEBUG_POSITIONS, { pos_fire, COLOUR["orange"] })
+    FdAddToDebugTable(DEBUG_POSITIONS, { pos_fire, COLOUR["orange"] })
     SpawnFire(pos_fire)
 end
 

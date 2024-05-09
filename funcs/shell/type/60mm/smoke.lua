@@ -6,23 +6,23 @@ function tick_secondary_smoke(self, delta, variant)
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = round((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
+        local amount_submunitions = FdRound((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
         local pitch = { min = 10, max = 80 }
         local pitch_ratio_min = pitch.min / pitch.max
 
         local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
         for i = 1, amount_submunitions, 1 do
-            local random_pitch = mapToRange(math.random(), 0, 1, pitch.min, pitch.max)
+            local random_pitch = FdMapToRange(math.random(), 0, 1, pitch.min, pitch.max)
             local rotation = QuatEuler(0, math.random() * 360, random_pitch)
             local transform = Transform(position_origin, rotation)
 
-            local sub = objectNew({
+            local sub = FdObjectNew({
                 transform = TransformCopy(transform),
-                velocity = Vec(mapToRange(math.random(), 0, 1, 10, 25), 0, 0)
+                velocity = Vec(FdMapToRange(math.random(), 0, 1, 10, 25), 0, 0)
             }, DEFAULT_SUBMUNITION)
 
-            addToDebugTable(DEBUG_POSITIONS, { transform.pos, getRGBA(COLOUR["white"]) })
-            addToDebugTable(DEBUG_LINES, { position_origin, transform.pos, getRGBA(COLOUR["white"]) })
+            FdAddToDebugTable(DEBUG_POSITIONS, { transform.pos, FdGetRGBA(COLOUR["white"]) })
+            FdAddToDebugTable(DEBUG_LINES, { position_origin, transform.pos, FdGetRGBA(COLOUR["white"]) })
 
             local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
             vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
@@ -34,7 +34,7 @@ function tick_secondary_smoke(self, delta, variant)
                 created_at = ELAPSED_TIME,
                 type = "SM",
                 handle = sub.body,
-                ttl = mapToRange(math.random(), 0, 1, 0.3, 2) * clamp(mapToRange(
+                ttl = FdMapToRange(math.random(), 0, 1, 0.3, 2) * FdClamp(FdMapToRange(
                     random_pitch / pitch.max,
                     pitch_ratio_min, 0.8,
                     1, 0.01
@@ -48,7 +48,7 @@ function tick_secondary_smoke(self, delta, variant)
                 sub.body,
                 VecScale(
                     VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0))),
-                    VecLength(sub.velocity) * clamp(mapToRange(
+                    VecLength(sub.velocity) * FdClamp(FdMapToRange(
                         random_pitch / pitch.max,
                         0.5, 1,
                         0.5, 4
@@ -75,7 +75,7 @@ function tick_secondary_smoke(self, delta, variant)
 
         local i = 6
         repeat
-            local radius = variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.3, 1)
+            local radius = variant.secondary.radius * FdMapToRange(math.random(), 0, 1, 0.3, 1)
             ParticleRadius(radius / 2, radius, 'linear', 0.1, 0.1)
 
             SpawnParticle(unpack(particle_cfg))
@@ -107,7 +107,7 @@ function tick_secondary_smoke(self, delta, variant)
         }
 
         for i = 0, 6, 1 do
-            ParticleRadius(radius / mapToRange(math.random(), 0, 1, 1.1, 1.7), radius, 'linear', 0.02)
+            ParticleRadius(radius / FdMapToRange(math.random(), 0, 1, 1.1, 1.7), radius, 'linear', 0.02)
             SpawnParticle(unpack(particle_cfg))
         end
     end
@@ -150,8 +150,8 @@ function tick_secondary_smoke(self, delta, variant)
             local transform = Transform(position_original, rot)
             local position_spawn = TransformToParentPoint(transform, Vec((radius / 2), 0, 0))
 
-            addToDebugTable(DEBUG_POSITIONS, { position_spawn, getRGBA(COLOUR["red"]) })
-            addToDebugTable(DEBUG_LINES, { position_original, position_spawn, getRGBA(COLOUR["red"]) })
+            FdAddToDebugTable(DEBUG_POSITIONS, { position_spawn, FdGetRGBA(COLOUR["red"]) })
+            FdAddToDebugTable(DEBUG_LINES, { position_original, position_spawn, FdGetRGBA(COLOUR["red"]) })
 
             local par_rot = 0.6 * (range / velocity)
             ParticleRotation(par_rot, 0)
@@ -167,7 +167,7 @@ function tick_secondary_smoke(self, delta, variant)
     end
 
     -- Initialize smoke effects
-    if not assertTableKeys(self.secondary, "init") then
+    if not FdAssertTableKeys(self.secondary, "init") then
         self.secondary.init = true
         self.secondary.velocity = VecAdd(Vec(0, velocity, 0), G_VEC_WIND)
 
@@ -183,7 +183,7 @@ function tick_secondary_smoke(self, delta, variant)
         local heads = 10
         for i = 1, heads, 1 do
             local range = velocity * (i / heads)
-            local size = variant.secondary.radius / mapToRange(math.random(), 0, 1, 2, 4)
+            local size = variant.secondary.radius / FdMapToRange(math.random(), 0, 1, 2, 4)
             local pitch = math.random() * 40
             local heading = math.random() * 360
             local distance = math.random() * 5
@@ -195,7 +195,7 @@ function tick_secondary_smoke(self, delta, variant)
     if timer_ratio < 0.10 then return end
 
     if math.random() > 0.96 then
-        doBodyPrimary(variant.secondary.radius * mapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
+        doBodyPrimary(variant.secondary.radius * FdMapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
     end
 end
 
@@ -217,9 +217,9 @@ function manage_smoke(shapes, body)
     do
         ParticleReset()
 
-        local radius = mapToRange(math.random(), 0, 1, 0.05, 0.2)
-        if math.random() > 0.8 then radius = radius * mapToRange(math.random(), 0, 1, 1.5, 5) end
-        ParticleRadius(radius / 2, radius * (mapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
+        local radius = FdMapToRange(math.random(), 0, 1, 0.05, 0.2)
+        if math.random() > 0.8 then radius = radius * FdMapToRange(math.random(), 0, 1, 1.5, 5) end
+        ParticleRadius(radius / 2, radius * (FdMapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
 
         ParticleType("plain")
         ParticleCollide(0)
@@ -235,7 +235,7 @@ function manage_smoke(shapes, body)
                 i / iterations
             )
 
-            SpawnParticle(spawn_pos, G_VEC_WIND, mapToRange(math.random(), 0, 1, 5, 30))
+            SpawnParticle(spawn_pos, G_VEC_WIND, FdMapToRange(math.random(), 0, 1, 5, 30))
         end
     end
 

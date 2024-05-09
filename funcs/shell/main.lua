@@ -32,7 +32,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
 
         if hit_distance < 1 and not halt then
             if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
-                addToDebugTable(DEBUG_POSITIONS, {hit_pos, getRGBA(COLOUR["red"], 0.2)})
+                FdAddToDebugTable(DEBUG_POSITIONS, {hit_pos, FdGetRGBA(COLOUR["red"], 0.2)})
                 FRAG_STATS[4] = FRAG_STATS[4] + 1
             end
 
@@ -56,8 +56,8 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
             point_colour = COLOUR["yellow"]
         end
 
-        addToDebugTable(DEBUG_POSITIONS, {hit_pos, point_colour})
-        addToDebugTable(DEBUG_LINES, {pos, hit_pos, getRGBA(COLOUR["white"], 0.5)})
+        FdAddToDebugTable(DEBUG_POSITIONS, {hit_pos, point_colour})
+        FdAddToDebugTable(DEBUG_LINES, {pos, hit_pos, FdGetRGBA(COLOUR["white"], 0.5)})
         FRAG_STATS[2] = FRAG_STATS[2] + 1
 
         return true
@@ -79,7 +79,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
     if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
         if line_end == nil then return false end
 
-        addToDebugTable(DEBUG_LINES, {pos, line_end.pos, getRGBA(COLOUR["red"], 0.1)})
+        FdAddToDebugTable(DEBUG_LINES, {pos, line_end.pos, FdGetRGBA(COLOUR["red"], 0.1)})
         FRAG_STATS[3] = FRAG_STATS[3] + 1
     end
 
@@ -92,11 +92,11 @@ local function detonate(self, pos)
 
     self.position = VecCopy(pos)
 
-    if not (assertTableKeys(variant, "secondary")) or trigger_secondary(self, variant.secondary, true) then
+    if not (FdAssertTableKeys(variant, "secondary")) or trigger_secondary(self, variant.secondary, true) then
         self.state = shell_states.DETONATED
     end
 
-    addToDebugTable(DEBUG_POSITIONS, {pos, COLOUR["red"]})
+    FdAddToDebugTable(DEBUG_POSITIONS, {pos, COLOUR["red"]})
 
     if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
         MakeHole(pos, 5, 2, 1, false)
@@ -122,8 +122,8 @@ local function detonate(self, pos)
         local FRAG_DISTANCE = variant.size_makehole[1] / 2
 
         if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
-            dWatch("Frag Size", FRAG_SIZE)
-            dWatch("Frag Dist", FRAG_DISTANCE)
+            FdWatch("Frag Size", FRAG_SIZE)
+            FdWatch("Frag Dist", FRAG_DISTANCE)
         end
 
         local frag_pos = pos
@@ -136,14 +136,14 @@ local function detonate(self, pos)
             QueryRequire('large')
             hit, dist2 = QueryRaycast(VecAdd(VecCopy(frag_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
 
-            local dist_diff = round(dist2, 4) - dist1
-            dPrint("Diff 1/2: "..dist1.." / "..dist2)
-            dPrint("Diff: "..dist_diff)
+            local dist_diff = FdRound(dist2, 4) - dist1
+            FdLog("Diff 1/2: "..dist1.." / "..dist2)
+            FdLog("Diff: "..dist_diff)
             if dist_diff ~= 0 then
-                dPrint("Using differential calculation")
+                FdLog("Using differential calculation")
                 frag_pos = VecAdd(pos, Vec(0, dist1 + (check_dist - (dist_diff * 0.95)), 0))
             else
-                dPrint("Using shape bounds calculation")
+                FdLog("Using shape bounds calculation")
                 local bounds_min, bounds_max = GetShapeBounds(shape1)
                 local bounds_size = VecSub(bounds_max, bounds_min)
 
@@ -156,12 +156,12 @@ local function detonate(self, pos)
         end
 
         if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
-            dPrint("--- FRAGMENTATION STATS ---")
-            dPrint(FRAG_STATS[2].." - hit")
-            dPrint(FRAG_STATS[3].." - missed")
-            dPrint(FRAG_STATS[4].." - redirected")
-            dPrint("-------------")
-            dPrint("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
+            FdLog("--- FRAGMENTATION STATS ---")
+            FdLog(FRAG_STATS[2].." - hit")
+            FdLog(FRAG_STATS[3].." - missed")
+            FdLog(FRAG_STATS[4].." - redirected")
+            FdLog("-------------")
+            FdLog("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
         end
     end
 end
@@ -171,7 +171,7 @@ local function tick_active(self, delta)
     local variant = values.variants[self.variant]
 
     self.distance_ground = VecLength(VecSub(self.position, self.destination))
-    dWatch("Distance to Target", self.distance_ground)
+    FdWatch("Distance to Target", self.distance_ground)
 
     -- TODO - More intelligent out of bounds detection
     -- Mark shell for deletion as the shell has gone out of bounds.
@@ -182,15 +182,15 @@ local function tick_active(self, delta)
 
     -- Check if shell has a secondary state and that the secondary has not been activated yet;
     -- if so, check various trigger conditions
-    if (assertTableKeys(variant, "secondary") and not self.secondary.active) then
+    if (FdAssertTableKeys(variant, "secondary") and not self.secondary.active) then
         trigger_secondary(self, variant.secondary)
     end
 
     -- Shell whistle logic
     if not variant.silent and VecLength(self.vel_current) > 100 and (self.distance_ground < 500) then
         local distance_player = VecLength(VecSub(self.position, GetPlayerPos()))
-        local volume = clamp(150 - (clamp(distance_player, 0, 500) / 5), 0, 100)
-        dWatch("Volume", volume)
+        local volume = FdClamp(150 - (FdClamp(distance_player, 0, 500) / 5), 0, 100)
+        FdWatch("Volume", volume)
         PlayLoop(self.snd_whistle, self.position, 100)
     end
 
@@ -229,13 +229,13 @@ local function tick_active(self, delta)
 
     -- Stop increasing kinetic energy after first hit
     if not self.hit_once then
-        self.kinetic_energy = clamp((values.weight * math.pow(math.abs(VecLength(self.vel_current)), 2)) / 1000, 0, 5000)
+        self.kinetic_energy = FdClamp((values.weight * math.pow(math.abs(VecLength(self.vel_current)), 2)) / 1000, 0, 5000)
     end
 
-    dWatch("shell(CURRENT VELOCITY)", self.vel_current)
-    dWatch("shell(KINETIC ENERGY)", self.kinetic_energy)
+    FdWatch("shell(CURRENT VELOCITY)", self.vel_current)
+    FdWatch("shell(KINETIC ENERGY)", self.kinetic_energy)
 
-    addToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 0.5}})
+    FdAddToDebugTable(DEBUG_LINES, {self.position, position_new, {0, 1, 0, 0.5}})
 
     if self.secondary.active and self.hit_once then
         return
@@ -255,9 +255,9 @@ local function tick_active(self, delta)
 
         local shell_radius = self.sprite.width / 2
 
-        addToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
-        addToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})
-        dPrint("Hit detected.")
+        FdAddToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
+        FdAddToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})
+        FdLog("Hit detected.")
 
         self.hit_once = true
 
@@ -267,7 +267,7 @@ local function tick_active(self, delta)
         end
 
         local position_initial_hit = VecAdd(self.position, VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance))
-        addToDebugTable(DEBUG_POSITIONS, {position_initial_hit, COLOUR["white"]})
+        FdAddToDebugTable(DEBUG_POSITIONS, {position_initial_hit, COLOUR["white"]})
 
         -- Guard clause: Check if ballistics is disabled to halt expensive computation
         if not CONFIG_getConfValue("G_SIMULATE_BALLISTICS") then
@@ -276,10 +276,10 @@ local function tick_active(self, delta)
         end
 
         local material_initial = GetShapeMaterialAtPosition(shape_initial, (position_initial_hit))
-        dPrint("Initial material is '"..material_initial.."'")
+        FdLog("Initial material is '"..material_initial.."'")
 
         -- Perform recursive check for materials encountered during this tick
-        local hit_materials, hit_positions, reached_max_depth = getMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 6)
+        local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 6)
 
         local position_detonation
         if hit_positions ~= nil then
@@ -298,12 +298,12 @@ local function tick_active(self, delta)
         for index, material in pairs(hit_materials) do
             if trigger_detonation then break end
 
-            dPrint("Material at index "..index.." is '"..material.."'")
+            FdLog("Material at index "..index.." is '"..material.."'")
 
             -- Pull penetration values for material, default if not found
             local pen_values = MAT_PEN[material]
             if pen_values == nil then
-                dPrint("Material not found in penetration table. Defaulting...")
+                FdLog("Material not found in penetration table. Defaulting...")
                 pen_values = MAT_PEN["default"]
             end
 
@@ -311,16 +311,16 @@ local function tick_active(self, delta)
             pen_values = pen_values[variant.id] or pen_values["HE"]
 
             if self.kinetic_energy < pen_values.min_energy then
-                dPrint("Material '"..material.."' triggered detonation. (energy below threshold)")
+                FdLog("Material '"..material.."' triggered detonation. (energy below threshold)")
                 return true, hit_positions[index]
             end
 
             if (math.random() * 100) < pen_values.chance then
-                dPrint("Material '"..material.."' triggered detonation. (Unlucky roll)")
+                FdLog("Material '"..material.."' triggered detonation. (Unlucky roll)")
                 return true, hit_positions[index]
             end
 
-            dPrint("Material '"..material.."' was too weak to trigger detonation.")
+            FdLog("Material '"..material.."' was too weak to trigger detonation.")
             -- self.kinetic_energy = self.kinetic_energy - (pen_values.min_energy * (MAT_PEN[material].absorb / 100))
             self.kinetic_energy = self.kinetic_energy - (pen_values.min_energy * 1)
             MakeHole(hit_positions[index], shell_radius + 1, shell_radius + 0.5, shell_radius, false)
@@ -333,7 +333,7 @@ local function tick_active(self, delta)
         if not hit then return false end
 
         local bottom_material = GetShapeMaterialAtPosition(shape_initial, (position_initial_hit))
-        dPrint("Bottom material detected as '"..bottom_material.."'")
+        FdLog("Bottom material detected as '"..bottom_material.."'")
 
         if bottom_material ~= "rock" and bottom_material ~= "none" then
             return false
@@ -343,7 +343,7 @@ local function tick_active(self, delta)
             return true, hit_positions[1]
         end
 
-        dPrint("Bottom material is impenetrable")
+        FdLog("Bottom material is impenetrable")
         return true, position_initial_hit
     end
 
@@ -381,9 +381,9 @@ local function fire(self)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
-    dPrint("--- Firing shell ("..values.name.." ["..variant.name.."]) ---")
+    FdLog("--- Firing shell ("..values.name.." ["..variant.name.."]) ---")
 
-    if assertTableKeys(variant, "secondary", "timer") then
+    if FdAssertTableKeys(variant, "secondary", "timer") then
         self.secondary.timer = variant.secondary.timer
     end
 
@@ -395,7 +395,7 @@ local function fire(self)
         self.destination = TransformToParentPoint(transform, distance)
     end
 
-    addToDebugTable(DEBUG_POSITIONS, {self.destination, getRGBA(COLOUR["green"])})
+    FdAddToDebugTable(DEBUG_POSITIONS, {self.destination, FdGetRGBA(COLOUR["green"])})
 
     local height_offset = 0
     if variant.id == "PF" then
@@ -406,7 +406,7 @@ local function fire(self)
 
     -- TODO - Use muzzle velocity based on shell/gun fired
     local velocity = 827 / 2
-    if assertTableKeys(values, "muzzle_velocity") then
+    if FdAssertTableKeys(values, "muzzle_velocity") then
         velocity = values.muzzle_velocity
     end
 
@@ -460,7 +460,7 @@ function shell_init(shell)
 end
 
 function shell_tick(self, delta)
-    dWatch("Flight Time", self.flight_time)
+    FdWatch("Flight Time", self.flight_time)
 
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
