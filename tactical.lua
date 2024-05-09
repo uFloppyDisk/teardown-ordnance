@@ -8,7 +8,7 @@ function tactical_init()
     if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
     STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
-    CAMERA_DEFAULT_FOV = CONFIG_getConfValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
+    CAMERA_DEFAULT_FOV = CfgGetValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
     CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
     STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
     STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
@@ -18,7 +18,7 @@ end
 
 ---@param delta number Time elapsed since last tick.
 function tactical_tick(delta)
-    if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
+    if CfgGetValue("TACTICAL_POSTPROCESSING_TOGGLE") then
         SetEnvironmentProperty("sunBrightness", FdClamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
         SetEnvironmentProperty("brightness", FdClamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
         SetPostProcessingProperty("saturation", 0.9)
@@ -34,14 +34,14 @@ function tactical_tick(delta)
     local pos_translate = Vec(0, 0, 0)
 
     -- Camera up/down/left/right key events
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then pos_translate[3] = pos_translate[3] - 1 end
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS")) then pos_translate[3] = pos_translate[3] + 1 end
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG")) then pos_translate[1] = pos_translate[1] - 1 end
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_X_POS")) then pos_translate[1] = pos_translate[1] + 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then pos_translate[3] = pos_translate[3] - 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS")) then pos_translate[3] = pos_translate[3] + 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG")) then pos_translate[1] = pos_translate[1] - 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS")) then pos_translate[1] = pos_translate[1] + 1 end
 
     -- Camera elevation key events
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then pos_translate[2] = pos_translate[2] - 1 end
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then pos_translate[2] = pos_translate[2] - 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
 
     -- Camera elevation bounds logic
     local current_camera_z = STATES.tactical.camera_settings.camera_transform.pos[2]
@@ -60,11 +60,11 @@ function tactical_tick(delta)
     -- Translate rate scaling based on zoom level and modifier key events
     local translate_default = 50
     local translate = translate_default * (CAMERA_CURRENT_FOV / 75)
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")) then
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")) then
         translate = translate * 2
     end
 
-    if InputDown(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")) then
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")) then
         translate = translate * 0.33
     end
 
@@ -85,7 +85,7 @@ function tactical_tick(delta)
     STATES.tactical.camera_settings.camera_transform = camera_transform_new
 
     -- Camera zoom key event
-    if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
+    if not InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
             STATES.tactical.camera_settings.target_camera_fov = FdClamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
@@ -94,7 +94,7 @@ function tactical_tick(delta)
     end
 
     -- Camera reset key event
-    if InputPressed(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER")) then
+    if InputPressed(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER")) then
         camera_transform_new.pos = VecAdd(GetPlayerPos(), Vec(0, 100, 0))
         local reset_fov = CAMERA_DEFAULT_FOV
         SetValue("CAMERA_CURRENT_FOV", reset_fov, "easeout", 0.3)
@@ -205,7 +205,7 @@ local function drawQueuedSalvo(display)
 
     local function draw_shell_info(shell)
         if display ~= qs_display.VISIBLE then return end
-        if not CONFIG_getConfValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
+        if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
 
         local shell_type = SHELL_VALUES[shell.type]
 
@@ -243,7 +243,7 @@ function tactical_draw()
         margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
 
         UiPush()
-            if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) then
+            if not InputDown(CfgGetValue("KEYBIND_ADJUST_ATTACK")) then
                 STATES.tactical.mouse_pos = {UiGetMousePos()}
             end
 
@@ -258,7 +258,7 @@ function tactical_draw()
 
         local unit_fov = FdMapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
 
-        if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+        if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
             local world_depth = 0
             if InputDown('space') and STATES.tactical.hitscan.hit then
                 world_depth = STATES.tactical.hitscan.pos[2]
@@ -314,41 +314,41 @@ function tactical_draw()
             UiPop()
             UiTranslate(0, 48)
             UiPush()
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
                 UiTranslate(24, 0)
                 UiText("|")
                 UiTranslate(8, 0)
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
                 UiTranslate(16, 0)
                 UiText("- Up | Down")
             UiPop()
             UiTranslate(0, 28)
             UiPush()
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
                 UiTranslate(24, 0)
                 UiText("|")
                 UiTranslate(8, 0)
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
                 UiTranslate(16, 0)
                 UiText("- Left | Right")
             UiPop()
             UiTranslate(0, 28)
             UiPush()
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
                 UiTranslate(24, 0)
                 UiText("|")
                 UiTranslate(8, 0)
-                UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
+                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
                 UiTranslate(16, 0)
                 UiText("- Elevation Down | Up")
             UiPop()
             UiTranslate(0, 28)
-            UiText(CONFIG_getConfValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
+            UiText(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
             UiText("Scroll - Camera zoom", true)
-            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")].." - Fast camera", true)
-            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CONFIG_getConfValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")].." - Slow camera", true)
+            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")].." - Fast camera", true)
+            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")].." - Slow camera", true)
 
-            if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
+            if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
                 UiText("Space (hold) - Snap grid to target elevation")
             end
 

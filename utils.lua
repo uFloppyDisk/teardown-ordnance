@@ -253,7 +253,7 @@ function FdDrawPitchHeadingLine(transform, pitch, length, colour, lines, quick_s
     local pos_start = transform.pos
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
 
-    if quick_salvo or InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK")) or pitch < 90 then
+    if quick_salvo or InputDown(CfgGetValue("KEYBIND_ADJUST_ATTACK")) or pitch < 90 then
         DrawLine(pos_start, pos_end, unpack(colour))
         DebugLine(transform.pos, pos_end, unpack(colour))
     end

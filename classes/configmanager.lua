@@ -5,7 +5,7 @@ CONFIG = {
     incompatible = true
 }
 
-function CONFIG_init()
+function CfgInit()
     if not HasKey(G_CONFIG_REGISTRY) then
         return true
     end
@@ -17,12 +17,12 @@ function CONFIG_init()
         return true
     end
 
-    if not CONFIG_checkIntegrity() then return true end
+    if not CfgCheckIntegrity() then return true end
 
     return false
 end
 
-function CONFIG_getConfValue(obj_or_key)
+function CfgGetValue(obj_or_key)
     local objConf = obj_or_key
     if type(objConf) == "string" then
         objConf = CONFIG_VARIABLES[objConf]
@@ -36,10 +36,12 @@ function CONFIG_getConfValue(obj_or_key)
     if objConf.value_type == "float" then func = GetFloat end
     if objConf.value_type == "string" then func = GetString end
 
+    if func == nil then return nil end
+
     return func(objConf.variable)
 end
 
-function CONFIG_setConfValue(obj_or_key, value)
+function CfgSetValue(obj_or_key, value)
     local objConf = obj_or_key
     if type(objConf) == "string" then
         objConf = CONFIG_VARIABLES[objConf]
@@ -53,11 +55,13 @@ function CONFIG_setConfValue(obj_or_key, value)
     if objConf.value_type == "float" then func = SetFloat end
     if objConf.value_type == "string" then func = SetString end
 
+    if func == nil then return nil end
+
     return func(objConf.variable, value)
 end
 
-function CONFIG_checkIntegrity()
-    for key, conf in pairs(CONFIG_VARIABLES) do
+function CfgCheckIntegrity()
+    for _, conf in pairs(CONFIG_VARIABLES) do
         if not HasKey(conf.variable) then
             FdLog("Could not find variable '"..conf.variable.."'")
             return false
@@ -67,7 +71,7 @@ function CONFIG_checkIntegrity()
     return true
 end
 
-function CONFIG_reset(no_restore)
+function CfgReset(no_restore)
     ClearKey("savegame.mod")
 
     if no_restore then
@@ -75,8 +79,8 @@ function CONFIG_reset(no_restore)
         return
     end
 
-    for key, conf in pairs(CONFIG_VARIABLES) do
-        CONFIG_setConfValue(conf, conf.value_default)
+    for _, conf in pairs(CONFIG_VARIABLES) do
+        CfgSetValue(conf, conf.value_default)
     end
 
     SetInt(G_CONFIG_REGISTRY, CONFIG.version)

@@ -31,7 +31,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
         local hit_pos = VecAdd(pos, VecScale(VecNormalize(VecSub(position_new, pos)), hit_distance))
 
         if hit_distance < 1 and not halt then
-            if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+            if CfgGetValue("G_FRAGMENTATION_DEBUG") then
                 FdAddToDebugTable(DEBUG_POSITIONS, {hit_pos, FdGetRGBA(COLOUR["red"], 0.2)})
                 FRAG_STATS[4] = FRAG_STATS[4] + 1
             end
@@ -47,7 +47,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
         local rand_frag_size = frag_size * (1.0 - (math.random() * 0.50))
         MakeHole(hit_pos, rand_frag_size * 3, rand_frag_size * 2, rand_frag_size)
 
-        if not CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+        if not CfgGetValue("G_FRAGMENTATION_DEBUG") then
             return true
         end
 
@@ -76,7 +76,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
 
     if hit_final then return true end
 
-    if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+    if CfgGetValue("G_FRAGMENTATION_DEBUG") then
         if line_end == nil then return false end
 
         FdAddToDebugTable(DEBUG_LINES, {pos, line_end.pos, FdGetRGBA(COLOUR["red"], 0.1)})
@@ -98,7 +98,7 @@ local function detonate(self, pos)
 
     FdAddToDebugTable(DEBUG_POSITIONS, {pos, COLOUR["red"]})
 
-    if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
+    if CfgGetValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
         MakeHole(pos, 5, 2, 1, false)
         return
     end
@@ -113,15 +113,15 @@ local function detonate(self, pos)
             return
         end
 
-        if not CONFIG_getConfValue("G_SIMULATE_FRAGMENTATION") then
+        if not CfgGetValue("G_SIMULATE_FRAGMENTATION") then
             return
         end
 
-        local FRAG_AMOUNT = CONFIG_getConfValue("SHELL_FRAGMENTATION_AMOUNT") or 250
-        local FRAG_SIZE = (CONFIG_getConfValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
+        local FRAG_AMOUNT = CfgGetValue("SHELL_FRAGMENTATION_AMOUNT") or 250
+        local FRAG_SIZE = (CfgGetValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
         local FRAG_DISTANCE = variant.size_makehole[1] / 2
 
-        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+        if CfgGetValue("G_FRAGMENTATION_DEBUG") then
             FdWatch("Frag Size", FRAG_SIZE)
             FdWatch("Frag Dist", FRAG_DISTANCE)
         end
@@ -155,7 +155,7 @@ local function detonate(self, pos)
             tick_frag(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
         end
 
-        if CONFIG_getConfValue("G_FRAGMENTATION_DEBUG") then
+        if CfgGetValue("G_FRAGMENTATION_DEBUG") then
             FdLog("--- FRAGMENTATION STATS ---")
             FdLog(FRAG_STATS[2].." - hit")
             FdLog(FRAG_STATS[3].." - missed")
@@ -271,7 +271,7 @@ local function tick_active(self, delta)
         FdAddToDebugTable(DEBUG_POSITIONS, {position_initial_hit, COLOUR["white"]})
 
         -- Guard clause: Check if ballistics is disabled to halt expensive computation
-        if not CONFIG_getConfValue("G_SIMULATE_BALLISTICS") then
+        if not CfgGetValue("G_SIMULATE_BALLISTICS") then
             detonate(self, position_initial_hit)
             return true, position_initial_hit
         end

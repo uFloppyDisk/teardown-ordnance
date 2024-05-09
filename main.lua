@@ -25,18 +25,18 @@ function init()
     RegisterTool("ordnance", "Ordnance [FD]", "MOD/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
-    if CONFIG_init() then
+    if CfgInit() then
         FdLog("Restoring configuration defaults...")
-        CONFIG_reset()
+        CfgReset()
     else
         FdLog("Config exists and is complete.")
     end
 
-    G_DEV = CONFIG_getConfValue("G_DEBUG_MODE") or false
-    G_QUICK_SALVO_DELAY = CONFIG_getConfValue("G_QUICK_SALVO_DELAY") or 0.5
-    G_PHYSICS_ITERATIONS = 2 ^ (CONFIG_getConfValue("G_PHYSICS_ITERATIONS") or 4)
-    DEFAULT_SHELL.eta = CONFIG_getConfValue("G_TIME_OF_FLIGHT")
-    DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
+    G_DEV = CfgGetValue("G_DEBUG_MODE") or false
+    G_QUICK_SALVO_DELAY = CfgGetValue("G_QUICK_SALVO_DELAY") or 0.5
+    G_PHYSICS_ITERATIONS = 2 ^ (CfgGetValue("G_PHYSICS_ITERATIONS") or 4)
+    DEFAULT_SHELL.eta = CfgGetValue("G_TIME_OF_FLIGHT")
+    DEFAULT_SHELL.inaccuracy = CfgGetValue("G_SHELL_INACCURACY")
 
 
     STATES = {
@@ -50,7 +50,7 @@ function init()
 
         input_attack_invert = false,
 
-        shell_inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY"),
+        shell_inaccuracy = CfgGetValue("G_SHELL_INACCURACY"),
 
         quicksalvo = {
             enabled = false,
@@ -80,13 +80,13 @@ function init()
     }
 
     KEYBINDS = {
-        ["KEYBIND_TACTICAL_TOGGLE"] = CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE"),
-        ["KEYBIND_CYCLE_SHELLS"] = CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS"),
-        ["KEYBIND_CYCLE_VARIANTS"] = CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS"),
-        ["KEYBIND_ADJUST_ATTACK"] = CONFIG_getConfValue("KEYBIND_ADJUST_ATTACK"),
-        ["KEYBIND_ADJUST_INACCURACY"] = CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY"),
-        ["KEYBIND_GENERAL_CANCEL"] = CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL"),
-        ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS"),
+        ["KEYBIND_TACTICAL_TOGGLE"] = CfgGetValue("KEYBIND_TACTICAL_TOGGLE"),
+        ["KEYBIND_CYCLE_SHELLS"] = CfgGetValue("KEYBIND_CYCLE_SHELLS"),
+        ["KEYBIND_CYCLE_VARIANTS"] = CfgGetValue("KEYBIND_CYCLE_VARIANTS"),
+        ["KEYBIND_ADJUST_ATTACK"] = CfgGetValue("KEYBIND_ADJUST_ATTACK"),
+        ["KEYBIND_ADJUST_INACCURACY"] = CfgGetValue("KEYBIND_ADJUST_INACCURACY"),
+        ["KEYBIND_GENERAL_CANCEL"] = CfgGetValue("KEYBIND_GENERAL_CANCEL"),
+        ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS"),
     }
 
     UI_HELPERS = {
@@ -109,7 +109,7 @@ function tick(delta)
 
     FdWatch("state(ENABLED)", STATES.enabled)
     FdWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
-    FdWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_TIME_OF_FLIGHT"))
+    FdWatch("option(FLIGHT_TIME)", CfgGetValue("G_TIME_OF_FLIGHT"))
     FdWatch("option(PHYSICS ITERATIONS)", G_PHYSICS_ITERATIONS)
     FdWatch("Shells", #SHELLS)
     FdWatch("Salvo", #QUICK_SALVO)
@@ -182,7 +182,7 @@ function tick(delta)
     draw_debug()
 
     -- User toggles tactical marking mode
-    if InputPressed(CONFIG_getConfValue("KEYBIND_TACTICAL_TOGGLE")) then
+    if InputPressed(CfgGetValue("KEYBIND_TACTICAL_TOGGLE")) then
         if not STATES.tactical.enabled then
             DEFAULT_ENVIRONMENT["fogcolor"] = {GetEnvironmentProperty("fogcolor")}
             DEFAULT_ENVIRONMENT["fogParams"] = {GetEnvironmentProperty("fogParams")}
@@ -237,7 +237,7 @@ function tick(delta)
     end
 
     -- User change shell inaccuracy event
-    if InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
+    if InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
         SetBool("game.input.locktool", true)
 
         if InputValue("mousewheel") ~= 0 then
@@ -278,7 +278,7 @@ function tick(delta)
     end
 
     -- User cycling selected shell spec event
-    if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_SHELLS")) then
+    if InputPressed(CfgGetValue("KEYBIND_CYCLE_SHELLS")) then
         STATES.selected_shell = (STATES.selected_shell % #SHELL_VALUES) + 1
 
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
@@ -289,7 +289,7 @@ function tick(delta)
     end
 
     -- User cycling selected shell variant event
-    if InputPressed(CONFIG_getConfValue("KEYBIND_CYCLE_VARIANTS")) then
+    if InputPressed(CfgGetValue("KEYBIND_CYCLE_VARIANTS")) then
         if #SHELL_VALUES[STATES.selected_shell].variants <= 1 then
             PlaySound(SND_UI["cancel"], sound_pos, 0.4)
         else
@@ -299,7 +299,7 @@ function tick(delta)
     end
 
     -- User cancel quick salvo planning event
-    if InputPressed(CONFIG_getConfValue("KEYBIND_GENERAL_CANCEL")) and STATES.quicksalvo.enabled then
+    if InputPressed(CfgGetValue("KEYBIND_GENERAL_CANCEL")) and STATES.quicksalvo.enabled then
         QUICK_SALVO = {}
         PlaySound(SND_UI["cancel"], sound_pos, 0.4)
 
@@ -307,7 +307,7 @@ function tick(delta)
     end
 
     -- User toggling quick salvo event
-    if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO")) then
+    if InputPressed(CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quicksalvo.enabled = not STATES.quicksalvo.enabled
         PlaySound(SND_UI["select"], sound_pos, 0.6)
 
@@ -316,7 +316,7 @@ function tick(delta)
         end
     end
 
-    if InputPressed(CONFIG_getConfValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS")) then
+    if InputPressed(CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS")) then
         STATES.quicksalvo.markers = (STATES.quicksalvo.markers - 1) % 3
         PlaySound(SND_UI["select"], sound_pos, 0.6)
     end
@@ -344,7 +344,7 @@ function tick(delta)
             STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6
         )
 
-    if not InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE")) then
+    if not InputPressed(CfgGetValue("KEYBIND_PRIMARY_FIRE")) then
         return
     end
 

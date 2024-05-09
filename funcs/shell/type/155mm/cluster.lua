@@ -9,7 +9,7 @@ function tick_secondary_cluster(self, delta, variant)
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
+        local amount_submunitions = CfgGetValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
         for i = 1, amount_submunitions, 1 do
             local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
             local transform = Transform(self.position, rotation)
@@ -57,7 +57,7 @@ function tick_secondary_cluster(self, delta, variant)
         FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
 
         -- Random roll if submunition is a dud
-        if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
+        if CfgGetValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
             FdLog("Submunition at index " .. sub.index .. " is a dud.")
             MakeHole(position_hit, 0.5, 0.1, 0, false)
 

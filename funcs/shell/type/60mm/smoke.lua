@@ -6,7 +6,7 @@ function tick_secondary_smoke(self, delta, variant)
     local function init_sub()
         self.secondary.submunitions = {}
 
-        local amount_submunitions = FdRound((CONFIG_getConfValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
+        local amount_submunitions = FdRound((CfgGetValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
         local pitch = { min = 10, max = 80 }
         local pitch_ratio_min = pitch.min / pitch.max
 

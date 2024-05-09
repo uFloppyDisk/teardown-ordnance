@@ -163,7 +163,7 @@ function modalSetKey(option)
                         break
                     end
 
-                    if input == CONFIG_getConfValue(option.mapping) then
+                    if input == CfgGetValue(option.mapping) then
                         STATES.set_keybind.active = false
                         STATES.set_keybind.target = nil
                         STATES.set_keybind.msg_error_duplicate_bind = false
@@ -184,7 +184,7 @@ function modalSetKey(option)
                         break
                     end
 
-                    CONFIG_setConfValue(option.mapping, input)
+                    CfgSetValue(option.mapping, input)
                     STATES.set_keybind.active = false
                     STATES.set_keybind.target = nil
                     STATES.set_keybind.msg_error_duplicate_bind = false
@@ -401,7 +401,7 @@ function renderMenu()
                 if UiTextButton("Restore Defaults", width, height) then
                     for index, option in ipairs(OPTIONS) do
                         if option.category == "keybind" then
-                            CONFIG_setConfValue(option.mapping, option.mapping.value_default)
+                            CfgSetValue(option.mapping, option.mapping.value_default)
                         end
                     end
                 end
@@ -445,7 +445,7 @@ function init()
         confirm_reset = 0
     }
 
-    if CONFIG_init() then
+    if CfgInit() then
         STATES.confirm_reset = 3
     end
 
@@ -459,7 +459,7 @@ end
 
 function draw()
     if InputDown("ctrl") and InputDown("alt") and InputPressed("C") then
-        CONFIG_reset(true)
+        CfgReset(true)
         OPTIONS = {}
         Menu()
         return
@@ -547,7 +547,7 @@ function reset(force_reset)
                     UiAlign("center")
 
                     if UiTextButton("OK", ((box.width / 2) - 25), (box.height / 5)) then
-                        CONFIG_reset()
+                        CfgReset()
                         OPTIONS = {}
 
                         Menu()
@@ -562,7 +562,7 @@ function reset(force_reset)
                     UiButtonHoverColor(1, 0.1, 0.1, 1)
                     if UiTextButton("YES", ((box.width / 2) - 25), (box.height / 5)) then
                         if STATES.confirm_reset == 2 then
-                            CONFIG_reset()
+                            CfgReset()
                             OPTIONS = {}
 
                             Menu()
