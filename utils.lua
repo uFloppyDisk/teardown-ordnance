@@ -55,7 +55,7 @@ end
 ---@param ... string Path to traverse.
 ---@return boolean # True if path exists.
 function FdAssertTableKeys(root, ...)
-    for i, key in ipairs(arg) do
+    for _, key in ipairs{...} do
         if root[key] == nil then return false end
 
         root = root[key]
@@ -563,13 +563,13 @@ function FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, m
         return materials, hit_pos, true
     end
 
-    for index, shape in pairs(shapes) do
+    for _, shape in pairs(shapes) do
         QueryRejectShape(shape)
     end
 
     QueryRequire('large')
     QueryRequire("physical")
-    local hit, distance, normal, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
+    local hit, distance, _, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
     if not hit then
         return materials, hit_pos, false
     end

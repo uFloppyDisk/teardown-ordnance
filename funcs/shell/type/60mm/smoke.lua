@@ -202,7 +202,8 @@ end
 function manage_smoke(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 
-    local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+    local bound_x, bound_y = GetBodyBounds(body.handle)
+    local pos = VecLerp(bound_x, bound_y, 0.5)
     local velocity = GetBodyVelocity(body.handle)
     PointLight(pos, 1, 0.4668, 0.1229, 0.7)
 
@@ -240,5 +241,6 @@ function manage_smoke(shapes, body)
     end
 
     if math.random() > 0.05 then return false end
+    return false
 end
 

@@ -66,16 +66,18 @@ function tick_secondary_incendiary(self, delta, variant)
                 1, 0.706, 0.42
             )
 
-            step = 1 / 5
-            cur = 0
-            repeat
-                cur = cur + step
+            do
+              local step = 1 / 5
+              local cur = 0
+              repeat
+                  cur = cur + step
 
-                local lerp_pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+                  local lerp_pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
-                ParticleEmissive(100 * cur)
-                SpawnParticle(lerp_pos, Vec(0, 0, 0), 0.1)
-            until cur >= 1
+                  ParticleEmissive(100 * cur)
+                  SpawnParticle(lerp_pos, Vec(0, 0, 0), 0.1)
+              until cur >= 1
+            end
 
             PointLight(sub.transform.pos, FdGetUnpackedRGBA({ 1, 0.706, 0.42 }, sub.brightness))
 
@@ -87,19 +89,21 @@ function tick_secondary_incendiary(self, delta, variant)
             ParticleStretch(1)
             ParticleCollide(0, 0.1, "linear", 0.5)
 
-            local step = 1 / (math.floor(FdMapToRange(velocity_magnitude, 50, 150, 1, 5)))
-            local cur = 0
-            repeat
-                local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) *
-                    FdClamp(FdMapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
-                ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
+            do
+              local step = 1 / (math.floor(FdMapToRange(velocity_magnitude, 50, 150, 1, 5)))
+              local cur = 0
+              repeat
+                  local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) *
+                      FdClamp(FdMapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
+                  ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
 
-                local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
+                  local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
 
-                SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + (FdClamp(timer_elapsed, 0, 1) * 20))
+                  SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + (FdClamp(timer_elapsed, 0, 1) * 20))
 
-                cur = cur + step
-            until cur >= 1
+                  cur = cur + step
+              until cur >= 1
+            end
 
             return transform_new
         end
@@ -115,16 +119,18 @@ function tick_secondary_incendiary(self, delta, variant)
         ParticleStretch(0)
         ParticleCollide(0, 0.1, "constant", 0.2)
 
-        local step = 1 / 1
-        local cur = 0
-        repeat
-            local radius = math.random() * 2 + 1
-            ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
+        do
+          local step = 1 / 1
+          local cur = 0
+          repeat
+              local radius = math.random() * 2 + 1
+              ParticleRadius(radius, radius + 4.5, "smooth", 0, 0.8)
 
-            SpawnParticle(position_hit, G_VEC_WIND, math.random() * 30 + 20)
+              SpawnParticle(position_hit, G_VEC_WIND, math.random() * 30 + 20)
 
-            cur = cur + step
-        until cur >= 1
+              cur = cur + step
+          until cur >= 1
+        end
 
         if math.random() > 0 then
             MakeHole(position_hit, 0.5, 0.25, 0.125, false)
@@ -179,20 +185,24 @@ function tick_secondary_incendiary(self, delta, variant)
             PointLight(VecLerp(position_hit, sub.transform.pos, 0.1), 1, 0.733, 0.471, math.random() * 200 + 150)
         end
 
-        step = 1 / 5
-        cur = 0
-        repeat
-            QueryRejectBody(sub.body)
-            hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 5)
-            if not hit then break end
+        do
+          local step = 1 / 5
+          local cur = 0
+          repeat
+              local point, shape
 
-            FdAddToDebugTable(DEBUG_POSITIONS, { point, COLOUR["orange"] })
-            SpawnFire(point)
+              QueryRejectBody(sub.body)
+              hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 5)
+              if not hit then break end
 
-            QueryRejectShape(shape)
+              FdAddToDebugTable(DEBUG_POSITIONS, { point, COLOUR["orange"] })
+              SpawnFire(point)
 
-            cur = cur + step
-        until cur >= 1
+              QueryRejectShape(shape)
+
+              cur = cur + step
+          until cur >= 1
+        end
 
         return nil
     end
@@ -205,7 +215,7 @@ function tick_secondary_incendiary(self, delta, variant)
 
     if #self.secondary.submunitions == 0 then return true end
 
-    for index, sub in ipairs(self.secondary.submunitions) do
+    for _, sub in ipairs(self.secondary.submunitions) do
         if sub.active then
             local transform_new = tick_sub(sub)
 
@@ -218,12 +228,14 @@ function tick_secondary_incendiary(self, delta, variant)
     end
 
     FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
+    return true
 end
 
 function manage_incendiary(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 
-    local pos = VecLerp(GetBodyBounds(body.handle), 0.5)
+    local bound_x, bound_y = GetBodyBounds(body.handle)
+    local pos = VecLerp(bound_x, bound_y, 0.5)
     PointLight(pos, 1, 0.706, 0.42, 10)
 
     if IsPointInWater(pos) then return false end
@@ -255,5 +267,6 @@ function manage_incendiary(shapes, body)
 
     FdAddToDebugTable(DEBUG_POSITIONS, { pos_fire, COLOUR["orange"] })
     SpawnFire(pos_fire)
+    return true
 end
 

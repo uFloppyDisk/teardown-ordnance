@@ -2,7 +2,7 @@ function draw_sprite(self, pos)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
     local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
-    local lx, ly, lz = GetQuatEuler(look_at)
+    local _, ly, _ = GetQuatEuler(look_at)
     -- lx = clamp(lx, -15, 15)
     -- lz = clamp(lz, -15, 15)
     look_at = QuatEuler(0, -ly, 0)
@@ -72,7 +72,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
         rotation = QuatEuler(0, rot_y, rot_z)
     end
 
-    hit_final, line_end = check_hit(rotation)
+    local hit_final, line_end = check_hit(rotation)
 
     if hit_final then return true end
 
@@ -241,11 +241,12 @@ local function tick_active(self, delta)
         return
     end
 
+    local trigger_detonation
+
     -- Hit detection and ballistics system
-    local shell_radius = self.sprite.width / 2
     QueryRequire('large')
     QueryRequire("physical")
-    local hit, hit_distance, normal, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)))
+    local hit, hit_distance, _, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)))
 
     ---@return boolean|nil detonate Detonation state
     ---@return table|nil position Position to trigger detonation at.
@@ -327,7 +328,7 @@ local function tick_active(self, delta)
         end
 
         -- QueryRaycast in the opposite direction to check if bottom material is impenetrable. Fixes fringe QueryRejectShape edge case.
-        hit, hit_distance, normal, shape_initial = QueryRaycast(position_new, VecNormalize(VecSub(self.position, position_new)), VecLength(VecSub(self.position, position_new), 0))
+        hit, hit_distance, _, shape_initial = QueryRaycast(position_new, VecNormalize(VecSub(self.position, position_new)), VecLength(VecSub(self.position, position_new)), 0)
         position_initial_hit = VecAdd(position_new, VecScale(VecNormalize(VecSub(self.position, position_new)), hit_distance))
 
         if not hit then return false end
@@ -347,7 +348,8 @@ local function tick_active(self, delta)
         return true, position_initial_hit
     end
 
-    local trigger_detonation, pos_detonation = check_detonate()
+    local pos_detonation
+    trigger_detonation, pos_detonation = check_detonate()
 
     if trigger_detonation then
         detonate(self, pos_detonation)
@@ -359,7 +361,6 @@ end
 
 local function shell_play_sound_fire(self)
     local values = SHELL_VALUES[self.type]
-    local variant = values.variants[self.variant]
 
     local snd_pos = Vec(100, 0, 100)
     if self.pitch < 90 then
@@ -413,7 +414,6 @@ local function fire(self)
     local pitch_in_rad = math.rad(self.pitch)
 
     -- Flight Time Calculation
-    local eta_from_origin = (2 * velocity * math.sin(pitch_in_rad)) / math.abs(G_VEC_GRAVITY[2])
     local eta_from_apogee = (velocity * math.sin(pitch_in_rad)) / math.abs(G_VEC_GRAVITY[2])
 
     local velocity_horizontal, velocity_vertical = velocity * math.cos(pitch_in_rad), velocity * math.sin(pitch_in_rad)
