@@ -25,9 +25,9 @@ function OPTION:new(o)
 end
 
 function OPTION:getRegValue()
-    return CONFIG_getConfValue(self.mapping)
+    return CfgGetValue(self.mapping)
 end
 
 function OPTION:setRegValue(value)
-    return CONFIG_setConfValue(self.mapping, value)
+    return CfgSetValue(self.mapping, value)
 end
