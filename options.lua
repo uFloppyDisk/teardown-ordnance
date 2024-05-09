@@ -1,3 +1,4 @@
+#include "utils.lua"
 #include "classes/configmanager.lua"
 #include "constants.lua"
 #include "classes/Option.lua"
@@ -242,7 +243,7 @@ function renderMasthead(font_reg, font_selected)
             UiAlign("left")
             UiTranslate((offsets[2] / 2) * -1, 0)
 
-            index = math.floor(#CONFIG_MENUS / 2) + 1
+            local index = math.floor(#CONFIG_MENUS / 2) + 1
             renderTab(index)
         UiPop()
     end

@@ -14,6 +14,10 @@ DEFAULT_POSTPROCESSING = {}
 
 PLAYER_LOCK_TRANSFORM = nil
 
+-- total, hit, miss, redirected
+FRAG_STATS = {
+    0, 0, 0, 0
+}
 
 -- #region Main
 
@@ -34,10 +38,6 @@ function init()
     DEFAULT_SHELL.eta = CONFIG_getConfValue("G_TIME_OF_FLIGHT")
     DEFAULT_SHELL.inaccuracy = CONFIG_getConfValue("G_SHELL_INACCURACY")
 
-    -- total, hit, miss, redirected
-    FRAG_STATS = {
-        0, 0, 0, 0
-    }
 
     STATES = {
         enabled = false,

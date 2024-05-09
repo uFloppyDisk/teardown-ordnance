@@ -187,9 +187,9 @@ local function drawCursor()
     if not STATES.tactical.hitscan.hit then return end
 
     local opacity = FdMapToRange(
-    FdClamp(STATES.selected_attack_angle, 20, 84),
-        78, 84,
-        1, 0.65
+      FdClamp(STATES.selected_attack_angle, 20, 84),
+          78, 84,
+          1, 0.65
     )
 
     drawHUDMarker(STATES.tactical.hitscan.pos, 7, FdGetRGBA(COLOUR["yellow_dark"], opacity))
@@ -250,8 +250,8 @@ function tactical_draw()
             local m_pos = STATES.tactical.mouse_pos
 
             STATES.tactical.hitscan.pos,
-            STATES.tactical.hitscan.hit,
-            STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos.x, m_pos.y)
+              STATES.tactical.hitscan.hit,
+              STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos.x, m_pos.y)
 
             FdWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
