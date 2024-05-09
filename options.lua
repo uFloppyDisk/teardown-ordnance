@@ -49,7 +49,7 @@ function drawSlider(option)
         UiTranslate(MENU.offset_option_slider[1], MENU.offset_option_slider[2])
 
         value = UiSlider("ui/common/dot.png", "x", value * option.width, 0.0, option.width) / option.width
-        value = round((value * range + option.value_min), option.value_digits)
+        value = FdRound((value * range + option.value_min), option.value_digits)
 
     UiPop()
 
@@ -360,7 +360,7 @@ function renderMenu()
         if CONFIG_MENUS[STATES.menu].filter == "advanced" then
             UiPush()
                 UiFont("bold.ttf", 24)
-                UiColor(getUnpackedRGBA(COLOUR["red"]))
+                UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
 
                 local text = "WARNING: The following options are not intended for most users;\nChange at your own risk!"
                 local width, height = UiGetTextSize(text)
