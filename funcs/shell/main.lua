@@ -16,7 +16,7 @@ function ShellDrawSprite(self, pos)
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
-local function ShellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
+local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
     local function checkHit(rotation)
         local transform = Transform(pos, rotation)
         local position_new = TransformToParentPoint(transform, Vec(((frag_dist - 5) + (math.random() * 10)), 0, 0))
@@ -36,7 +36,7 @@ local function ShellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
                 FRAG_STATS[4] = FRAG_STATS[4] + 1
             end
 
-            return ShellFragTick(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
+            return shellFragTick(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
         end
 
         if math.random() < 0.66 then
@@ -152,7 +152,7 @@ local function detonate(self, pos)
         end
 
         for i = 1, FRAG_AMOUNT, 1 do
-            ShellFragTick(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
+            shellFragTick(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
         end
 
         if CfgGetValue("G_FRAGMENTATION_DEBUG") then
