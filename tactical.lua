@@ -203,7 +203,7 @@ local function drawQueuedSalvo(display)
     local rect_size = 10
     local rect_w, rect_h = rect_size, rect_size
 
-    local function draw_shell_info(shell)
+    local function drawShellInfo(shell)
         if display ~= qs_display.VISIBLE then return end
         if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
 
@@ -228,7 +228,7 @@ local function drawQueuedSalvo(display)
         UiPush()
             UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
 
-            draw_shell_info(shell)
+            drawShellInfo(shell)
 
             UiColor(unpack(FdGetRGBA(COLOUR["red"], 0.75)))
             UiRect(rect_w, rect_h)
