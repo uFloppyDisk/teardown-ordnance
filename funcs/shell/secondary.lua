@@ -93,4 +93,5 @@ function tick_secondary(self, delta, variant)
     -- if result then return true end
 
     self.secondary.timer = self.secondary.timer - delta
+    return false
 end

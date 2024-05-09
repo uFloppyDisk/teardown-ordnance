@@ -1,10 +1,10 @@
 function tick_secondary_cluster(self, delta, variant)
     local sprite = LoadSprite("MOD/img/" .. "bomblet" .. ".png")
 
-    local sounds = {
-        "155mm_shell_cluster_submunition_explode_01",
-        "155mm_shell_cluster_submunition_explode_02",
-    }
+--    local sounds = {
+--        "155mm_shell_cluster_submunition_explode_01",
+--        "155mm_shell_cluster_submunition_explode_02",
+--    }
 
     local function init_sub()
         self.secondary.submunitions = {}
@@ -15,6 +15,7 @@ function tick_secondary_cluster(self, delta, variant)
             local transform = Transform(self.position, rotation)
 
             local sub = FdObjectNew({
+                index = i,
                 transform = TransformCopy(transform),
                 velocity = Vec(math.random() * 10 + 5, 0, 0)
             }, DEFAULT_SUBMUNITION)
@@ -57,7 +58,7 @@ function tick_secondary_cluster(self, delta, variant)
 
         -- Random roll if submunition is a dud
         if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
-            FdLog("Submunition at index " .. index .. " is a dud.")
+            FdLog("Submunition at index " .. sub.index .. " is a dud.")
             MakeHole(position_hit, 0.5, 0.1, 0, false)
 
             return nil
