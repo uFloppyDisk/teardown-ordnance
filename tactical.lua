@@ -251,7 +251,7 @@ function tactical_draw()
 
             STATES.tactical.hitscan.pos,
             STATES.tactical.hitscan.hit,
-            STATES.tactical.hitscan.dist = getMousePosInWorld()
+            STATES.tactical.hitscan.dist = getMousePosInWorld(m_pos.x, m_pos.y)
 
             dWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()

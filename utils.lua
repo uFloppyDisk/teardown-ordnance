@@ -156,20 +156,16 @@ function getAimPos()
 	return camera_center, hit, distance
 end
 
+---@param x number X coordinate of mouse position.
+---@param y number Y coordinate of mouse position.
 ---@param set_distance? number Distance from origin.
 ---@return table world_position, boolean hit, number distance
-function getMousePosInWorld(set_distance)
+function getMousePosInWorld(x, y, set_distance)
     local dist = 200
     if set_distance ~= nil then dist = set_distance end
 
-	local camera_transform = GetCameraTransform()
-    local m_pos_x, m_pos_y = STATES.tactical.mouse_pos[1], STATES.tactical.mouse_pos[2]
-    if m_pos_x == nil or m_pos_y == nil then
-        m_pos_x = UiCenter()
-        m_pos_y = UiMiddle()
-    end
-
-    local direction = UiPixelToWorld(m_pos_x, m_pos_y)
+    local camera_transform = GetCameraTransform()
+    local direction = UiPixelToWorld(x, y)
 
     local hit_position = VecAdd(camera_transform.pos, VecScale(direction, dist))
 
@@ -178,11 +174,11 @@ function getMousePosInWorld(set_distance)
         hit, hit_distance = QueryRaycast(camera_transform.pos, direction, 500)
     end
 
-	if hit then
+    if hit then
         hit_position = VecAdd(camera_transform.pos, VecScale(direction, hit_distance))
     end
 
-	return hit_position, hit, hit_distance
+    return hit_position, hit, hit_distance
 end
 
 ---@param position table
