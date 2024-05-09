@@ -136,7 +136,7 @@ function tick(delta)
         local variant = values.variants[shell.variant]
 
         if (shell.secondary.active and variant.secondary.draw) or not shell.secondary.active then
-            draw_sprite(shell, shell.position)
+            ShellDrawSprite(shell, shell.position)
         end
 
         if variant.id == "PF" then
@@ -155,7 +155,7 @@ function tick(delta)
 
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
-            shell_init(salvo_shell)
+            ShellInit(salvo_shell)
             DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
         end
     else
@@ -312,7 +312,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], sound_pos, 0.6)
 
         if not STATES.quicksalvo.enabled and #QUICK_SALVO > 0 then
-            shell_init(table.remove(QUICK_SALVO, 1))
+            ShellInit(table.remove(QUICK_SALVO, 1))
         end
     end
 
@@ -381,7 +381,7 @@ function tick(delta)
 
     -- Fire shell manually
     if not STATES.quicksalvo.enabled then
-        shell_init(shell)
+        ShellInit(shell)
         return
     end
 
@@ -395,7 +395,7 @@ end
 function update(delta)
     -- Run shell tick for each shell not detonated, remove shell if detonated
     for i, shell in ipairs(SHELLS) do
-        shell_tick(shell, delta)
+        ShellTick(shell, delta)
 
         if shell.state == shell_states.DETONATED then
             FdLog("Shell "..i.." detonated. Removing...")
