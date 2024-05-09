@@ -1,4 +1,4 @@
-function tick_secondary_parachuted_flare(self, delta, variant)
+function ShellSecTickFlare(self, delta, variant)
     self.position = VecAdd(self.position, VecScale(self.vel_current, delta))
 
     if QueryRaycast(self.position, Vec(0, -1, 0), 0.02) then

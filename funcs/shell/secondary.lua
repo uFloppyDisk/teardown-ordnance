@@ -1,16 +1,16 @@
-function manage_bodies(body)
+function PhysBodyTick(body)
     if not IsHandleValid(body.handle) then return true end
 
     local disp_manage = {
-        ["IN"] = manage_incendiary,
-        ["SM"] = manage_smoke
+        ["IN"] = PhysBodyIncendiaryTick,
+        ["SM"] = PhysBodySmokeTick
     }
 
     local shapes = GetBodyShapes(body.handle)
     return disp_manage[body.type](shapes, body)
 end
 
-function manage_bodies_cleanup()
+function PhysBodyCleanup()
     for i, body in ipairs(BODIES) do
         if not body.valid then
             FdLog("Removing body " .. body.handle)
@@ -19,7 +19,7 @@ function manage_bodies_cleanup()
     end
 end
 
-function trigger_secondary(self, parameters, detonate)
+function ShellSecInit(self, parameters, detonate)
     local isDetonated = true
 
     if FdAssertTableKeys(parameters, "trigger_height") then
@@ -71,14 +71,14 @@ function trigger_secondary(self, parameters, detonate)
     return isDetonated
 end
 
-function tick_secondary(self, delta, variant)
+function ShellSecTick(self, delta, variant)
     if self.secondary.timer <= 0 then return true end
 
     local disp_tick_secondary = {
-        ["SM"] = tick_secondary_smoke,
-        ["PF"] = tick_secondary_parachuted_flare,
-        ["CL"] = tick_secondary_cluster,
-        ["IN"] = tick_secondary_incendiary,
+        ["SM"] = ShellSecTickSmoke,
+        ["PF"] = ShellSecTickFlare,
+        ["CL"] = ShellSecTickCluster,
+        ["IN"] = ShellSecTickIncendiary,
     }
 
     disp_tick_secondary[variant.id](self, delta, variant)

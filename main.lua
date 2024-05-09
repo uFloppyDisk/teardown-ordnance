@@ -116,7 +116,7 @@ function tick(delta)
     FdWatch("BODIES", #BODIES)
 
     for i, body in ipairs(BODIES) do
-        if body.valid == true and manage_bodies(body) then
+        if body.valid == true and PhysBodyTick(body) then
             body.valid = false
         end
 

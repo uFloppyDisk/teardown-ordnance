@@ -92,7 +92,7 @@ local function detonate(self, pos)
 
     self.position = VecCopy(pos)
 
-    if not (FdAssertTableKeys(variant, "secondary")) or trigger_secondary(self, variant.secondary, true) then
+    if not (FdAssertTableKeys(variant, "secondary")) or ShellSecInit(self, variant.secondary, true) then
         self.state = shell_states.DETONATED
     end
 
@@ -183,7 +183,7 @@ local function tickActive(self, delta)
     -- Check if shell has a secondary state and that the secondary has not been activated yet;
     -- if so, check various trigger conditions
     if (FdAssertTableKeys(variant, "secondary") and not self.secondary.active) then
-        trigger_secondary(self, variant.secondary)
+        ShellSecInit(self, variant.secondary)
     end
 
     -- Shell whistle logic
@@ -474,7 +474,7 @@ function ShellTick(self, delta)
     end
 
     if self.secondary.active then
-        local finished = tick_secondary(self, delta, variant)
+        local finished = ShellSecTick(self, delta, variant)
         if finished then
             self.state = shell_states.DETONATED
             self.secondary.active = false

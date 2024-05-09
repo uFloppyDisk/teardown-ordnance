@@ -1,9 +1,9 @@
-function tick_secondary_smoke(self, delta, variant)
+function ShellSecTickSmoke(self, delta, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
     local velocity = 1.25
 
-    local function init_sub()
+    local function subInit()
         self.secondary.submunitions = {}
 
         local amount_submunitions = FdRound((CfgGetValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50))
@@ -173,7 +173,7 @@ function tick_secondary_smoke(self, delta, variant)
 
         PointLight(self.position, 1, 0.5447, 0.2005, 100)
 
-        init_sub()
+        subInit()
 
         doIgnitedWP()
         doBodyPrimary()
@@ -199,7 +199,7 @@ function tick_secondary_smoke(self, delta, variant)
     end
 end
 
-function manage_smoke(shapes, body)
+function PhysBodySmokeTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 
     local bound_x, bound_y = GetBodyBounds(body.handle)

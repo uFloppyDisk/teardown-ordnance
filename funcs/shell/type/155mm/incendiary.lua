@@ -1,5 +1,5 @@
-function tick_secondary_incendiary(self, delta, variant)
-    local function init_sub()
+function ShellSecTickIncendiary(self, delta, variant)
+    local function subInit()
         -- self.secondary.inertia = VecScale(self.secondary.inertia, 0.5)
         self.secondary.submunitions = {}
 
@@ -29,7 +29,7 @@ function tick_secondary_incendiary(self, delta, variant)
         FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
     end
 
-    local function tick_sub(sub)
+    local function subTick(sub)
         local timer_ratio = self.secondary.timer / variant.secondary.timer
         local timer_elapsed = variant.secondary.timer - self.secondary.timer
 
@@ -210,14 +210,14 @@ function tick_secondary_incendiary(self, delta, variant)
     if self.secondary.timer < 0 then return true end
 
     if not FdAssertTableKeys(self, "secondary", "submunitions") then
-        init_sub()
+        subInit()
     end
 
     if #self.secondary.submunitions == 0 then return true end
 
     for _, sub in ipairs(self.secondary.submunitions) do
         if sub.active then
-            local transform_new = tick_sub(sub)
+            local transform_new = subTick(sub)
 
             sub.transform = transform_new
 
@@ -231,7 +231,7 @@ function tick_secondary_incendiary(self, delta, variant)
     return true
 end
 
-function manage_incendiary(shapes, body)
+function PhysBodyIncendiaryTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 
     local bound_x, bound_y = GetBodyBounds(body.handle)
