@@ -267,7 +267,7 @@ function tick(delta)
 
         local transform_player_current = GetPlayerCameraTransform()
         transform_player_current.rot = PLAYER_LOCK_TRANSFORM.rot
-        SetCameraTransform(transform_player_current, true)
+        SetCameraTransform(transform_player_current)
     else
         SetBool("game.input.locktool", false)
     end
@@ -333,16 +333,16 @@ function tick(delta)
     end
 
     UI_HELPERS.shell_telemetry.combined_transform,
-    UI_HELPERS.shell_telemetry.arrow_pitch_pos,
-    UI_HELPERS.shell_telemetry.arrow_heading_pos =
-    drawShellImpactGizmo(
-        {
-            aim_pos,
-            STATES.selected_attack_heading,
-            STATES.selected_attack_angle
-        },
-        STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6
-    )
+        UI_HELPERS.shell_telemetry.arrow_pitch_pos,
+        UI_HELPERS.shell_telemetry.arrow_heading_pos =
+        drawShellImpactGizmo(
+            {
+                aim_pos,
+                STATES.selected_attack_heading,
+                STATES.selected_attack_angle
+            },
+            STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6
+        )
 
     if not InputPressed(CONFIG_getConfValue("KEYBIND_PRIMARY_FIRE")) then
         return
