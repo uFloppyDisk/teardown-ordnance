@@ -22,10 +22,10 @@ function init()
     SetBool("game.tool.ordnance.enabled", true)
 
     if CONFIG_init() then
-        dPrint("Restoring configuration defaults...")
+        FdLog("Restoring configuration defaults...")
         CONFIG_reset()
     else
-        dPrint("Config exists and is complete.")
+        FdLog("Config exists and is complete.")
     end
 
     G_DEV = CONFIG_getConfValue("G_DEBUG_MODE") or false
@@ -107,13 +107,13 @@ end
 function tick(delta)
     ELAPSED_TIME = ELAPSED_TIME + delta
 
-    dWatch("state(ENABLED)", STATES.enabled)
-    dWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
-    dWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_TIME_OF_FLIGHT"))
-    dWatch("option(PHYSICS ITERATIONS)", G_PHYSICS_ITERATIONS)
-    dWatch("Shells", #SHELLS)
-    dWatch("Salvo", #QUICK_SALVO)
-    dWatch("BODIES", #BODIES)
+    FdWatch("state(ENABLED)", STATES.enabled)
+    FdWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
+    FdWatch("option(FLIGHT_TIME)", CONFIG_getConfValue("G_TIME_OF_FLIGHT"))
+    FdWatch("option(PHYSICS ITERATIONS)", G_PHYSICS_ITERATIONS)
+    FdWatch("Shells", #SHELLS)
+    FdWatch("Salvo", #QUICK_SALVO)
+    FdWatch("BODIES", #BODIES)
 
     for i, body in ipairs(BODIES) do
         if body.valid == true and manage_bodies(body) then
@@ -200,8 +200,8 @@ function tick(delta)
         end
 
         if STATES.tactical.enabled then
-            setEnvProps(DEFAULT_ENVIRONMENT)
-            setPostProcProps(DEFAULT_POSTPROCESSING)
+            FdSetEnvProps(DEFAULT_ENVIRONMENT)
+            FdSetPostProcProps(DEFAULT_POSTPROCESSING)
         end
 
         STATES.tactical.enabled = not STATES.tactical.enabled
@@ -247,7 +247,7 @@ function tick(delta)
             if STATES.shell_inaccuracy >= 100 then value = 5 end
 
             local offset = value * InputValue("mousewheel")
-            STATES.shell_inaccuracy = clamp(STATES.shell_inaccuracy + offset, 0, 150)
+            STATES.shell_inaccuracy = FdClamp(STATES.shell_inaccuracy + offset, 0, 150)
         end
     elseif InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then -- User change heading and angle of attack event
         SetBool("game.input.locktool", true)
@@ -262,7 +262,7 @@ function tick(delta)
 
         if InputValue("mousedy") ~= 0 then
             local offset = -0.2 * InputValue("mousedy")
-            STATES.selected_attack_angle = clamp(STATES.selected_attack_angle + offset, 20, 90)
+            STATES.selected_attack_angle = FdClamp(STATES.selected_attack_angle + offset, 20, 90)
         end
 
         local transform_player_current = GetPlayerCameraTransform()
@@ -321,7 +321,7 @@ function tick(delta)
         PlaySound(SND_UI["select"], sound_pos, 0.6)
     end
 
-    local aim_pos = getAimPos()
+    local aim_pos = FdGetAimPos()
 
     -- Check if currently in tactical mode, prevents user from firing if no valid target
     if STATES.tactical.enabled then
@@ -335,7 +335,7 @@ function tick(delta)
     UI_HELPERS.shell_telemetry.combined_transform,
         UI_HELPERS.shell_telemetry.arrow_pitch_pos,
         UI_HELPERS.shell_telemetry.arrow_heading_pos =
-        drawShellImpactGizmo(
+        FdDrawShellImpactGizmo(
             {
                 aim_pos,
                 STATES.selected_attack_heading,
@@ -362,12 +362,12 @@ function tick(delta)
     end
 
     local shell_sprite = values.sprite
-    if assertTableKeys(variant, "sprite") then
+    if FdAssertTableKeys(variant, "sprite") then
         shell_sprite = variant.sprite
     end
 
     -- Instantiate shell
-    local shell = objectNew({
+    local shell = FdObjectNew({
         type = STATES.selected_shell,
         variant = STATES.selected_variant,
         inaccuracy = STATES.shell_inaccuracy,
@@ -398,7 +398,7 @@ function update(delta)
         shell_tick(shell, delta)
 
         if shell.state == shell_states.DETONATED then
-            dPrint("Shell "..i.." detonated. Removing...")
+            FdLog("Shell "..i.." detonated. Removing...")
             table.remove(SHELLS, i)
         end
 	end
@@ -407,7 +407,7 @@ function update(delta)
     if shells_length < G_MAX_SHELLS then return end
 
     local trim_amount = shells_length - G_MAX_SHELLS
-    dPrint("Removing "..trim_amount.." shells from table...")
+    FdLog("Removing "..trim_amount.." shells from table...")
 
     for i=1, trim_amount do
         table.remove(SHELLS, 1)
@@ -425,7 +425,7 @@ function draw()
         tactical_draw()
     else
         if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
-            drawUIShellImpactGizmo()
+            FdDrawUIShellImpactGizmo()
         end
     end
 
@@ -461,7 +461,7 @@ function draw()
 
                 UiColor(1, 1, 1)
                 UiText("<Left Mouse> | Mark location for salvo", true)
-                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..enum_value(qs_display, STATES.quicksalvo.markers).."]", true)
+                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..FdGetEnumValue(qs_display, STATES.quicksalvo.markers).."]", true)
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
@@ -515,9 +515,9 @@ function draw_quicksalvo_markers(display)
 
         if display == qs_display.MINIMAL then
             local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
-            drawCircle(pos, 0.2, 8, COLOUR["red"])
+            FdDrawCircle(pos, 0.2, 8, COLOUR["red"])
         else
-            drawShellImpactGizmo(
+            FdDrawShellImpactGizmo(
                 {shell.destination, shell.heading, shell.pitch},
                 shell.inaccuracy, 32, COLOUR["red"], 2, true
             )

@@ -7,7 +7,7 @@ CAMERA_DEFAULT_FOV = nil
 function tactical_init()
     if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
-    STATES.tactical.camera_settings.camera_transform = getCameraTransform(getPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
+    STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
     CAMERA_DEFAULT_FOV = CONFIG_getConfValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
     CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
     STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
@@ -19,8 +19,8 @@ end
 ---@param delta number Time elapsed since last tick.
 function tactical_tick(delta)
     if CONFIG_getConfValue("TACTICAL_POSTPROCESSING_TOGGLE") then
-        SetEnvironmentProperty("sunBrightness", clamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
-        SetEnvironmentProperty("brightness", clamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
+        SetEnvironmentProperty("sunBrightness", FdClamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
+        SetEnvironmentProperty("brightness", FdClamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
         SetPostProcessingProperty("saturation", 0.9)
         SetPostProcessingProperty("colorbalance", 1, 1.75, 0.75)
     end
@@ -53,7 +53,7 @@ function tactical_tick(delta)
         pos_translate[2] = 0
     end
 
-    if not VecEqual(pos_translate, Vec(0, 0, 0)) then
+    if not FdVecEqual(pos_translate, Vec(0, 0, 0)) then
         pos_translate = VecNormalize(pos_translate)
     end
 
@@ -68,8 +68,8 @@ function tactical_tick(delta)
         translate = translate * 0.33
     end
 
-    dWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
-    dWatch("Camera Position", STATES.tactical.camera_settings.camera_transform.pos)
+    FdWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
+    FdWatch("Camera Position", STATES.tactical.camera_settings.camera_transform.pos)
 
     -- User input + modifiers to translate vector
     local set_offset_x = pos_translate[1] * translate
@@ -78,17 +78,17 @@ function tactical_tick(delta)
 
     local set_offset = VecScale(Vec(set_offset_x, set_offset_y, set_offset_z), delta)
 
-    dWatch("Set Offset", set_offset)
+    FdWatch("Set Offset", set_offset)
 
     -- Set new camera transform based on player input
-    local camera_transform_new = getCameraTransform(STATES.tactical.camera_settings.camera_transform, set_offset)
+    local camera_transform_new = FdGetCameraTransform(STATES.tactical.camera_settings.camera_transform, set_offset)
     STATES.tactical.camera_settings.camera_transform = camera_transform_new
 
     -- Camera zoom key event
     if not InputDown(CONFIG_getConfValue("KEYBIND_ADJUST_INACCURACY")) then
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
-            STATES.tactical.camera_settings.target_camera_fov = clamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
+            STATES.tactical.camera_settings.target_camera_fov = FdClamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
     end
@@ -166,9 +166,9 @@ end
 ---@see getRGBA
 local function drawHUDMarker(pos, initial_rect_size, colour)
     local x, y, dist = UiWorldToPixel(pos)
-    local rect_colour = colour or getRGBA(COLOUR["white"], 1)
+    local rect_colour = colour or FdGetRGBA(COLOUR["white"], 1)
     local rect_size = initial_rect_size or 10
-    rect_size = clamp(rect_size * (1 * (100 / (dist * (CAMERA_CURRENT_FOV / 75)))), 10, 30)
+    rect_size = FdClamp(rect_size * (1 * (100 / (dist * (CAMERA_CURRENT_FOV / 75)))), 10, 30)
 
     local rect_w, rect_h = rect_size, rect_size
 
@@ -186,13 +186,13 @@ end
 local function drawCursor()
     if not STATES.tactical.hitscan.hit then return end
 
-    local opacity = mapToRange(
-        clamp(STATES.selected_attack_angle, 20, 84),
+    local opacity = FdMapToRange(
+    FdClamp(STATES.selected_attack_angle, 20, 84),
         78, 84,
         1, 0.65
     )
 
-    drawHUDMarker(STATES.tactical.hitscan.pos, 7, getRGBA(COLOUR["yellow_dark"], opacity))
+    drawHUDMarker(STATES.tactical.hitscan.pos, 7, FdGetRGBA(COLOUR["yellow_dark"], opacity))
 end
 
 ---@param display qs_display
@@ -223,14 +223,14 @@ local function drawQueuedSalvo(display)
 
     for i, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
-        rect_size = clamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
+        rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
 
         UiPush()
             UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
 
             draw_shell_info(shell)
 
-            UiColor(unpack(getRGBA(COLOUR["red"], 0.75)))
+            UiColor(unpack(FdGetRGBA(COLOUR["red"], 0.75)))
             UiRect(rect_w, rect_h)
         UiPop()
     end
@@ -251,12 +251,12 @@ function tactical_draw()
 
             STATES.tactical.hitscan.pos,
             STATES.tactical.hitscan.hit,
-            STATES.tactical.hitscan.dist = getMousePosInWorld(m_pos.x, m_pos.y)
+            STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos.x, m_pos.y)
 
-            dWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
+            FdWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
 
-        local unit_fov = mapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
+        local unit_fov = FdMapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
 
         if CONFIG_getConfValue("TACTICAL_DRAW_GRID_TOGGLE") then
             local world_depth = 0
@@ -264,7 +264,7 @@ function tactical_draw()
                 world_depth = STATES.tactical.hitscan.pos[2]
             end
 
-            drawGrid(10, 1, world_depth, clamp(mapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+            drawGrid(10, 1, world_depth, FdClamp(FdMapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
             drawGrid(50, 2, world_depth, 0.5)
         end
 
@@ -285,7 +285,7 @@ function tactical_draw()
             UiPush()
                 local x = UiGetTextSize(ui_title)
                 UiTranslate(x, 0)
-                drawUIShellImpactGizmo(true, COLOUR["yellow_dark"], 0, 0, {true, true})
+                FdDrawUIShellImpactGizmo(true, COLOUR["yellow_dark"], 0, 0, {true, true})
             UiPop()
 
             UiFont("regular.ttf", 22)

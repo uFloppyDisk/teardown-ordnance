@@ -14,7 +14,7 @@ function tick_secondary_cluster(self, delta, variant)
             local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
             local transform = Transform(self.position, rotation)
 
-            local sub = objectNew({
+            local sub = FdObjectNew({
                 transform = TransformCopy(transform),
                 velocity = Vec(math.random() * 10 + 5, 0, 0)
             }, DEFAULT_SUBMUNITION)
@@ -44,7 +44,7 @@ function tick_secondary_cluster(self, delta, variant)
         local hit, hit_distance = QueryRaycast(sub.transform.pos, VecNormalize(VecSub(position_new, sub.transform.pos)),
             VecLength(VecSub(position_new, sub.transform.pos)))
         if not hit then
-            addToDebugTable(DEBUG_LINES, { sub.transform.pos, transform_new.pos, getRGBA(COLOUR["orange"], 0.15) })
+            FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
 
             return transform_new
         end
@@ -52,12 +52,12 @@ function tick_secondary_cluster(self, delta, variant)
         local position_hit = VecAdd(sub.transform.pos,
             VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
-        addToDebugTable(DEBUG_LINES, { sub.transform.pos, position_hit, COLOUR["orange"] })
-        addToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
+        FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, position_hit, COLOUR["orange"] })
+        FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
 
         -- Random roll if submunition is a dud
         if CONFIG_getConfValue("G_SIMULATE_UXO") and math.random(100) <= 2 then
-            dPrint("Submunition at index " .. index .. " is a dud.")
+            FdLog("Submunition at index " .. index .. " is a dud.")
             MakeHole(position_hit, 0.5, 0.1, 0, false)
 
             return nil
@@ -84,7 +84,7 @@ function tick_secondary_cluster(self, delta, variant)
         return
     end
 
-    if not assertTableKeys(self, "secondary", "submunitions") then
+    if not FdAssertTableKeys(self, "secondary", "submunitions") then
         init_sub()
     end
 

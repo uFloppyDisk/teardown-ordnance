@@ -2,7 +2,7 @@
 ---@param minimum number
 ---@param maximum number
 ---@return number
-function clamp(value, minimum, maximum)
+function FdClamp(value, minimum, maximum)
 	if value < minimum then value = minimum end
 	if value > maximum then value = maximum end
 
@@ -12,7 +12,7 @@ end
 ---@param number number
 ---@param digits? integer
 ---@return integer
-function round(number, digits)
+function FdRound(number, digits)
     local power = 10^(digits or 0)
     return math.floor((number * power) + 0.5) / power
 end
@@ -23,7 +23,7 @@ end
 ---@param out_start number
 ---@param out_end number
 ---@return number
-function mapToRange(input, in_start, in_end, out_start, out_end)
+function FdMapToRange(input, in_start, in_end, out_start, out_end)
     return out_start + (input - in_start) * (out_end - out_start) / (in_end - in_start)
 end
 
@@ -31,7 +31,7 @@ end
 ---@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
 ---@param alpha? number Float between 0 and 1. (inclusive).
 ---@return table colour {r, g, b, alpha}
-function getRGBA(colour, alpha)
+function FdGetRGBA(colour, alpha)
     alpha = alpha or 1
     local c = {unpack(colour)}
 
@@ -43,7 +43,7 @@ end
 ---@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
 ---@param alpha? number Float between 0 and 1. (inclusive)
 ---@return integer r, integer g, integer b, number a
-function getUnpackedRGBA(colour, alpha)
+function FdGetUnpackedRGBA(colour, alpha)
     alpha = alpha or 1
     local c = {unpack(colour)}
 
@@ -54,7 +54,7 @@ end
 ---@param root table
 ---@param ... string Path to traverse.
 ---@return boolean # True if path exists.
-function assertTableKeys(root, ...)
+function FdAssertTableKeys(root, ...)
     for i, key in ipairs(arg) do
         if root[key] == nil then return false end
 
@@ -66,14 +66,14 @@ end
 
 ---@param target table
 ---@param value any
-function addToDebugTable(target, value)
+function FdAddToDebugTable(target, value)
     if not G_DEV then return end
 
     table.insert(target, value)
 end
 
 ---@param msg number|string
-function dPrint(msg)
+function FdLog(msg)
     if not G_DEV then return end
 
     DebugPrint(msg)
@@ -81,21 +81,21 @@ end
 
 ---@param name string
 ---@param variable table|number|string|boolean|nil String representation of Teardown mod variable. Ex. 'savegame.mod.variable'
-function dWatch(name, variable)
+function FdWatch(name, variable)
     if not G_DEV then return end
 
     DebugWatch(name, variable)
 end
 
 ---@param env table
-function setEnvProps(env)
+function FdSetEnvProps(env)
     for k, v in pairs(env) do
         SetEnvironmentProperty(k, unpack(v))
     end
 end
 
 ---@param pp table
-function setPostProcProps(pp)
+function FdSetPostProcProps(pp)
     for k, v in pairs(pp) do
         SetPostProcessingProperty(k, unpack(v))
     end
@@ -104,7 +104,7 @@ end
 ---@param vec table
 ---@param vec2 table
 ---@return boolean # True if vec and vec2 are equal.
-function VecEqual(vec, vec2)
+function FdVecEqual(vec, vec2)
     local vecToCompare = VecCopy(vec)
 
     if vecToCompare[1] ~= vec2[1] then return false end
@@ -115,7 +115,7 @@ function VecEqual(vec, vec2)
 end
 
 ---@return table
-function getPlayerTransform()
+function FdGetPlayerTransform()
     local current_transform = GetPlayerCameraTransform()
     return Transform(VecCopy(current_transform.pos), current_transform.rot)
 end
@@ -125,7 +125,7 @@ end
 ---@param set_rot? table
 ---@param rot_absolute? boolean
 ---@return table Transform
-function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
+function FdGetCameraTransform(transform, set_offset, set_rot, rot_absolute)
     local offset = set_offset or Vec(0, 0, 0)
     local rot = set_rot or QuatEuler(-90, 0, 0)
     rot_absolute = rot_absolute or true
@@ -138,7 +138,7 @@ function getCameraTransform(transform, set_offset, set_rot, rot_absolute)
 end
 
 ---@return table aim_position, boolean hit, number distance
-function getAimPos()
+function FdGetAimPos()
 	local camera_transform = GetCameraTransform()
 	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
 
@@ -160,7 +160,7 @@ end
 ---@param y number Y coordinate of mouse position.
 ---@param set_distance? number Distance from origin.
 ---@return table world_position, boolean hit, number distance
-function getMousePosInWorld(x, y, set_distance)
+function FdGetMousePosInWorld(x, y, set_distance)
     local dist = 200
     if set_distance ~= nil then dist = set_distance end
 
@@ -185,12 +185,12 @@ end
 ---@param radius number
 ---@param points integer
 ---@param colour table
-function drawCircle(position, radius, points, colour)
+function FdDrawCircle(position, radius, points, colour)
     position = position or Vec(0, 0, 0)
     if not (radius > 0) then return end
 
     points = points or 16
-    colour = colour or getRGBA(COLOUR["red"], 0.8)
+    colour = colour or FdGetRGBA(COLOUR["red"], 0.8)
 
     local step = (math.pi * 2) / points
 
@@ -223,10 +223,10 @@ end
 ---@param length number
 ---@param colour table
 ---@return table|nil
-function drawHeading(transform, length, colour)
+function FdDrawHeading(transform, length, colour)
     if not (length > 0) then return end
 
-    colour = colour or getRGBA(COLOUR["red"], 0.8)
+    colour = colour or FdGetRGBA(COLOUR["red"], 0.8)
 
     local pos_end = TransformToParentPoint(transform, Vec(length, 0, 0))
     DrawLine(transform.pos, pos_end, unpack(colour))
@@ -243,7 +243,7 @@ end
 ---@param lines integer Amount of vertical lines to draw.
 ---@return table position # Ending position of the line based on distance, pitch, and heading.
 ---@return table position_horizontal # Ending position of the line based only on the heading and distance.
-function drawPitchHeadingLine(transform, pitch, length, colour, lines, quick_salvo)
+function FdDrawPitchHeadingLine(transform, pitch, length, colour, lines, quick_salvo)
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
     pitch = pitch or 90
     length = length or 1
@@ -274,7 +274,7 @@ function drawPitchHeadingLine(transform, pitch, length, colour, lines, quick_sal
     return pos_end, pos_horizontal_end
 end
 
-function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_salvo)
+function FdDrawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_salvo)
     telemetry = telemetry or {
         Vec(0, 0, 0), 0, 90
     }
@@ -288,9 +288,9 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
 
     local isopleth_cull_start = 88
     if telemetry[3] >= isopleth_cull_start then
-        lines = math.ceil(mapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
+        lines = math.ceil(FdMapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
     end
-    local pos_pitch_end, pos_heading_end = drawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour, lines, quick_salvo)
+    local pos_pitch_end, pos_heading_end = FdDrawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour, lines, quick_salvo)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 
@@ -298,7 +298,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
     if radius > length_heading then length_heading = radius end
 
     if telemetry[3] < 90 then
-        drawHeading(transform_aim_shell_heading, length_heading, colour)
+        FdDrawHeading(transform_aim_shell_heading, length_heading, colour)
     end
 
     if radius <= 0 then
@@ -307,7 +307,7 @@ function drawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_sa
 
     points = points or 16
 
-    drawCircle(telemetry[1], radius, points, colour)
+    FdDrawCircle(telemetry[1], radius, points, colour)
 
     return transform_aim_shell_both, pos_pitch_end, pos_heading_end
 end
@@ -317,7 +317,7 @@ end
 ---@param x? number
 ---@param y? number
 ---@param align? table Align right/top, respectively. {boolean, boolean}
-function drawUIShellImpactGizmo(static, colour, x, y, align)
+function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
     if static == nil then static = false end
 
     local heading = math.abs(math.ceil((((STATES.selected_attack_heading + 270) % 360) * -1) + 359))
@@ -344,7 +344,7 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
             translate_y = translate_y + length
         end
 
-        drawUIAttackHUD({pitch, heading}, 100, {translate_x, translate_y})
+        FdDrawUIAttackHUD({pitch, heading}, 100, {translate_x, translate_y})
 
         return
     end
@@ -360,7 +360,7 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
             local gizmo_offset = {50, -50}
                 UiTranslate(ui_pos_root[1], ui_pos_root[2])
 
-                drawUIAttackHUD({pitch, heading}, gizmo_size, gizmo_offset)
+                FdDrawUIAttackHUD({pitch, heading}, gizmo_size, gizmo_offset)
             UiPop()
             return
         end
@@ -377,7 +377,7 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
 
         UiPush()
             UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
-            UiText(round(STATES.selected_attack_angle).."°", true)
+            UiText(FdRound(STATES.selected_attack_angle).."°", true)
         UiPop()
 
         if UI_HELPERS.shell_telemetry.arrow_heading_pos == nil then
@@ -413,7 +413,7 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
                 UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
                 UiText(heading.."°", true)
             else
-                local offset_extra = mapToRange(ui_pos_root[3], 25, 150, 0, 7)
+                local offset_extra = FdMapToRange(ui_pos_root[3], 25, 150, 0, 7)
                 UiTranslate(0, 25 + offset_extra)
 
                 UiAlign('center')
@@ -423,15 +423,15 @@ function drawUIShellImpactGizmo(static, colour, x, y, align)
     UiPop()
 end
 
-function drawUIAttackHUD(attack, size, offset, colour)
-    local pitch = round(attack[1])
-    local heading = round(attack[2])
+function FdDrawUIAttackHUD(attack, size, offset, colour)
+    local pitch = FdRound(attack[1])
+    local heading = FdRound(attack[2])
 
     if pitch == 90 then return end
 
     size = size or 100
     offset = offset or {0, 0}
-    colour = colour or getRGBA(COLOUR["yellow_dark"])
+    colour = colour or FdGetRGBA(COLOUR["yellow_dark"])
 
     local length_base = math.cos(math.rad(pitch)) * size
     local length_vert = math.sin(math.rad(pitch)) * size
@@ -446,7 +446,7 @@ function drawUIAttackHUD(attack, size, offset, colour)
         UiAlign("left")
         UiFont("regular.ttf", 26)
         UiTextShadow(0, 0, 0, 1, 1, 1)
-        UiColor(unpack(getRGBA(colour, 0.5)))
+        UiColor(unpack(FdGetRGBA(colour, 0.5)))
 
         UiPush()
             UiTranslate(size_hypo, 0)
@@ -534,8 +534,8 @@ function drawUIAttackHUD(attack, size, offset, colour)
     UiPop()
 end
 
-function objectNew(new, base_object)
-    local base = objectCopy(base_object)
+function FdObjectNew(new, base_object)
+    local base = FdObjectCopy(base_object)
     for key, value in pairs(new) do
         base[key] = value
     end
@@ -543,23 +543,23 @@ function objectNew(new, base_object)
     return base
 end
 
-function objectCopy(object)
+function FdObjectCopy(object)
     local copy
     if type(object) == 'table' then
         copy = {}
         for key, value in pairs(object) do
-            copy[objectCopy(key)] = objectCopy(value)
+            copy[FdObjectCopy(key)] = FdObjectCopy(value)
         end
-        setmetatable(copy, objectCopy(getmetatable(object)))
+        setmetatable(copy, FdObjectCopy(getmetatable(object)))
     else
         copy = object
     end
     return copy
 end
 
-function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
+function FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth)
     if depth < 0 or depth == nil then
-        dPrint("Max depth reached.")
+        FdLog("Max depth reached.")
         return materials, hit_pos, true
     end
 
@@ -577,21 +577,21 @@ function getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, mat
     table.insert(shapes, shape)
 
     local position_hit = VecAdd(pos, VecScale(VecNormalize(VecSub(pos_new, pos)), distance))
-    addToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
+    FdAddToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
     local material = GetShapeMaterialAtPosition(shape, (position_hit))
 
     table.insert(materials, material)
     table.insert(hit_pos, VecCopy(position_hit))
 
-    dPrint("Hit shape with material '"..material.."'")
-    return getMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
+    FdLog("Hit shape with material '"..material.."'")
+    return FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end
 
 --- Get name of enum value.
 ---@param enum { [string]: integer }
 ---@param value integer
 ---@return string
-function enum_value(enum, value)
+function FdGetEnumValue(enum, value)
     for k, v in pairs(enum) do
         if (v == value) then return k end
     end
