@@ -1,4 +1,4 @@
-function tick_secondary_cluster(self, delta, variant)
+function ShellSecTickCluster(self, delta, variant)
     local sprite = LoadSprite("MOD/img/" .. "bomblet" .. ".png")
 
 --    local sounds = {
@@ -6,7 +6,7 @@ function tick_secondary_cluster(self, delta, variant)
 --        "155mm_shell_cluster_submunition_explode_02",
 --    }
 
-    local function init_sub()
+    local function subInit()
         self.secondary.submunitions = {}
 
         local amount_submunitions = CfgGetValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
@@ -28,7 +28,7 @@ function tick_secondary_cluster(self, delta, variant)
         end
     end
 
-    local function tick_sub(sub)
+    local function subTick(sub)
         local gravity = math.abs(G_VEC_GRAVITY[2])
         local world_down = TransformToLocalVec(sub.transform, Vec(0, -1, 0))
 
@@ -86,7 +86,7 @@ function tick_secondary_cluster(self, delta, variant)
     end
 
     if not FdAssertTableKeys(self, "secondary", "submunitions") then
-        init_sub()
+        subInit()
     end
 
     if #self.secondary.submunitions == 0 then
@@ -96,7 +96,7 @@ function tick_secondary_cluster(self, delta, variant)
     end
 
     for index, sub in ipairs(self.secondary.submunitions) do
-        local transform_new = tick_sub(sub)
+        local transform_new = subTick(sub)
 
         sub.transform = transform_new
 
