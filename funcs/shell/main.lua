@@ -1,4 +1,4 @@
-function draw_sprite(self, pos)
+function ShellDrawSprite(self, pos)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
     local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
@@ -16,8 +16,8 @@ function draw_sprite(self, pos)
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
-local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
-    local function check_hit(rotation)
+local function ShellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
+    local function checkHit(rotation)
         local transform = Transform(pos, rotation)
         local position_new = TransformToParentPoint(transform, Vec(((frag_dist - 5) + (math.random() * 10)), 0, 0))
         local transform_new = Transform(position_new, transform.rot)
@@ -36,7 +36,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
                 FRAG_STATS[4] = FRAG_STATS[4] + 1
             end
 
-            return tick_frag(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
+            return ShellFragTick(self, index, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
         end
 
         if math.random() < 0.66 then
@@ -72,7 +72,7 @@ local function tick_frag(self, index, pos, frag_size, frag_dist, rot, halt)
         rotation = QuatEuler(0, rot_y, rot_z)
     end
 
-    local hit_final, line_end = check_hit(rotation)
+    local hit_final, line_end = checkHit(rotation)
 
     if hit_final then return true end
 
@@ -152,7 +152,7 @@ local function detonate(self, pos)
         end
 
         for i = 1, FRAG_AMOUNT, 1 do
-            tick_frag(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
+            ShellFragTick(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
         end
 
         if CfgGetValue("G_FRAGMENTATION_DEBUG") then
@@ -166,7 +166,7 @@ local function detonate(self, pos)
     end
 end
 
-local function tick_active(self, delta)
+local function tickActive(self, delta)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
@@ -250,7 +250,7 @@ local function tick_active(self, delta)
 
     ---@return boolean|nil detonate Detonation state
     ---@return table|nil position Position to trigger detonation at.
-    local function check_detonate()
+    local function checkDetonated()
         if not hit then return false end
         -- if trigger_detonation then return true end
 
@@ -349,7 +349,7 @@ local function tick_active(self, delta)
     end
 
     local pos_detonation
-    trigger_detonation, pos_detonation = check_detonate()
+    trigger_detonation, pos_detonation = checkDetonated()
 
     if trigger_detonation then
         detonate(self, pos_detonation)
@@ -359,7 +359,7 @@ local function tick_active(self, delta)
     self.position = VecCopy(position_new)
 end
 
-local function shell_play_sound_fire(self)
+local function playFireSound(self)
     local values = SHELL_VALUES[self.type]
 
     local snd_pos = Vec(100, 0, 100)
@@ -442,24 +442,24 @@ local function fire(self)
 
     if self.flight_time <= 0 then
         self.state = shell_states.ACTIVE
-        shell_play_sound_fire(self)
+        playFireSound(self)
         return
     end
 
     self.state = shell_states.IN_FLIGHT
 
-    shell_play_sound_fire(self)
+    playFireSound(self)
 end
 
 
 -- #region Shell Control
 
-function shell_init(shell)
+function ShellInit(shell)
     table.insert(SHELLS, shell)
     fire(shell)
 end
 
-function shell_tick(self, delta)
+function ShellTick(self, delta)
     FdWatch("Flight Time", self.flight_time)
 
     local values = SHELL_VALUES[self.type]
@@ -482,7 +482,7 @@ function shell_tick(self, delta)
     end
 
     if self.state == shell_states.ACTIVE then
-        tick_active(self, delta)
+        tickActive(self, delta)
     end
 end
 
