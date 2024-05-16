@@ -196,7 +196,7 @@ function tick(delta)
             DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
             DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
 
-            tactical_init()
+            ContextTacticalInit()
         end
 
         if STATES.tactical.enabled then
@@ -325,7 +325,7 @@ function tick(delta)
 
     -- Check if currently in tactical mode, prevents user from firing if no valid target
     if STATES.tactical.enabled then
-        tactical_tick(delta)
+        ContextTacticalTick(delta)
         aim_pos = STATES.tactical.hitscan.pos
 
         -- No valid target
@@ -422,7 +422,7 @@ function draw()
     local values = SHELL_VALUES[STATES.selected_shell]
 
     if STATES.tactical.enabled then
-        tactical_draw()
+        ContextTacticalDraw()
     else
         if InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
             FdDrawUIShellImpactGizmo()
