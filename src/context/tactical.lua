@@ -4,7 +4,7 @@ CAMERA_ELEVATION_OFFSET_MIN = 20
 CAMERA_CURRENT_FOV = nil
 CAMERA_DEFAULT_FOV = nil
 
-function tactical_init()
+function ContextTacticalInit()
     if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
     STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
@@ -17,7 +17,7 @@ function tactical_init()
 end
 
 ---@param delta number Time elapsed since last tick.
-function tactical_tick(delta)
+function ContextTacticalTick(delta)
     if CfgGetValue("TACTICAL_POSTPROCESSING_TOGGLE") then
         SetEnvironmentProperty("sunBrightness", FdClamp(DEFAULT_ENVIRONMENT["sunBrightness"][1], 0, 1))
         SetEnvironmentProperty("brightness", FdClamp(DEFAULT_ENVIRONMENT["brightness"][1], 1, 1))
@@ -236,7 +236,7 @@ local function drawQueuedSalvo(display)
     end
 end
 
-function tactical_draw()
+function ContextTacticalDraw()
     UiPush()
         UiMakeInteractive()
         local margins = {}
