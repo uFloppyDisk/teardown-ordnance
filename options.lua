@@ -1,7 +1,7 @@
-#include "utils.lua"
-#include "classes/configmanager.lua"
-#include "constants.lua"
-#include "classes/Option.lua"
+#include "src/utils.lua"
+#include "src/configmanager.lua"
+#include "src/constants.lua"
+#include "src/class/Option.lua"
 
 MENU = {
     spacing_tab = 25,
