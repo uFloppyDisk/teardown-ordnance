@@ -251,7 +251,7 @@ function ContextTacticalDraw()
 
             STATES.tactical.hitscan.pos,
               STATES.tactical.hitscan.hit,
-              STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos.x, m_pos.y)
+              STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos[1], m_pos[2])
 
             FdWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
         UiPop()
