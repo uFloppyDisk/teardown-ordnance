@@ -9,14 +9,6 @@ G_CONFIG_ROOT = "savegame.mod.config"
 G_CONFIG_KEYBINDS_ROOT = G_CONFIG_ROOT..".keybind"
 G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT..".tactical"
 
----@enum shell_states
-shell_states = {
-    QUEUED = 0,
-    IN_FLIGHT = 1,
-    ACTIVE = 2,
-    DETONATED = 3
-}
-
 -- #region Colours
 
 COLOUR = {
@@ -32,11 +24,19 @@ COLOUR = {
 
 -- #region Enums
 
----@enum qs_display
-qs_display = {
+---@enum DISPLAY_STATE
+DISPLAY_STATE = {
     HIDDEN = 0,
     VISIBLE = 1,
     MINIMAL = 2,
+}
+
+---@enum SHELL_STATE
+SHELL_STATE = {
+    QUEUED = 0,
+    IN_FLIGHT = 1,
+    ACTIVE = 2,
+    DETONATED = 3
 }
 
 -- #endregion
