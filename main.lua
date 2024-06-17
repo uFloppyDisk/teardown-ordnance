@@ -179,7 +179,15 @@ function tick(delta)
     STATES.enabled = true
     local sound_pos = GetCameraTransform().pos
 
-    draw_debug()
+    if G_DEV then
+      if #DEBUG_POSITIONS > 0 then
+        FdDebugRenderPositions(DEBUG_POSITIONS)
+      end
+
+      if #DEBUG_LINES > 0 then
+        FdDebugRenderLines(DEBUG_LINES)
+      end
+    end
 
     -- User toggles tactical marking mode
     if InputPressed(CfgGetValue("KEYBIND_TACTICAL_TOGGLE")) then
@@ -485,23 +493,6 @@ end
 -- #endregion Main
 
 -- #region functions
-
---- Draw debug lines and positions.
-function draw_debug()
-    if not G_DEV then return end
-
-    if #DEBUG_POSITIONS > 0 then
-        for i, item in pairs(DEBUG_POSITIONS) do
-            DebugCross(item[1], item[2][1], item[2][2], item[2][3], item[2][4] or 1)
-        end
-    end
-
-    if #DEBUG_LINES > 0 then
-        for i, item in pairs(DEBUG_LINES) do
-            DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], item[3][4] or 1) -- assertTableKeys(item[3], 4) and item[3][4] or 1)
-        end
-    end
-end
 
 ---@param display DISPLAY_STATE
 function draw_quicksalvo_markers(display)
