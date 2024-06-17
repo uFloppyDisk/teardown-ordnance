@@ -1,4 +1,4 @@
-#include "load.lua"
+#include "src/load.lua"
 
 ELAPSED_TIME = 0
 
