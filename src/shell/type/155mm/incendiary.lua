@@ -138,7 +138,7 @@ function ShellSecTickIncendiary(self, delta, variant)
 
         local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.25), sub.rotation)
 
-        sub.body = Spawn("MOD/assets/white_phosphorus.xml", transform_spawn)[2]
+        sub.body = Spawn("MOD/assets/vox/white_phosphorus.xml", transform_spawn)[2]
         table.insert(BODIES, {
             valid = true,
             created_at = ELAPSED_TIME,
