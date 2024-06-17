@@ -87,6 +87,22 @@ function FdWatch(name, variable)
     DebugWatch(name, variable)
 end
 
+---Render points in-game for debugging purposes
+---@param positions table
+function FdDebugRenderPositions(positions)
+    for _, item in pairs(positions) do
+        DebugCross(item[1], item[2][1], item[2][2], item[2][3], item[2][4] or 1)
+    end
+end
+
+---Render lines in-game for debugging purposes
+---@param lines table
+function FdDebugRenderLines(lines)
+    for _, item in pairs(lines) do
+        DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], item[3][4] or 1) -- assertTableKeys(item[3], 4) and item[3][4] or 1)
+    end
+end
+
 ---@param env table
 function FdSetEnvProps(env)
     for k, v in pairs(env) do
