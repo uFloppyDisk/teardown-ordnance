@@ -68,6 +68,7 @@ CONFIG_KEYBIND_FRIENDLYNAMES = {
     ["return"]      = "Enter/Return",
 }
 
+---@type { [string]: TConfigMapping }
 CONFIG_VARIABLES = {
     ["G_DEBUG_MODE"] = {
         variable = G_CONFIG_ROOT..".debug_mode",
@@ -283,6 +284,7 @@ CONFIG_VARIABLES = {
     },
 }
 
+---@type { [number]: TConfigOption }
 CONFIG_OPTIONS = {
     {
         type = "textbutton",

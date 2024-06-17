@@ -22,6 +22,9 @@ function CfgInit()
     return false
 end
 
+---Get config value based on TConfigMapping or string reference
+---@param obj_or_key TConfigMapping | string
+---@return nil | boolean | number | string
 function CfgGetValue(obj_or_key)
     local objConf = obj_or_key
     if type(objConf) == "string" then
@@ -41,6 +44,9 @@ function CfgGetValue(obj_or_key)
     return func(objConf.variable)
 end
 
+---Set config value based on TConfigMapping or string reference
+---@param obj_or_key TConfigMapping | string
+---@return nil
 function CfgSetValue(obj_or_key, value)
     local objConf = obj_or_key
     if type(objConf) == "string" then
@@ -60,6 +66,8 @@ function CfgSetValue(obj_or_key, value)
     return func(objConf.variable, value)
 end
 
+---Check whether config is missing one or more definitions in user storage
+---@return boolean # False if test not passed 
 function CfgCheckIntegrity()
     for _, conf in pairs(CONFIG_VARIABLES) do
         if not HasKey(conf.variable) then
@@ -71,6 +79,8 @@ function CfgCheckIntegrity()
     return true
 end
 
+---Reset config to defaults (or clear completely)
+---@param no_restore boolean Whether to clear config without restoring defaults
 function CfgReset(no_restore)
     ClearKey("savegame.mod")
 
