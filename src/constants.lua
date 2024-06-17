@@ -11,6 +11,7 @@ G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT..".tactical"
 
 -- #region Colours
 
+---@type { [string]: TColour }
 COLOUR = {
     ["white"]           = {1, 1, 1, 1},
     ["red"]             = {1, 0.2, 0.2, 1},

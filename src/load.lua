@@ -1,3 +1,4 @@
+#include "src/types.lua"
 #include "src/utils.lua"
 #include "src/configmanager.lua"
 

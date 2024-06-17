@@ -28,7 +28,7 @@ function FdMapToRange(input, in_start, in_end, out_start, out_end)
 end
 
 --- Takes a colour table (and, optionally, an alpha value) and returns a table {r, g, b, a}
----@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
+---@param colour TColour {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
 ---@param alpha? number Float between 0 and 1. (inclusive).
 ---@return table colour {r, g, b, alpha}
 function FdGetRGBA(colour, alpha)
@@ -40,7 +40,7 @@ function FdGetRGBA(colour, alpha)
 end
 
 --- Takes a colour table (and, optionally, an alpha value) and returns unpacked colour values.
----@param colour table {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
+---@param colour TColour {r, g, b, alpha?} r,g,b values between 0 and 255, alpha between 0 and 1. (inclusive)
 ---@param alpha? number Float between 0 and 1. (inclusive)
 ---@return integer r, integer g, integer b, number a
 function FdGetUnpackedRGBA(colour, alpha)
@@ -76,6 +76,7 @@ end
 function FdLog(msg)
     if not G_DEV then return end
 
+    ---@cast msg string
     DebugPrint(msg)
 end
 
@@ -84,11 +85,12 @@ end
 function FdWatch(name, variable)
     if not G_DEV then return end
 
+    ---@cast variable string
     DebugWatch(name, variable)
 end
 
 ---Render points in-game for debugging purposes
----@param positions table
+---@param positions TDebugPosition[]
 function FdDebugRenderPositions(positions)
     for _, item in pairs(positions) do
         DebugCross(item[1], item[2][1], item[2][2], item[2][3], item[2][4] or 1)
@@ -96,7 +98,7 @@ function FdDebugRenderPositions(positions)
 end
 
 ---Render lines in-game for debugging purposes
----@param lines table
+---@param lines TDebugLine[]
 function FdDebugRenderLines(lines)
     for _, item in pairs(lines) do
         DebugLine(item[1], item[2], item[3][1], item[3][2], item[3][3], item[3][4] or 1) -- assertTableKeys(item[3], 4) and item[3][4] or 1)
@@ -200,7 +202,7 @@ end
 ---@param position table
 ---@param radius number
 ---@param points integer
----@param colour table
+---@param colour TColour
 function FdDrawCircle(position, radius, points, colour)
     position = position or Vec(0, 0, 0)
     if not (radius > 0) then return end
@@ -237,7 +239,7 @@ end
 
 ---@param transform table
 ---@param length number
----@param colour table
+---@param colour TColour
 ---@return table|nil
 function FdDrawHeading(transform, length, colour)
     if not (length > 0) then return end
@@ -255,7 +257,7 @@ end
 ---@param transform table
 ---@param pitch number
 ---@param length number
----@param colour table
+---@param colour TColour
 ---@param lines integer Amount of vertical lines to draw.
 ---@return table position # Ending position of the line based on distance, pitch, and heading.
 ---@return table position_horizontal # Ending position of the line based only on the heading and distance.
@@ -329,7 +331,7 @@ function FdDrawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_
 end
 
 ---@param static? boolean
----@param colour? table {R, G, B, a}
+---@param colour? TColour {R, G, B, a}
 ---@param x? number
 ---@param y? number
 ---@param align? table Align right/top, respectively. {boolean, boolean}
