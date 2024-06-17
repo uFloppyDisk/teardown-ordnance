@@ -370,7 +370,7 @@ local function playFireSound(self)
         snd_pos = TransformToParentVec(transform, VecScale(Vec(1, 0, 0), length))
     end
 
-    local snd_fire = LoadSound("MOD/snd/"..values.sounds.fire..".ogg")
+    local snd_fire = LoadSound("MOD/assets/snd/"..values.sounds.fire..".ogg")
     PlaySound(snd_fire, VecAdd(GetCameraTransform().pos, snd_pos), 20)
 end
 

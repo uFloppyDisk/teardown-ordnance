@@ -22,7 +22,7 @@ FRAG_STATS = {
 -- #region Main
 
 function init()
-    RegisterTool("ordnance", "Ordnance [FD]", "MOD/vox/lasergun.vox")
+    RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
 
     if CfgInit() then
@@ -99,9 +99,9 @@ function init()
     }
 
     SND_UI = {}
-    SND_UI["select"]                = LoadSound("MOD/snd/menu_select.ogg")
-    SND_UI["cancel"]                = LoadSound("MOD/snd/menu_cancel.ogg")
-    SND_UI["salvo_mark"]            = LoadSound("MOD/snd/salvo_mark.ogg")
+    SND_UI["select"]                = LoadSound("MOD/assets/snd/menu_select.ogg")
+    SND_UI["cancel"]                = LoadSound("MOD/assets/snd/menu_cancel.ogg")
+    SND_UI["salvo_mark"]            = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 end
 
 function tick(delta)
@@ -374,7 +374,7 @@ function tick(delta)
         pitch = STATES.selected_attack_angle,
         heading = STATES.selected_attack_heading,
         sprite = shell_sprite,
-        snd_whistle = LoadLoop("MOD/snd/"..shell_whistle..".ogg")
+        snd_whistle = LoadLoop("MOD/assets/snd/"..shell_whistle..".ogg")
     }, DEFAULT_SHELL)
 
     shell.destination = aim_pos
