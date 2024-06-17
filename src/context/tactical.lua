@@ -162,7 +162,7 @@ end
 
 ---@param pos table World position.
 ---@param initial_rect_size integer Max rectangle dimensions.
----@param colour table r, g, b, a
+---@param colour TColour
 ---@see getRGBA
 local function drawHUDMarker(pos, initial_rect_size, colour)
     local x, y, dist = UiWorldToPixel(pos)
