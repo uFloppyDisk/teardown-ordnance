@@ -54,7 +54,7 @@ function init()
 
         quicksalvo = {
             enabled = false,
-            markers = qs_display.VISIBLE,
+            markers = DISPLAY_STATE.VISIBLE,
         },
 
         tactical = {
@@ -386,7 +386,7 @@ function tick(delta)
     end
 
     -- Queue shell in quick salvo
-    shell.state = shell_states.QUEUED
+    shell.state = SHELL_STATE.QUEUED
     table.insert(QUICK_SALVO, shell)
 
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
@@ -397,7 +397,7 @@ function update(delta)
     for i, shell in ipairs(SHELLS) do
         ShellTick(shell, delta)
 
-        if shell.state == shell_states.DETONATED then
+        if shell.state == SHELL_STATE.DETONATED then
             FdLog("Shell "..i.." detonated. Removing...")
             table.remove(SHELLS, i)
         end
@@ -461,7 +461,7 @@ function draw()
 
                 UiColor(1, 1, 1)
                 UiText("<Left Mouse> | Mark location for salvo", true)
-                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..FdGetEnumValue(qs_display, STATES.quicksalvo.markers).."]", true)
+                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers).."]", true)
 
                 if #QUICK_SALVO > 0 then
                     UiColor(1, 1, 0.1)
@@ -503,9 +503,9 @@ function draw_debug()
     end
 end
 
----@param display qs_display
+---@param display DISPLAY_STATE
 function draw_quicksalvo_markers(display)
-    if display == qs_display.HIDDEN then return end
+    if display == DISPLAY_STATE.HIDDEN then return end
 
     local queue_length = #QUICK_SALVO
     if queue_length <= 0 then return end
@@ -513,7 +513,7 @@ function draw_quicksalvo_markers(display)
     for i=1, queue_length do
         local shell = QUICK_SALVO[i]
 
-        if display == qs_display.MINIMAL then
+        if display == DISPLAY_STATE.MINIMAL then
             local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
             FdDrawCircle(pos, 0.2, 8, COLOUR["red"])
         else

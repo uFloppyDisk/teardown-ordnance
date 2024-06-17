@@ -93,7 +93,7 @@ local function detonate(self, pos)
     self.position = VecCopy(pos)
 
     if not (FdAssertTableKeys(variant, "secondary")) or ShellSecInit(self, variant.secondary, true) then
-        self.state = shell_states.DETONATED
+        self.state = SHELL_STATE.DETONATED
     end
 
     FdAddToDebugTable(DEBUG_POSITIONS, {pos, COLOUR["red"]})
@@ -176,7 +176,7 @@ local function tickActive(self, delta)
     -- TODO - More intelligent out of bounds detection
     -- Mark shell for deletion as the shell has gone out of bounds.
     if (self.distance_ground > 5000) then
-        self.state = shell_states.DETONATED
+        self.state = SHELL_STATE.DETONATED
         return
     end
 
@@ -441,12 +441,12 @@ local function fire(self)
     self.vel_current = Vec(-velocity_3d[1], -velocity_vertical - (G_VEC_GRAVITY[2] * at_time), -velocity_3d[3])
 
     if self.flight_time <= 0 then
-        self.state = shell_states.ACTIVE
+        self.state = SHELL_STATE.ACTIVE
         playFireSound(self)
         return
     end
 
-    self.state = shell_states.IN_FLIGHT
+    self.state = SHELL_STATE.IN_FLIGHT
 
     playFireSound(self)
 end
@@ -465,9 +465,9 @@ function ShellTick(self, delta)
     local values = SHELL_VALUES[self.type]
     local variant = values.variants[self.variant]
 
-    if self.state == shell_states.IN_FLIGHT then
+    if self.state == SHELL_STATE.IN_FLIGHT then
         if self.flight_time <= 0 then
-            self.state = shell_states.ACTIVE
+            self.state = SHELL_STATE.ACTIVE
         end
 
         self.flight_time = self.flight_time - delta
@@ -476,12 +476,12 @@ function ShellTick(self, delta)
     if self.secondary.active then
         local finished = ShellSecTick(self, delta, variant)
         if finished then
-            self.state = shell_states.DETONATED
+            self.state = SHELL_STATE.DETONATED
             self.secondary.active = false
         end
     end
 
-    if self.state == shell_states.ACTIVE then
+    if self.state == SHELL_STATE.ACTIVE then
         tickActive(self, delta)
     end
 end

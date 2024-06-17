@@ -80,7 +80,7 @@ function ShellSecTickCluster(self, delta, variant)
 
 
     if self.secondary.timer < 0 then
-        self.state = shell_states.DETONATED
+        self.state = SHELL_STATE.DETONATED
         self.secondary.active = false
         return
     end
@@ -90,7 +90,7 @@ function ShellSecTickCluster(self, delta, variant)
     end
 
     if #self.secondary.submunitions == 0 then
-        self.state = shell_states.DETONATED
+        self.state = SHELL_STATE.DETONATED
         self.secondary.active = false
         return
     end
