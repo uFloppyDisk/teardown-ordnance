@@ -409,7 +409,7 @@ function update(delta)
             FdLog("Shell "..i.." detonated. Removing...")
             table.remove(SHELLS, i)
         end
-	end
+    end
 
     local shells_length = #SHELLS
     if shells_length < G_MAX_SHELLS then return end
