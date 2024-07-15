@@ -80,7 +80,7 @@ function CfgCheckIntegrity()
 end
 
 ---Reset config to defaults (or clear completely)
----@param no_restore boolean Whether to clear config without restoring defaults
+---@param no_restore? boolean Whether to clear config without restoring defaults
 function CfgReset(no_restore)
     ClearKey("savegame.mod")
 
