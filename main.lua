@@ -19,6 +19,32 @@ FRAG_STATS = {
     0, 0, 0, 0
 }
 
+-- #region functions
+
+---@param display DISPLAY_STATE
+local function drawQuicksalvoMarkers(display)
+    if display == DISPLAY_STATE.HIDDEN then return end
+
+    local queue_length = #QUICK_SALVO
+    if queue_length <= 0 then return end
+
+    for i=1, queue_length do
+        local shell = QUICK_SALVO[i]
+
+        if display == DISPLAY_STATE.MINIMAL then
+            local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
+            FdDrawCircle(pos, 0.2, 8, COLOUR["red"])
+        else
+            FdDrawShellImpactGizmo(
+                {shell.destination, shell.heading, shell.pitch},
+                shell.inaccuracy, 32, COLOUR["red"], 2, true
+            )
+        end
+    end
+end
+
+-- #endregion functions
+
 -- #region Main
 
 ---@diagnostic disable-next-line: lowercase-global
@@ -149,7 +175,7 @@ function tick(delta)
     end
 
     -- Draw HUD markers for quick salvo shell targets
-    draw_quicksalvo_markers(STATES.quicksalvo.markers)
+    drawQuicksalvoMarkers(STATES.quicksalvo.markers)
 
     -- Fire remaining quick salvo shells with delay if currently not in quick salvo mode
     if not STATES.quicksalvo.enabled and #QUICK_SALVO > 0 then
@@ -495,29 +521,3 @@ function draw()
 end
 
 -- #endregion Main
-
--- #region functions
-
----@param display DISPLAY_STATE
-function draw_quicksalvo_markers(display)
-    if display == DISPLAY_STATE.HIDDEN then return end
-
-    local queue_length = #QUICK_SALVO
-    if queue_length <= 0 then return end
-
-    for i=1, queue_length do
-        local shell = QUICK_SALVO[i]
-
-        if display == DISPLAY_STATE.MINIMAL then
-            local pos = VecAdd(shell.destination, Vec(0, 0.03, 0))
-            FdDrawCircle(pos, 0.2, 8, COLOUR["red"])
-        else
-            FdDrawShellImpactGizmo(
-                {shell.destination, shell.heading, shell.pitch},
-                shell.inaccuracy, 32, COLOUR["red"], 2, true
-            )
-        end
-    end
-end
-
--- #endregion functions
