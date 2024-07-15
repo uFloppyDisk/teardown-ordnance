@@ -1,3 +1,6 @@
+---@diagnostic disable:exp-in-action
+---@diagnostic disable:undefined-global
+
 #include "src/types.lua"
 #include "src/utils.lua"
 #include "src/configmanager.lua"
