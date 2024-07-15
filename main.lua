@@ -159,7 +159,7 @@ function tick(delta)
         end
     end
 
-    for i, shell in ipairs(SHELLS) do
+    for _, shell in ipairs(SHELLS) do
         local values = SHELL_VALUES[shell.type]
         local variant = values.variants[shell.variant]
 
@@ -446,7 +446,7 @@ function update(delta)
     local trim_amount = shells_length - G_MAX_SHELLS
     FdLog("Removing "..trim_amount.." shells from table...")
 
-    for i=1, trim_amount do
+    for _=1, trim_amount do
         table.remove(SHELLS, 1)
     end
 end
