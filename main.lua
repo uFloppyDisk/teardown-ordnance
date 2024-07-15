@@ -21,6 +21,7 @@ FRAG_STATS = {
 
 -- #region Main
 
+---@diagnostic disable-next-line: lowercase-global
 function init()
     RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/lasergun.vox")
     SetBool("game.tool.ordnance.enabled", true)
@@ -104,6 +105,7 @@ function init()
     SND_UI["salvo_mark"]            = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 end
 
+---@diagnostic disable-next-line: lowercase-global
 function tick(delta)
     ELAPSED_TIME = ELAPSED_TIME + delta
 
@@ -400,6 +402,7 @@ function tick(delta)
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
 end
 
+---@diagnostic disable-next-line: lowercase-global
 function update(delta)
     -- Run shell tick for each shell not detonated, remove shell if detonated
     for i, shell in ipairs(SHELLS) do
@@ -422,6 +425,7 @@ function update(delta)
     end
 end
 
+---@diagnostic disable-next-line: lowercase-global
 function draw()
     if not STATES.enabled or GetPlayerVehicle() ~= 0 then
         return
