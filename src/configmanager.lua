@@ -24,7 +24,7 @@ end
 
 ---Get config value based on TConfigMapping or string reference
 ---@param obj_or_key TConfigMapping | string
----@return nil | boolean | number | string
+---@return any
 function CfgGetValue(obj_or_key)
     local objConf = obj_or_key
     if type(objConf) == "string" then
