@@ -161,8 +161,8 @@ local function drawGrid(metres, width, world_depth, opacity)
 end
 
 ---@param pos table World position.
----@param initial_rect_size integer Max rectangle dimensions.
----@param colour TColour
+---@param initial_rect_size? integer Max rectangle dimensions.
+---@param colour? TColour
 ---@see getRGBA
 local function drawHUDMarker(pos, initial_rect_size, colour)
     local x, y, dist = UiWorldToPixel(pos)
