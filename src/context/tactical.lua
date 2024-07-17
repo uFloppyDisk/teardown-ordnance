@@ -221,7 +221,7 @@ local function drawQueuedSalvo(display)
         UiPop()
     end
 
-    for i, shell in ipairs(QUICK_SALVO) do
+    for _, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
         rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
 
@@ -239,8 +239,6 @@ end
 function ContextTacticalDraw()
     UiPush()
         UiMakeInteractive()
-        local margins = {}
-        margins.x0, margins.y0, margins.x1, margins.y1 = UiSafeMargins()
 
         UiPush()
             if not InputDown(CfgGetValue("KEYBIND_ADJUST_ATTACK")) then
