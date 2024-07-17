@@ -1,7 +1,11 @@
+---@diagnostic disable:undefined-global
+---@diagnostic disable:exp-in-action
 #include "src/utils.lua"
 #include "src/configmanager.lua"
 #include "src/constants.lua"
 #include "src/class/Option.lua"
+---@diagnostic enable:undefined-global
+---@diagnostic enable:exp-in-action
 
 MENU = {
     spacing_tab = 25,
@@ -545,6 +549,7 @@ end
 
 -- #region Main
 
+---@diagnostic disable-next-line:lowercase-global
 function init()
     STATES = {
         menu = 1,
@@ -568,6 +573,7 @@ function init()
     end
 end
 
+---@diagnostic disable-next-line:lowercase-global
 function draw()
     if InputDown("ctrl") and InputDown("alt") and InputPressed("C") then
         CfgReset(true)
