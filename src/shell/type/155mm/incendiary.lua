@@ -4,7 +4,7 @@ function ShellSecTickIncendiary(self, delta, variant)
         self.secondary.submunitions = {}
 
         local amount_submunitions = CfgGetValue("SHELL_SEC_CLUSTER_BOMBLET_AMOUNT") or 50
-        for i = 1, amount_submunitions, 1 do
+        for _ = 1, amount_submunitions, 1 do
             local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
             local transform = Transform(self.position, rotation)
 

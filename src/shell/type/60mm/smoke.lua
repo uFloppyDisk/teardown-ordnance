@@ -1,4 +1,4 @@
-function ShellSecTickSmoke(self, delta, variant)
+function ShellSecTickSmoke(self, _, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
     local velocity = 1.25
@@ -11,7 +11,7 @@ function ShellSecTickSmoke(self, delta, variant)
         local pitch_ratio_min = pitch.min / pitch.max
 
         local position_origin = VecAdd(self.position, Vec(0, 0.2, 0))
-        for i = 1, amount_submunitions, 1 do
+        for _ = 1, amount_submunitions, 1 do
             local random_pitch = FdMapToRange(math.random(), 0, 1, pitch.min, pitch.max)
             local rotation = QuatEuler(0, math.random() * 360, random_pitch)
             local transform = Transform(position_origin, rotation)
@@ -106,7 +106,7 @@ function ShellSecTickSmoke(self, delta, variant)
             self.secondary.timer
         }
 
-        for i = 0, 6, 1 do
+        for _ = 0, 6, 1 do
             ParticleRadius(radius / FdMapToRange(math.random(), 0, 1, 1.1, 1.7), radius, 'linear', 0.02)
             SpawnParticle(unpack(particle_cfg))
         end

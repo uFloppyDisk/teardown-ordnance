@@ -1,4 +1,4 @@
-function ShellSecTickCluster(self, delta, variant)
+function ShellSecTickCluster(self, delta, _)
     local sprite = LoadSprite("MOD/assets/img/" .. "bomblet" .. ".png")
 
 --    local sounds = {
