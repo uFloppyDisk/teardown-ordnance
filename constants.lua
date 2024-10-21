@@ -713,16 +713,16 @@ MAT_PEN = {
         },
     },
 
-    -- Lazy fix for snow material returning null, old values are commented
+    -- Null material
     ["default"] = {
-        absorb = 0, -- 100
+        absorb = 100,
         ["HE"] = {
-            min_energy = 0, -- 9999
-            chance = 0 -- 100
+            min_energy = 9999,
+            chance = 100
         },
         ["BB"] = {
-            min_energy = 0, -- 9999
-            chance = 0 -- 100
+            min_energy = 9999,
+            chance = 100
         },
     }
 }
