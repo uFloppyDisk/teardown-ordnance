@@ -616,3 +616,20 @@ function FdGetEnumValue(enum, value)
 
     return "UNKNOWN"
 end
+
+--- Split string by delimiter
+---@param str string
+---@param sep string
+---@return string[]
+function FdSplitString(str, sep)
+  if sep == nil then
+    sep = "%s"
+  end
+
+  local t = {}
+  for s in string.gmatch(str, "([^"..sep.."]+)") do
+    table.insert(t, s)
+  end
+  FdWatch("test", t)
+  return t
+end
