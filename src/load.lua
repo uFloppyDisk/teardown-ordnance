@@ -6,6 +6,7 @@
 #include "src/configmanager.lua"
 
 #include "src/constants.lua"
+#include "src/state.lua"
 
 #include "src/shell/type/60mm/flare.lua"
 #include "src/shell/type/60mm/smoke.lua"

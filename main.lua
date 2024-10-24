@@ -65,43 +65,6 @@ function init()
     DEFAULT_SHELL.eta = CfgGetValue("G_TIME_OF_FLIGHT")
     DEFAULT_SHELL.inaccuracy = CfgGetValue("G_SHELL_INACCURACY")
 
-
-    STATES = {
-        enabled = false,
-        fire = false,
-
-        selected_shell = 1,
-        selected_variant = 1,
-        selected_attack_angle = 90,
-        selected_attack_heading = 90,
-
-        input_attack_invert = false,
-
-        shell_inaccuracy = CfgGetValue("G_SHELL_INACCURACY"),
-
-        quicksalvo = {
-            enabled = false,
-            markers = DISPLAY_STATE.VISIBLE,
-        },
-
-        tactical = {
-            enabled = false,
-
-            mouse_pos = {},
-            hitscan = {
-                hit = false,
-                pos = Vec(),
-                dist = nil
-            },
-            camera_settings = {
-                camera_transform = nil,
-                target_camera_fov = nil,
-                current_camera_fov = nil
-            },
-            camera_defaults = {}
-        },
-    }
-
     DELAYS = {
         quick_salvo = G_QUICK_SALVO_DELAY
     }
@@ -129,6 +92,8 @@ function init()
     SND_UI["select"]                = LoadSound("MOD/assets/snd/menu_select.ogg")
     SND_UI["cancel"]                = LoadSound("MOD/assets/snd/menu_cancel.ogg")
     SND_UI["salvo_mark"]            = LoadSound("MOD/assets/snd/salvo_mark.ogg")
+
+    ResetToDefaultState()
 end
 
 ---@diagnostic disable-next-line: lowercase-global
