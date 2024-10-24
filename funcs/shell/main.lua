@@ -337,7 +337,7 @@ local function tick_active(self, delta)
         local bottom_material = GetShapeMaterialAtPosition(shape_initial, (position_initial_hit))
         dPrint("Bottom material detected as '"..bottom_material.."'")
 
-        if bottom_material ~= "rock" and bottom_material ~= "none" then
+        if bottom_material ~= "rock" and bottom_material ~= "none" and bottom_material ~= "" then
             return false
         end
 
