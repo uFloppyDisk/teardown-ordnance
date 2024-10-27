@@ -81,16 +81,14 @@ function ShellSecTick(self, delta, variant)
         ["IN"] = ShellSecTickIncendiary,
     }
 
-    disp_tick_secondary[variant.id](self, delta, variant)
+    local success, result = pcall(disp_tick_secondary[variant.id], self, delta, variant)
 
-    -- local success, result = pcall(disp_tick_secondary[variant.id], self, delta, variant)
+    if not success then
+        FdLog("An error occurred while calling shell secondary tick function:\n\t\t"..result)
+        return true
+    end
 
-    -- if not success then
-    --     dPrint("Shell secondary handler function is not defined.")
-    --     return true
-    -- end
-
-    -- if result then return true end
+    if result == true then return true end
 
     self.secondary.timer = self.secondary.timer - delta
     return false
