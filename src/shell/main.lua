@@ -16,6 +16,33 @@ function ShellDrawSprite(self, pos)
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
 end
 
+---Calculate origin of fragmentation to prevent level geometry from absorbing it all
+---@param source_pos vector_t
+---@param source_dist number
+---@param check_dist number
+---@param shape shape_handle Shape handle for shape bounds calculation
+---@return vector_t
+local function solveFragOrigin(source_pos, source_dist, check_dist, shape)
+    source_pos = VecCopy(source_pos)
+    QueryRequire('large')
+    local _, distance = QueryRaycast(VecAdd(VecCopy(source_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
+
+    local dist_diff = FdRound(distance, 4) - source_dist
+    FdLog("Diff 1/2: "..source_dist.." / "..distance)
+    FdLog("Diff: "..dist_diff)
+
+    if dist_diff ~= 0 then
+        FdLog("Using differential calculation")
+        return VecAdd(source_pos, Vec(0, source_dist + (check_dist - (dist_diff * 0.95)), 0))
+    end
+
+    FdLog("Using shape bounds calculation")
+    local bounds_min, bounds_max = GetShapeBounds(shape)
+    local bounds_size = VecSub(bounds_max, bounds_min)
+
+    return VecAdd(source_pos, Vec(0, math.abs(bounds_size[2]), 0))
+end
+
 local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
     local function checkHit(rotation)
         local transform = Transform(pos, rotation)
@@ -106,63 +133,43 @@ local function detonate(self, pos)
     local hole = variant.size_makehole
     MakeHole(pos, hole[1], hole[2], hole[3], false)
 
-    if variant.size_explosion > 0 then
-        Explosion(pos, variant.size_explosion)
+    if variant.size_explosion <= 0 then return end
 
-        if variant.size_explosion < 0.5 then
-            return
-        end
+    Explosion(pos, variant.size_explosion)
 
-        if not CfgGetValue("G_SIMULATE_FRAGMENTATION") then
-            return
-        end
+    if variant.size_explosion < 0.5 then return end
+    if not CfgGetValue("G_SIMULATE_FRAGMENTATION") then return end
 
-        local FRAG_AMOUNT = CfgGetValue("SHELL_FRAGMENTATION_AMOUNT") or 250
-        local FRAG_SIZE = (CfgGetValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
-        local FRAG_DISTANCE = variant.size_makehole[1] / 2
+    local FRAG_AMOUNT = CfgGetValue("SHELL_FRAGMENTATION_AMOUNT") or 250
+    local FRAG_SIZE = (CfgGetValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
+    local FRAG_DISTANCE = variant.size_makehole[1] / 2
 
-        if CfgGetValue("G_FRAGMENTATION_DEBUG") then
-            FdWatch("Frag Size", FRAG_SIZE)
-            FdWatch("Frag Dist", FRAG_DISTANCE)
-        end
+    if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+        FdWatch("Frag Size", FRAG_SIZE)
+        FdWatch("Frag Dist", FRAG_DISTANCE)
+    end
 
-        local frag_pos = pos
+    local check_dist = 0.5
 
-        local check_dist = 0.5
-        QueryRequire('large')
-        local hit, dist1, _, shape1 = QueryRaycast(frag_pos, Vec(0, 1, 0), check_dist)
-        if hit then
-            local dist2
-            QueryRequire('large')
-            hit, dist2 = QueryRaycast(VecAdd(VecCopy(frag_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
+    QueryRequire('large')
+    local hit, distance, _, shape = QueryRaycast(pos, Vec(0, 1, 0), check_dist)
 
-            local dist_diff = FdRound(dist2, 4) - dist1
-            FdLog("Diff 1/2: "..dist1.." / "..dist2)
-            FdLog("Diff: "..dist_diff)
-            if dist_diff ~= 0 then
-                FdLog("Using differential calculation")
-                frag_pos = VecAdd(pos, Vec(0, dist1 + (check_dist - (dist_diff * 0.95)), 0))
-            else
-                FdLog("Using shape bounds calculation")
-                local bounds_min, bounds_max = GetShapeBounds(shape1)
-                local bounds_size = VecSub(bounds_max, bounds_min)
+    local frag_origin = pos
+    if hit then
+        frag_origin = solveFragOrigin(pos, distance, check_dist, shape)
+    end
 
-                frag_pos = VecAdd(pos, Vec(0, math.abs(bounds_size[2]), 0))
-            end
-        end
+    for i = 1, FRAG_AMOUNT, 1 do
+        shellFragTick(self, i, frag_origin, FRAG_SIZE, FRAG_DISTANCE)
+    end
 
-        for i = 1, FRAG_AMOUNT, 1 do
-            shellFragTick(self, i, frag_pos, FRAG_SIZE, FRAG_DISTANCE)
-        end
-
-        if CfgGetValue("G_FRAGMENTATION_DEBUG") then
-            FdLog("--- FRAGMENTATION STATS ---")
-            FdLog(FRAG_STATS[2].." - hit")
-            FdLog(FRAG_STATS[3].." - missed")
-            FdLog(FRAG_STATS[4].." - redirected")
-            FdLog("-------------")
-            FdLog("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
-        end
+    if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+        FdLog("--- FRAGMENTATION STATS ---")
+        FdLog(FRAG_STATS[2].." - hit")
+        FdLog(FRAG_STATS[3].." - missed")
+        FdLog(FRAG_STATS[4].." - redirected")
+        FdLog("-------------")
+        FdLog("TOTAL: "..FRAG_STATS[1].." - "..FRAG_STATS[4].." redirected = "..(FRAG_STATS[1] - FRAG_STATS[4])..")")
     end
 end
 
