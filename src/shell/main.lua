@@ -1,10 +1,11 @@
+---Draw shell sprite at position
+---@param self any
+---@param pos vector_t
 function ShellDrawSprite(self, pos)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
     local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
     local _, ly, _ = GetQuatEuler(look_at)
-    -- lx = clamp(lx, -15, 15)
-    -- lz = clamp(lz, -15, 15)
     look_at = QuatEuler(0, -ly, 0)
 
     rotation = QuatRotateQuat(rotation, look_at)
