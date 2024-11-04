@@ -223,13 +223,10 @@ local function tickActive(self, delta)
             ParticleAlpha(0.2)
             ParticleStretch(1.0)
 
-            do -- Fill flight particles
-                local iterations = 16
-
-                for i = 1, iterations, 1 do
-                    local spawn_pos = VecLerp(self.position, position_new, i / iterations)
-                    SpawnParticle(spawn_pos, G_VEC_WIND, 0.1)
-                end
+            local iterations = 16
+            for i = 1, iterations, 1 do
+                local spawn_pos = VecLerp(self.position, position_new, i / iterations)
+                SpawnParticle(spawn_pos, G_VEC_WIND, 0.1)
             end
         end
     end
