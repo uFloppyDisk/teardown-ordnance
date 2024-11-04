@@ -129,7 +129,7 @@ function tick(delta)
         local variant = values.variants[shell.variant]
 
         if (shell.secondary.active and variant.secondary.draw) or not shell.secondary.active then
-            ShellDrawSprite(shell, shell.position)
+            ShellDrawSprite(shell)
         end
 
         if variant.id == "PF" then
