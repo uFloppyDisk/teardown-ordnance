@@ -34,6 +34,7 @@ DISPLAY_STATE = {
 
 ---@enum SHELL_STATE
 SHELL_STATE = {
+    NONE = -1,
     QUEUED = 0,
     IN_FLIGHT = 1,
     ACTIVE = 2,
@@ -850,8 +851,26 @@ SHELL_VALUES = {
     }
 }
 
+---@class (exact) Shell
+---@field state SHELL_STATE
+---@field secondary { active: boolean, timer: number, intensity: number, particle_spread: vector_t, inertia: vector_t }
+---@field type number
+---@field variant number
+---@field flight_time number
+---@field inaccuracy number
+---@field destination vector_t|nil
+---@field eta vector_t|nil
+---@field pitch number
+---@field heading number
+---@field position vector_t|nil
+---@field vel_previous vector_t|nil
+---@field vel_current vector_t|nil
+---@field kinetic_energy number
+---@field hit_once boolean
+---@field sprite number|nil
+---@field snd_whistle number|nil
 DEFAULT_SHELL = {
-    state = -1,
+    state = SHELL_STATE.NONE,
 
     secondary = {
         active = false,

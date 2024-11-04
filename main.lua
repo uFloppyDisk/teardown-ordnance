@@ -368,6 +368,7 @@ function tick(delta)
     end
 
     -- Instantiate shell
+    ---@type Shell
     local shell = FdObjectNew({
         type = STATES.selected_shell,
         variant = STATES.selected_variant,
