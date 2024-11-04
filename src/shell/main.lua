@@ -1,7 +1,6 @@
----Draw shell sprite at position
+---Draw shell sprite
 ---@param self any
----@param pos vector_t
-function ShellDrawSprite(self, pos)
+function ShellDrawSprite(self)
     local rotation = QuatEuler(0, self.heading, 90 + self.pitch)
 
     local look_at = QuatLookAt(self.position, GetCameraTransform().pos)
@@ -10,8 +9,8 @@ function ShellDrawSprite(self, pos)
 
     rotation = QuatRotateQuat(rotation, look_at)
 
-    local transform_pos = Transform(pos, rotation)
-    local transform_pos_90 = Transform(pos, QuatRotateQuat(rotation, QuatAxisAngle(Vec(0, 1, 0), 90)))
+    local transform_pos = Transform(self.position, rotation)
+    local transform_pos_90 = Transform(self.position, QuatRotateQuat(rotation, QuatAxisAngle(Vec(0, 1, 0), 90)))
 
     DrawSprite(self.sprite.img, transform_pos_90, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false) -- Second
     DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4, 0.4, 0.4, 1, true, false)
