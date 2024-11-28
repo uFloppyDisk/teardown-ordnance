@@ -173,13 +173,13 @@ function tick(delta)
     local sound_pos = GetCameraTransform().pos
 
     if G_DEV then
-      if #DEBUG_POSITIONS > 0 then
-        FdDebugRenderPositions(DEBUG_POSITIONS)
-      end
+        if #DEBUG_POSITIONS > 0 then
+            FdDebugRenderPositions(DEBUG_POSITIONS)
+        end
 
-      if #DEBUG_LINES > 0 then
-        FdDebugRenderLines(DEBUG_LINES)
-      end
+        if #DEBUG_LINES > 0 then
+            FdDebugRenderLines(DEBUG_LINES)
+        end
     end
 
     -- User toggles tactical marking mode

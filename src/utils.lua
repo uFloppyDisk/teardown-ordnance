@@ -3,10 +3,10 @@
 ---@param maximum number
 ---@return number
 function FdClamp(value, minimum, maximum)
-	if value < minimum then value = minimum end
-	if value > maximum then value = maximum end
+    if value < minimum then value = minimum end
+    if value > maximum then value = maximum end
 
-	return value
+    return value
 end
 
 ---@param number number
@@ -157,21 +157,21 @@ end
 
 ---@return table aim_position, boolean hit, number distance
 function FdGetAimPos()
-	local camera_transform = GetCameraTransform()
-	local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
+    local camera_transform = GetCameraTransform()
+    local camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -150))
 
     local direction = VecSub(camera_center, camera_transform.pos)
     local distance = VecLength(direction)
-	direction = VecNormalize(direction)
+    direction = VecNormalize(direction)
 
-	local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, distance)
+    local hit, hit_distance = QueryRaycast(camera_transform.pos, direction, distance)
 
-	if hit then
-		camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -hit_distance))
-		distance = hit_distance
-	end
+    if hit then
+        camera_center = TransformToParentPoint(camera_transform, Vec(0, 0, -hit_distance))
+        distance = hit_distance
+    end
 
-	return camera_center, hit, distance
+    return camera_center, hit, distance
 end
 
 ---@param x number X coordinate of mouse position.
@@ -622,14 +622,14 @@ end
 ---@param sep string
 ---@return string[]
 function FdSplitString(str, sep)
-  if sep == nil then
-    sep = "%s"
-  end
+    if sep == nil then
+        sep = "%s"
+    end
 
-  local t = {}
-  for s in string.gmatch(str, "([^"..sep.."]+)") do
-    table.insert(t, s)
-  end
-  FdWatch("test", t)
-  return t
+    local t = {}
+    for s in string.gmatch(str, "([^"..sep.."]+)") do
+        table.insert(t, s)
+    end
+    FdWatch("test", t)
+    return t
 end
