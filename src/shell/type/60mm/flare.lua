@@ -6,20 +6,21 @@ function ShellSecTickFlare(self, delta, variant)
     end
 
     local timer_ratio = self.secondary.timer / variant.secondary.timer
-    self.secondary.intensity = FdClamp((self.secondary.intensity + (math.random(10, 20) * math.random(-1, 1))), 900, 1100)
+    local intensity = FdClamp((self.secondary.intensity + (math.random(10, 20) * math.random(-1, 1))), 900, 1100)
 
     if IsPointInWater(self.position) then
-        self.secondary.intensity = self.secondary.intensity * 0.5
+        intensity = intensity * 0.5
     end
 
     if math.random() <= 0.04 then
-        self.secondary.intensity = self.secondary.intensity * 0.9
+        intensity = intensity * 0.9
     end
 
     if timer_ratio <= 0.15 then
-        self.secondary.intensity = self.secondary.intensity * ((timer_ratio) / 0.15)
+        intensity = intensity * ((timer_ratio) / 0.15)
     end
 
+    self.secondary.intensity = intensity
     FdWatch("shell(SECONDARY_INTENSITY)", self.secondary.intensity)
 
     if timer_ratio <= 0.02 then return end
