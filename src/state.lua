@@ -46,28 +46,28 @@ STATES.tactical = {
 local DEFAULT_STATE = STATES
 
 local function parseKey(key)
-  return FdSplitString(key, ".")
+    return FdSplitString(key, ".")
 end
 
 function ResetToDefaultState()
-  STATES = DEFAULT_STATE
+    STATES = DEFAULT_STATE
 end
 
 ---Get value from state table
 ---@param keyOrKeyRef StateKeyRef|string
 ---@return any
 function GetStateValue(keyOrKeyRef)
-  local key = keyOrKeyRef
-  if keyRef[keyOrKeyRef] ~= nil then key = keyRef[keyOrKeyRef] end
+    local key = keyOrKeyRef
+    if keyRef[keyOrKeyRef] ~= nil then key = keyRef[keyOrKeyRef] end
 
-  local path = parseKey(key)
+    local path = parseKey(key)
 
-  local head = STATES
-  for _, seg in ipairs(path) do
-    head = head[seg]
+    local head = STATES
+    for _, seg in ipairs(path) do
+        head = head[seg]
 
-    if head == nil then return nil end
-  end
+        if head == nil then return nil end
+    end
 
-  return head
+    return head
 end
