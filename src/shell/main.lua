@@ -245,52 +245,44 @@ local function tickActive(self, delta)
         return
     end
 
-    local trigger_detonation
-
     -- Hit detection and ballistics system
     QueryRequire('large')
     QueryRequire("physical")
     local hit, hit_distance, _, shape_initial = QueryRaycast(self.position, VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)))
+    if not hit then
+        self.position = VecCopy(position_new)
+        return
+    end
 
-    ---@return boolean|nil detonate Detonation state
-    ---@return table|nil position Position to trigger detonation at.
-    local function checkDetonated()
-        if not hit then return false end
-        -- if trigger_detonation then return true end
+    FdAddToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
+    FdAddToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})
+    FdLog("Hit detected.")
 
-        local shell_radius = self.sprite.width / 2
+    self.hit_once = true
 
-        FdAddToDebugTable(DEBUG_POSITIONS, {self.position, COLOUR["yellow"]})
-        FdAddToDebugTable(DEBUG_LINES, {self.position, position_new, COLOUR["red"]})
-        FdLog("Hit detected.")
+    if self.secondary.active then
+        self.vel_current = Vec(0, 0, 0)
+        return
+    end
 
-        self.hit_once = true
-
-        if self.secondary.active then
-            self.vel_current = Vec(0, 0, 0)
-            return
-        end
-
-        local position_initial_hit = VecAdd(self.position, VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance))
-        FdAddToDebugTable(DEBUG_POSITIONS, {position_initial_hit, COLOUR["white"]})
-
-        -- Guard clause: Check if ballistics is disabled to halt expensive computation
-        if not CfgGetValue("G_SIMULATE_BALLISTICS") then
-            detonate(self, position_initial_hit)
-            return true, position_initial_hit
-        end
-
-        local material_initial = GetShapeMaterialAtPosition(shape_initial, (position_initial_hit))
+    ---Solve shell ballistics
+    ---@param pos_hit vector_t
+    ---@param radius number
+    ---@return boolean
+    ---@return vector_t?
+    local function solveBallistics(pos_hit, radius)
+        local trigger_detonation = false
+        local material_initial = GetShapeMaterialAtPosition(shape_initial, (pos_hit))
         FdLog("Initial material is '"..material_initial.."'")
 
         -- Perform recursive check for materials encountered during this tick
-        local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(self.position, position_new, { position_initial_hit }, shell_radius, { material_initial }, { shape_initial }, 6)
+        local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(self.position, position_new, { pos_hit }, radius, { material_initial }, { shape_initial }, 6)
 
         local position_detonation
         if hit_positions ~= nil then
             position_detonation = hit_positions[#hit_positions]
         else
-            position_detonation = position_initial_hit
+            position_detonation = pos_hit
             trigger_detonation = true
         end
 
@@ -328,12 +320,12 @@ local function tickActive(self, delta)
             FdLog("Material '"..material.."' was too weak to trigger detonation.")
             -- self.kinetic_energy = self.kinetic_energy - (pen_values.min_energy * (MAT_PEN[material].absorb / 100))
             self.kinetic_energy = self.kinetic_energy - (pen_values.min_energy * 1)
-            MakeHole(hit_positions[index], shell_radius + 1, shell_radius + 0.5, shell_radius, false)
+            MakeHole(hit_positions[index], radius + 1, radius + 0.5, radius, false)
         end
 
         -- QueryRaycast in the opposite direction to check if bottom material is impenetrable. Fixes fringe QueryRejectShape edge case.
         hit, hit_distance, _, shape_initial = QueryRaycast(position_new, VecNormalize(VecSub(self.position, position_new)), VecLength(VecSub(self.position, position_new)), 0)
-        position_initial_hit = VecAdd(position_new, VecScale(VecNormalize(VecSub(self.position, position_new)), hit_distance))
+        local position_initial_hit = VecAdd(position_new, VecScale(VecNormalize(VecSub(self.position, position_new)), hit_distance))
 
         if not hit then return false end
 
@@ -352,8 +344,22 @@ local function tickActive(self, delta)
         return true, position_initial_hit
     end
 
-    local pos_detonation
-    trigger_detonation, pos_detonation = checkDetonated()
+    local pos_initial_hit = VecAdd(
+        self.position,
+        VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance)
+    )
+    local radius = self.sprite.width / 2
+
+    FdAddToDebugTable(DEBUG_POSITIONS, {pos_initial_hit, COLOUR["white"]})
+
+    local trigger_detonation, pos_detonation
+
+    if not CfgGetValue("G_SIMULATE_BALLISTICS") then
+        trigger_detonation = true
+        pos_detonation = pos_initial_hit
+    else
+        trigger_detonation, pos_detonation = solveBallistics(pos_initial_hit, radius)
+    end
 
     if trigger_detonation then
         detonate(self, pos_detonation)
