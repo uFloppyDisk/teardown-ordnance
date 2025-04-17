@@ -243,4 +243,3 @@ function PhysBodySmokeTick(shapes, body)
     if math.random() > 0.05 then return false end
     return false
 end
-

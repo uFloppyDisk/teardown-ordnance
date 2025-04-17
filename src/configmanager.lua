@@ -13,7 +13,7 @@ function CfgInit()
     local current_version = GetInt(G_CONFIG_REGISTRY)
     if current_version == nil then return true end
 
-    if CONFIG.incompatible and not(current_version == CONFIG.version) then
+    if CONFIG.incompatible and not (current_version == CONFIG.version) then
         return true
     end
 
@@ -67,11 +67,11 @@ function CfgSetValue(obj_or_key, value)
 end
 
 ---Check whether config is missing one or more definitions in user storage
----@return boolean # False if test not passed 
+---@return boolean # False if test not passed
 function CfgCheckIntegrity()
     for _, conf in pairs(CONFIG_VARIABLES) do
         if not HasKey(conf.variable) then
-            FdLog("Could not find variable '"..conf.variable.."'")
+            FdLog("Could not find variable '" .. conf.variable .. "'")
             return false
         end
     end

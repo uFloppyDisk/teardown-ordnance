@@ -6,19 +6,19 @@ G_MAX_SHELLS = 100
 G_QUICK_SALVO_DELAY = 0
 
 G_CONFIG_ROOT = "savegame.mod.config"
-G_CONFIG_KEYBINDS_ROOT = G_CONFIG_ROOT..".keybind"
-G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT..".tactical"
+G_CONFIG_KEYBINDS_ROOT = G_CONFIG_ROOT .. ".keybind"
+G_CONFIG_KEYBINDS_TAC = G_CONFIG_KEYBINDS_ROOT .. ".tactical"
 
 -- #region Colours
 
 ---@type { [string]: TColour }
 COLOUR = {
-    ["white"]           = {1, 1, 1, 1},
-    ["red"]             = {1, 0.2, 0.2, 1},
-    ["yellow"]          = {1, 1, 0, 1},
-    ["yellow_dark"]     = {1, 0.8, 0, 1},
-    ["orange"]          = {1, 0.6, 0.2, 1},
-    ["green"]           = {0.2, 1, 0.2, 1},
+    ["white"]       = { 1, 1, 1, 1 },
+    ["red"]         = { 1, 0.2, 0.2, 1 },
+    ["yellow"]      = { 1, 1, 0, 1 },
+    ["yellow_dark"] = { 1, 0.8, 0, 1 },
+    ["orange"]      = { 1, 0.6, 0.2, 1 },
+    ["green"]       = { 0.2, 1, 0.2, 1 },
 }
 
 -- #endregion
@@ -46,123 +46,123 @@ SHELL_STATE = {
 -- #region Config Definitions
 
 CONFIG_KEYBIND_FRIENDLYNAMES = {
-    ["esc"]         = "Escape",
-    ["tab"]         = "Tab",
-    ["lmb"]         = "Left Mouse",
-    ["rmb"]         = "Right Mouse",
-    ["mmb"]         = "Middle Mouse",
-    ["uparrow"]     = "Up Arrow",
-    ["downarrow"]   = "Down Arrow",
-    ["leftarrow"]   = "Left Arrow",
-    ["rightarrow"]  = "Right Arrow",
-    ["backspace"]   = "Backspace",
-    ["alt"]         = "Alt",
-    ["delete"]      = "Delete",
-    ["home"]        = "Home",
-    ["end"]         = "End",
-    ["pgup"]        = "Page Up",
-    ["pgdown"]      = "Page Down",
-    ["insert"]      = "Insert",
-    ["space"]       = "Spacebar",
-    ["shift"]       = "Shift",
-    ["ctrl"]        = "Control",
-    ["return"]      = "Enter/Return",
+    ["esc"]        = "Escape",
+    ["tab"]        = "Tab",
+    ["lmb"]        = "Left Mouse",
+    ["rmb"]        = "Right Mouse",
+    ["mmb"]        = "Middle Mouse",
+    ["uparrow"]    = "Up Arrow",
+    ["downarrow"]  = "Down Arrow",
+    ["leftarrow"]  = "Left Arrow",
+    ["rightarrow"] = "Right Arrow",
+    ["backspace"]  = "Backspace",
+    ["alt"]        = "Alt",
+    ["delete"]     = "Delete",
+    ["home"]       = "Home",
+    ["end"]        = "End",
+    ["pgup"]       = "Page Up",
+    ["pgdown"]     = "Page Down",
+    ["insert"]     = "Insert",
+    ["space"]      = "Spacebar",
+    ["shift"]      = "Shift",
+    ["ctrl"]       = "Control",
+    ["return"]     = "Enter/Return",
 }
 
 ---@type { [string]: TConfigMapping }
 CONFIG_VARIABLES = {
     ["G_DEBUG_MODE"] = {
-        variable = G_CONFIG_ROOT..".debug_mode",
+        variable = G_CONFIG_ROOT .. ".debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
     ["G_SIMULATE_BALLISTICS"] = {
-        variable = G_CONFIG_ROOT..".simulate_ballistics",
+        variable = G_CONFIG_ROOT .. ".simulate_ballistics",
 
         value_type = "boolean",
         value_default = true
     },
     ["G_PHYSICS_ITERATIONS"] = {
-        variable = G_CONFIG_ROOT..".physics_iterations",
+        variable = G_CONFIG_ROOT .. ".physics_iterations",
 
         value_type = "int",
         value_default = 4
     },
     ["G_SIMULATE_UXO"] = {
-        variable = G_CONFIG_ROOT..".simulate_uxo",
+        variable = G_CONFIG_ROOT .. ".simulate_uxo",
 
         value_type = "boolean",
         value_default = false
     },
     ["G_TIME_OF_FLIGHT"] = {
-        variable = G_CONFIG_ROOT..".time_of_flight",
+        variable = G_CONFIG_ROOT .. ".time_of_flight",
 
         value_type = "float",
         value_default = 3.0
     },
     ["G_SHELL_INACCURACY"] = {
-        variable = G_CONFIG_ROOT..".shell_inaccuracy",
+        variable = G_CONFIG_ROOT .. ".shell_inaccuracy",
 
         value_type = "float",
         value_default = 5.0
     },
     ["G_QUICK_SALVO_DELAY"] = {
-        variable = G_CONFIG_ROOT..".quick_salvo_delay",
+        variable = G_CONFIG_ROOT .. ".quick_salvo_delay",
 
         value_type = "float",
         value_default = 0.5
     },
     ["G_SIMULATE_FRAGMENTATION"] = {
-        variable = G_CONFIG_ROOT..".fragmentation.enabled",
+        variable = G_CONFIG_ROOT .. ".fragmentation.enabled",
 
         value_type = "boolean",
         value_default = true
     },
     ["G_FRAGMENTATION_DEBUG"] = {
-        variable = G_CONFIG_ROOT..".fragmentation.debug_mode",
+        variable = G_CONFIG_ROOT .. ".fragmentation.debug_mode",
 
         value_type = "boolean",
         value_default = false
     },
     ["SHELL_SEC_CLUSTER_BOMBLET_AMOUNT"] = {
-        variable = G_CONFIG_ROOT..".shells.secondary.cluster_bomblet_amount",
+        variable = G_CONFIG_ROOT .. ".shells.secondary.cluster_bomblet_amount",
 
         value_type = "int",
         value_default = 50
     },
     ["SHELL_FRAGMENTATION_AMOUNT"] = {
-        variable = G_CONFIG_ROOT..".fragmentation.amount",
+        variable = G_CONFIG_ROOT .. ".fragmentation.amount",
 
         value_type = "int",
         value_default = 250
     },
     ["SHELL_FRAGMENTATION_SIZE"] = {
-        variable = G_CONFIG_ROOT..".fragmentation.size",
+        variable = G_CONFIG_ROOT .. ".fragmentation.size",
 
         value_type = "int",
         value_default = 20
     },
     ["TACTICAL_POSTPROCESSING_TOGGLE"] = {
-        variable = G_CONFIG_ROOT..".tactical.postprocessing",
+        variable = G_CONFIG_ROOT .. ".tactical.postprocessing",
 
         value_type = "boolean",
         value_default = true
     },
     ["TACTICAL_SHELL_LABELS_TOGGLE"] = {
-        variable = G_CONFIG_ROOT..".tactical.shell_labels",
+        variable = G_CONFIG_ROOT .. ".tactical.shell_labels",
 
         value_type = "boolean",
         value_default = true
     },
     ["TACTICAL_DEFAULT_CAMERA_FOV"] = {
-        variable = G_CONFIG_ROOT..".tactical.camera_fov",
+        variable = G_CONFIG_ROOT .. ".tactical.camera_fov",
 
         value_type = "int",
         value_default = 75
     },
     ["TACTICAL_DRAW_GRID_TOGGLE"] = {
-        variable = G_CONFIG_ROOT..".tactical.draw_grid",
+        variable = G_CONFIG_ROOT .. ".tactical.draw_grid",
 
         value_type = "boolean",
         value_default = true
@@ -174,49 +174,49 @@ CONFIG_VARIABLES = {
 
     -- Global
     ["KEYBIND_CYCLE_SHELLS"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_shells",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".cycle_shells",
 
         value_type = "string",
         value_default = "B"
     },
     ["KEYBIND_CYCLE_VARIANTS"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".cycle_variants",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".cycle_variants",
 
         value_type = "string",
         value_default = "N"
     },
     ["KEYBIND_ADJUST_ATTACK"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_attack",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".adjust_attack",
 
         value_type = "string",
         value_default = "G"
     },
     ["KEYBIND_ADJUST_INACCURACY"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".adjust_inaccuracy",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".adjust_inaccuracy",
 
         value_type = "string",
         value_default = "Z"
     },
     ["KEYBIND_GENERAL_CANCEL"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".cancel",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".cancel",
 
         value_type = "string",
         value_default = "C"
     },
     ["KEYBIND_TOGGLE_QUICKSALVO"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".toggle_quicksalvo",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".toggle_quicksalvo",
 
         value_type = "string",
         value_default = "rmb"
     },
     ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".quicksalvo.toggle_markers",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".quicksalvo.toggle_markers",
 
         value_type = "string",
         value_default = "J"
     },
     ["KEYBIND_PRIMARY_FIRE"] = {
-        variable = G_CONFIG_KEYBINDS_ROOT..".primary_fire",
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".primary_fire",
 
         value_type = "string",
         value_default = "lmb"
@@ -224,61 +224,61 @@ CONFIG_VARIABLES = {
 
     -- Tactical Mode
     ["KEYBIND_TACTICAL_TOGGLE"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."toggle",
+        variable = G_CONFIG_KEYBINDS_TAC .. "toggle",
 
         value_type = "string",
         value_default = "M"
     },
     ["KEYBIND_TACTICAL_CENTER_PLAYER"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."center_player",
+        variable = G_CONFIG_KEYBINDS_TAC .. "center_player",
 
         value_type = "string",
         value_default = "H"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.z_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_negative",
 
         value_type = "string",
         value_default = "W"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.z_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_positive",
 
         value_type = "string",
         value_default = "S"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.x_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_negative",
 
         value_type = "string",
         value_default = "A"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.x_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_positive",
 
         value_type = "string",
         value_default = "D"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.y_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_negative",
 
         value_type = "string",
         value_default = "R"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.y_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_positive",
 
         value_type = "string",
         value_default = "F"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_FAST"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.mod_fast",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_fast",
 
         value_type = "string",
         value_default = "shift"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW"] = {
-        variable = G_CONFIG_KEYBINDS_TAC.."translate.mod_slow",
+        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_slow",
 
         value_type = "string",
         value_default = "ctrl"
@@ -745,21 +745,21 @@ SHELL_VALUES = {
                 name = "High Explosive",
                 silent = false,
                 size_explosion = 4,
-                size_makehole = {50, 20, 5}
+                size_makehole = { 50, 20, 5 }
             },
             {
                 id = "BB",
                 name = "Bunkerbuster",
                 silent = false,
                 size_explosion = 4,
-                size_makehole = {50, 35, 20}
+                size_makehole = { 50, 35, 20 }
             },
             {
                 id = "CL",
                 name = "Cluster",
                 silent = true,
                 size_explosion = 0,
-                size_makehole = {0.1, 0, 0},
+                size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 10,
                     trigger_sound = LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
@@ -773,7 +773,7 @@ SHELL_VALUES = {
                 name = "Incendiary",
                 silent = true,
                 size_explosion = 0,
-                size_makehole = {0.1, 0, 0},
+                size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 10,
                     trigger_sound = LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
@@ -784,7 +784,7 @@ SHELL_VALUES = {
             }
         },
         sprite = {
-            img = LoadSprite("MOD/assets/img/".."155mm_HE"..".png"),
+            img = LoadSprite("MOD/assets/img/" .. "155mm_HE" .. ".png"),
             scaling_factor = 5.33,
             width = 0.155 * 2
         },
@@ -807,19 +807,19 @@ SHELL_VALUES = {
                 name = "High Explosive",
                 silent = false,
                 size_explosion = 1.5,
-                size_makehole = {35, 15, 3}
+                size_makehole = { 35, 15, 3 }
             },
             {
                 id = "PF",
                 name = "Parachuted Flare",
                 sprite = {
-                    img = LoadSprite("MOD/assets/img/".."60mm_ILL"..".png"),
+                    img = LoadSprite("MOD/assets/img/" .. "60mm_ILL" .. ".png"),
                     scaling_factor = 5.25,
                     width = 0.06 * 2
                 },
                 silent = true,
                 size_explosion = 0,
-                size_makehole = {0.1, 0, 0},
+                size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 30,
                     trigger_sound = LoadSound("MOD/assets/snd/60mm_ILL_secondary_pop_distant.ogg"),
@@ -831,7 +831,7 @@ SHELL_VALUES = {
                 name = "Smoke",
                 silent = false,
                 size_explosion = 0.1,
-                size_makehole = {2, 1, 0.5},
+                size_makehole = { 2, 1, 0.5 },
                 secondary = {
                     timer = 30,
                     radius = 10,
@@ -840,7 +840,7 @@ SHELL_VALUES = {
             }
         },
         sprite = {
-            img = LoadSprite("MOD/assets/img/".."60mm_HE"..".png"),
+            img = LoadSprite("MOD/assets/img/" .. "60mm_HE" .. ".png"),
             scaling_factor = 4.08,
             width = 0.06 * 2
         },
