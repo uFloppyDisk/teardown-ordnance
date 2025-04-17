@@ -1,0 +1,29 @@
+name: Package mod
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  package-mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: mod
+      - name: Clean development-only files
+        run: cd mod && rm -rf .??*
+      - name: Package mod
+        run: |
+          REPO=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)
+          REF=$(echo $GITHUB_REF_NAME | cut -d "/" -f 1)
+          tar -C mod -czvf "$REPO-$REF.tar.gz" .
+          (cd mod; zip -r "../$REPO-$REF.zip" *)
+
+      - name: Upload mod files to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.tar.gz
+            *.zip
