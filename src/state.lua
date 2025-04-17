@@ -1,10 +1,10 @@
 ---@enum (key) StateKeyRef
 local keyRef = {
-  ["UserShell"] = "selected_shell",
-  ["UserVariant"] = "selected_variant",
-  ["UserHeading"] = "selected_attack_heading",
-  ["UserAngle"] = "selected_attack_angle",
-  ["UserAccuracy"] = "shell_inaccuracy",
+    ["UserShell"] = "selected_shell",
+    ["UserVariant"] = "selected_variant",
+    ["UserHeading"] = "selected_attack_heading",
+    ["UserAngle"] = "selected_attack_angle",
+    ["UserAccuracy"] = "shell_inaccuracy",
 }
 
 STATES = {

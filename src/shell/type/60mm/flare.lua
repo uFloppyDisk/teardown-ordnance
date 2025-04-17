@@ -33,8 +33,10 @@ function ShellSecTickFlare(self, delta, variant)
     ParticleStretch(0)
 
     local particle_origin = VecAdd(self.position, Vec(0, (self.sprite.width * self.sprite.scaling_factor), 0))
-    self.secondary.particle_spread[1] = FdClamp(self.secondary.particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
-    self.secondary.particle_spread[3] = FdClamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5, 0.5)
+    self.secondary.particle_spread[1] = FdClamp(self.secondary.particle_spread[1] + (0.04 * math.random(-1, 1)), -0.5,
+        0.5)
+    self.secondary.particle_spread[3] = FdClamp(self.secondary.particle_spread[3] + (0.04 * math.random(-1, 1)), -0.5,
+        0.5)
 
     SpawnParticle(VecAdd(particle_origin, self.secondary.particle_spread), Vec(-0.15, 0.08, 0.05), 7 + (13 * timer_ratio))
 end

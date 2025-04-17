@@ -13,7 +13,7 @@ end
 ---@param digits? integer
 ---@return integer
 function FdRound(number, digits)
-    local power = 10^(digits or 0)
+    local power = 10 ^ (digits or 0)
     return math.floor((number * power) + 0.5) / power
 end
 
@@ -33,7 +33,7 @@ end
 ---@return table colour {r, g, b, alpha}
 function FdGetRGBA(colour, alpha)
     alpha = alpha or 1
-    local c = {unpack(colour)}
+    local c = { unpack(colour) }
 
     table.insert(c, 4, alpha)
     return c
@@ -45,7 +45,7 @@ end
 ---@return integer r, integer g, integer b, number a
 function FdGetUnpackedRGBA(colour, alpha)
     alpha = alpha or 1
-    local c = {unpack(colour)}
+    local c = { unpack(colour) }
 
     table.insert(c, 4, alpha)
     return unpack(c)
@@ -55,7 +55,7 @@ end
 ---@param ... string Path to traverse.
 ---@return boolean # True if path exists.
 function FdAssertTableKeys(root, ...)
-    for _, key in ipairs{...} do
+    for _, key in ipairs { ... } do
         if root[key] == nil then return false end
 
         root = root[key]
@@ -265,7 +265,7 @@ function FdDrawPitchHeadingLine(transform, pitch, length, colour, lines, quick_s
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
     pitch = pitch or 90
     length = length or 1
-    colour = colour or {1, 1, 1, 1}
+    colour = colour or { 1, 1, 1, 1 }
     lines = lines or 6
 
     local pos_start = transform.pos
@@ -308,7 +308,8 @@ function FdDrawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_
     if telemetry[3] >= isopleth_cull_start then
         lines = math.ceil(FdMapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
     end
-    local pos_pitch_end, pos_heading_end = FdDrawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour, lines, quick_salvo)
+    local pos_pitch_end, pos_heading_end = FdDrawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour,
+        lines, quick_salvo)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 
@@ -346,8 +347,8 @@ function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
         -- TODO: Display compass on HUD with markers in relation to shell heading
         if x == nil then x = 0 end
         if y == nil then y = 0 end
-        if colour == nil then colour = {0, 0, 0, 1} end
-        if align == nil or type(align) ~= "table" then align = {false, false} end
+        if colour == nil then colour = { 0, 0, 0, 1 } end
+        if align == nil or type(align) ~= "table" then align = { false, false } end
 
         local length = 100
 
@@ -362,82 +363,82 @@ function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
             translate_y = translate_y + length
         end
 
-        FdDrawUIAttackHUD({pitch, heading}, 100, {translate_x, translate_y})
+        FdDrawUIAttackHUD({ pitch, heading }, 100, { translate_x, translate_y })
 
         return
     end
 
     -- prints values for heading/pitch following drawn lines
     UiPush()
-        UiMakeInteractive()
-        -- TODO: Add text offset based on distance to prevent overcrowding
-        local ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
+    UiMakeInteractive()
+    -- TODO: Add text offset based on distance to prevent overcrowding
+    local ui_pos_root = { UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos) }
 
-        if ui_pos_root[3] > 70 then
-            local gizmo_size = 100
-            local gizmo_offset = {50, -50}
-                UiTranslate(ui_pos_root[1], ui_pos_root[2])
+    if ui_pos_root[3] > 70 then
+        local gizmo_size = 100
+        local gizmo_offset = { 50, -50 }
+        UiTranslate(ui_pos_root[1], ui_pos_root[2])
 
-                FdDrawUIAttackHUD({pitch, heading}, gizmo_size, gizmo_offset)
-            UiPop()
-            return
-        end
-
-        UiTranslate(UiWidth() / 2, UiHeight() / 2)
-
-        ui_pos_root = {UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos)}
-
-        UiAlign("left")
-        UiFont("regular.ttf", 26)
-        UiTextShadow(0, 0, 0, 2, 1, 1)
-
-        local ui_pos_pitch = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_pitch_pos)}
-
-        UiPush()
-            UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
-            UiText(FdRound(STATES.selected_attack_angle).."°", true)
+        FdDrawUIAttackHUD({ pitch, heading }, gizmo_size, gizmo_offset)
         UiPop()
+        return
+    end
 
-        if UI_HELPERS.shell_telemetry.arrow_heading_pos == nil then
-            UiPop()
-            return
-        end
+    UiTranslate(UiWidth() / 2, UiHeight() / 2)
 
-        local ui_pos_heading = nil
-        local pos_diff = {100, 100}
+    ui_pos_root = { UiWorldToPixel(UI_HELPERS.shell_telemetry.combined_transform.pos) }
 
-        if UI_HELPERS.shell_telemetry.arrow_heading_pos ~= nil then
-            ui_pos_heading = {UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_heading_pos)}
-            pos_diff = {math.abs(ui_pos_pitch[1] - ui_pos_heading[1]), math.abs(ui_pos_pitch[2] - ui_pos_heading[2])}
-        end
+    UiAlign("left")
+    UiFont("regular.ttf", 26)
+    UiTextShadow(0, 0, 0, 2, 1, 1)
 
-        UiPush()
-            if ui_pos_root[3] < 23 then
-                local offset_x, offset_y = 15, -12
-                local size_x, size_y = UiGetTextSize(heading.."°")
+    local ui_pos_pitch = { UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_pitch_pos) }
 
-                if pos_diff[1] > size_x or pos_diff[2] > size_y then
-                    if ui_pos_heading[1] < 0 then
-                        UiAlign('right')
-                        offset_x = -offset_x
-                    end
-                else
-                    offset_y = -offset_y + size_y
+    UiPush()
+    UiTranslate(ui_pos_pitch[1], ui_pos_pitch[2])
+    UiText(FdRound(STATES.selected_attack_angle) .. "°", true)
+    UiPop()
 
-                    offset_x = 0
-                    UiAlign('center')
-                end
+    if UI_HELPERS.shell_telemetry.arrow_heading_pos == nil then
+        UiPop()
+        return
+    end
 
-                UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
-                UiText(heading.."°", true)
-            else
-                local offset_extra = FdMapToRange(ui_pos_root[3], 25, 150, 0, 7)
-                UiTranslate(0, 25 + offset_extra)
+    local ui_pos_heading = nil
+    local pos_diff = { 100, 100 }
 
-                UiAlign('center')
-                UiText(heading.."°", true)
+    if UI_HELPERS.shell_telemetry.arrow_heading_pos ~= nil then
+        ui_pos_heading = { UiWorldToPixel(UI_HELPERS.shell_telemetry.arrow_heading_pos) }
+        pos_diff = { math.abs(ui_pos_pitch[1] - ui_pos_heading[1]), math.abs(ui_pos_pitch[2] - ui_pos_heading[2]) }
+    end
+
+    UiPush()
+    if ui_pos_root[3] < 23 then
+        local offset_x, offset_y = 15, -12
+        local size_x, size_y = UiGetTextSize(heading .. "°")
+
+        if pos_diff[1] > size_x or pos_diff[2] > size_y then
+            if ui_pos_heading[1] < 0 then
+                UiAlign('right')
+                offset_x = -offset_x
             end
-        UiPop()
+        else
+            offset_y = -offset_y + size_y
+
+            offset_x = 0
+            UiAlign('center')
+        end
+
+        UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
+        UiText(heading .. "°", true)
+    else
+        local offset_extra = FdMapToRange(ui_pos_root[3], 25, 150, 0, 7)
+        UiTranslate(0, 25 + offset_extra)
+
+        UiAlign('center')
+        UiText(heading .. "°", true)
+    end
+    UiPop()
     UiPop()
 end
 
@@ -448,7 +449,7 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
     if pitch == 90 then return end
 
     size = size or 100
-    offset = offset or {0, 0}
+    offset = offset or { 0, 0 }
     colour = colour or FdGetRGBA(COLOUR["yellow_dark"])
 
     local length_base = math.cos(math.rad(pitch)) * size
@@ -458,97 +459,97 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
     local size_shadow = 3
 
     UiPush()
-        UiTranslate(offset[1], offset[2])
-        -- UiTranslate(x * 0.7, y * 5)
+    UiTranslate(offset[1], offset[2])
+    -- UiTranslate(x * 0.7, y * 5)
 
-        UiAlign("left")
-        UiFont("regular.ttf", 26)
-        UiTextShadow(0, 0, 0, 1, 1, 1)
-        UiColor(unpack(FdGetRGBA(colour, 0.5)))
+    UiAlign("left")
+    UiFont("regular.ttf", 26)
+    UiTextShadow(0, 0, 0, 1, 1, 1)
+    UiColor(unpack(FdGetRGBA(colour, 0.5)))
+
+    UiPush()
+    UiTranslate(size_hypo, 0)
+
+    do         -- shadows
+        UiPush()
+        UiColor(0, 0, 0, 0.125)
 
         UiPush()
-            UiTranslate(size_hypo, 0)
-
-            do -- shadows
-            UiPush()
-                UiColor(0, 0, 0, 0.125)
-
-                UiPush()
-                    UiTranslate(length_base, -length_vert)
-                    UiTranslate(size_shadow, 0)
-                    UiRect(size_shadow, length_vert + size_shadow + 4.5)
-                UiPop()
-                UiPush()
-                    UiTranslate(0, size_shadow + 1)
-                    UiRect(length_base + 3.5, size_shadow)
-                UiPop()
-            UiPop()
-            end
-
-            UiRect(length_base + 0.5, 3)
-
-            do
-            UiPush()
-                local ui_text_heading = heading.."°"
-                local size_x, size_y = UiGetTextSize(ui_text_heading)
-
-                UiTranslate(length_base / 2, 0)
-
-                UiAlign('center')
-                UiPush()
-                    UiTranslate(0, 7)
-                    UiColor(0, 0, 0, 0.125)
-                    UiRect(size_x, size_y)
-                UiPop()
-
-                UiTranslate(0, size_y + 2)
-                UiColor(1, 1, 1, 1)
-                UiText(heading.."°")
-            UiPop()
-
-            UiPush()
-                UiTranslate(length_base, -length_vert)
-                UiRect(3, length_vert + 3.5)
-            UiPop()
-            end
+        UiTranslate(length_base, -length_vert)
+        UiTranslate(size_shadow, 0)
+        UiRect(size_shadow, length_vert + size_shadow + 4.5)
         UiPop()
-
-        do
         UiPush()
-            local ui_text_pitch = pitch.."°"
-            local size_x, size_y = UiGetTextSize(ui_text_pitch)
-
-            UiTranslate(length_base + size_hypo + 6, -length_vert)
-
-            UiPush()
-                UiColor(0, 0, 0, 0.125)
-                UiRect(size_x, size_y + 3)
-            UiPop()
-
-            UiTranslate(0, size_y * 0.8)
-            UiColor(1, 1, 1, 1)
-            UiText(pitch.."°")
+        UiTranslate(0, size_shadow + 1)
+        UiRect(length_base + 3.5, size_shadow)
         UiPop()
-        end
+        UiPop()
+    end
 
-        do -- Hypotenuse
-            local size_adj = size + 4
+    UiRect(length_base + 0.5, 3)
+
+    do
         UiPush()
-            UiAlign('bottom')
-            UiTranslate(size_hypo, size_hypo)
-            UiRotate(STATES.selected_attack_angle)
+        local ui_text_heading = heading .. "°"
+        local size_x, size_y = UiGetTextSize(ui_text_heading)
 
-            UiPush()
-                UiTranslate(0, size_shadow)
-                UiColor(0, 0, 0, 0.5)
+        UiTranslate(length_base / 2, 0)
 
-                UiRect(size_adj, size_shadow + 1)
-            UiPop()
-
-            UiColor(unpack(colour))
-            UiRect(size_adj, size_hypo)
+        UiAlign('center')
+        UiPush()
+        UiTranslate(0, 7)
+        UiColor(0, 0, 0, 0.125)
+        UiRect(size_x, size_y)
         UiPop()
-        end
+
+        UiTranslate(0, size_y + 2)
+        UiColor(1, 1, 1, 1)
+        UiText(heading .. "°")
+        UiPop()
+
+        UiPush()
+        UiTranslate(length_base, -length_vert)
+        UiRect(3, length_vert + 3.5)
+        UiPop()
+    end
+    UiPop()
+
+    do
+        UiPush()
+        local ui_text_pitch = pitch .. "°"
+        local size_x, size_y = UiGetTextSize(ui_text_pitch)
+
+        UiTranslate(length_base + size_hypo + 6, -length_vert)
+
+        UiPush()
+        UiColor(0, 0, 0, 0.125)
+        UiRect(size_x, size_y + 3)
+        UiPop()
+
+        UiTranslate(0, size_y * 0.8)
+        UiColor(1, 1, 1, 1)
+        UiText(pitch .. "°")
+        UiPop()
+    end
+
+    do     -- Hypotenuse
+        local size_adj = size + 4
+        UiPush()
+        UiAlign('bottom')
+        UiTranslate(size_hypo, size_hypo)
+        UiRotate(STATES.selected_attack_angle)
+
+        UiPush()
+        UiTranslate(0, size_shadow)
+        UiColor(0, 0, 0, 0.5)
+
+        UiRect(size_adj, size_shadow + 1)
+        UiPop()
+
+        UiColor(unpack(colour))
+        UiRect(size_adj, size_hypo)
+        UiPop()
+    end
     UiPop()
 end
 
@@ -595,13 +596,13 @@ function FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, m
     table.insert(shapes, shape)
 
     local position_hit = VecAdd(pos, VecScale(VecNormalize(VecSub(pos_new, pos)), distance))
-    FdAddToDebugTable(DEBUG_POSITIONS, {position_hit, COLOUR["white"]})
+    FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
     local material = GetShapeMaterialAtPosition(shape, (position_hit))
 
     table.insert(materials, material)
     table.insert(hit_pos, VecCopy(position_hit))
 
-    FdLog("Hit shape with material '"..material.."'")
+    FdLog("Hit shape with material '" .. material .. "'")
     return FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, materials, shapes, depth - 1)
 end
 
@@ -627,7 +628,7 @@ function FdSplitString(str, sep)
     end
 
     local t = {}
-    for s in string.gmatch(str, "([^"..sep.."]+)") do
+    for s in string.gmatch(str, "([^" .. sep .. "]+)") do
         table.insert(t, s)
     end
     FdWatch("test", t)

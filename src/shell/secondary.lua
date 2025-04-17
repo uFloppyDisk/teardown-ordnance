@@ -84,7 +84,7 @@ function ShellSecTick(self, delta, variant)
     local success, result = pcall(disp_tick_secondary[variant.id], self, delta, variant)
 
     if not success then
-        FdLog("An error occurred while calling shell secondary tick function:\n\t\t"..result)
+        FdLog("An error occurred while calling shell secondary tick function:\n\t\t" .. result)
         return true
     end
 

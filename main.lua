@@ -28,7 +28,7 @@ local function drawQuicksalvoMarkers(display)
     local queue_length = #QUICK_SALVO
     if queue_length <= 0 then return end
 
-    for i=1, queue_length do
+    for i = 1, queue_length do
         local shell = QUICK_SALVO[i]
 
         if display == DISPLAY_STATE.MINIMAL then
@@ -36,7 +36,7 @@ local function drawQuicksalvoMarkers(display)
             FdDrawCircle(pos, 0.2, 8, COLOUR["red"])
         else
             FdDrawShellImpactGizmo(
-                {shell.destination, shell.heading, shell.pitch},
+                { shell.destination, shell.heading, shell.pitch },
                 shell.inaccuracy, 32, COLOUR["red"], 2, true
             )
         end
@@ -59,17 +59,17 @@ function init()
         FdLog("Config exists and is complete.")
     end
 
-    G_DEV = CfgGetValue("G_DEBUG_MODE") or false
-    G_QUICK_SALVO_DELAY = CfgGetValue("G_QUICK_SALVO_DELAY") or 0.5
-    G_PHYSICS_ITERATIONS = 2 ^ (CfgGetValue("G_PHYSICS_ITERATIONS") or 4)
-    DEFAULT_SHELL.eta = CfgGetValue("G_TIME_OF_FLIGHT")
+    G_DEV                    = CfgGetValue("G_DEBUG_MODE") or false
+    G_QUICK_SALVO_DELAY      = CfgGetValue("G_QUICK_SALVO_DELAY") or 0.5
+    G_PHYSICS_ITERATIONS     = 2 ^ (CfgGetValue("G_PHYSICS_ITERATIONS") or 4)
+    DEFAULT_SHELL.eta        = CfgGetValue("G_TIME_OF_FLIGHT")
     DEFAULT_SHELL.inaccuracy = CfgGetValue("G_SHELL_INACCURACY")
 
-    DELAYS = {
+    DELAYS                   = {
         quick_salvo = G_QUICK_SALVO_DELAY
     }
 
-    KEYBINDS = {
+    KEYBINDS                 = {
         ["KEYBIND_TACTICAL_TOGGLE"] = CfgGetValue("KEYBIND_TACTICAL_TOGGLE"),
         ["KEYBIND_CYCLE_SHELLS"] = CfgGetValue("KEYBIND_CYCLE_SHELLS"),
         ["KEYBIND_CYCLE_VARIANTS"] = CfgGetValue("KEYBIND_CYCLE_VARIANTS"),
@@ -79,7 +79,7 @@ function init()
         ["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] = CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS"),
     }
 
-    UI_HELPERS = {
+    UI_HELPERS               = {
         player_camera = nil,
         shell_telemetry = {
             combined_transform = nil,
@@ -88,10 +88,10 @@ function init()
         }
     }
 
-    SND_UI = {}
-    SND_UI["select"]                = LoadSound("MOD/assets/snd/menu_select.ogg")
-    SND_UI["cancel"]                = LoadSound("MOD/assets/snd/menu_cancel.ogg")
-    SND_UI["salvo_mark"]            = LoadSound("MOD/assets/snd/salvo_mark.ogg")
+    SND_UI                   = {}
+    SND_UI["select"]         = LoadSound("MOD/assets/snd/menu_select.ogg")
+    SND_UI["cancel"]         = LoadSound("MOD/assets/snd/menu_cancel.ogg")
+    SND_UI["salvo_mark"]     = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 
     ResetToDefaultState()
 end
@@ -160,7 +160,7 @@ function tick(delta)
         return
     end
 
-    if not(GetString("game.player.tool") == "ordnance") then
+    if not (GetString("game.player.tool") == "ordnance") then
         STATES.enabled = false
         return
     end
@@ -185,17 +185,17 @@ function tick(delta)
     -- User toggles tactical marking mode
     if InputPressed(CfgGetValue("KEYBIND_TACTICAL_TOGGLE")) then
         if not STATES.tactical.enabled then
-            DEFAULT_ENVIRONMENT["fogcolor"] = {GetEnvironmentProperty("fogcolor")}
-            DEFAULT_ENVIRONMENT["fogParams"] = {GetEnvironmentProperty("fogParams")}
-            DEFAULT_ENVIRONMENT["snowamount"] = {GetEnvironmentProperty("snowamount")}
-            DEFAULT_ENVIRONMENT["snowdir"] = {GetEnvironmentProperty("snowdir")}
-            DEFAULT_ENVIRONMENT["sunBrightness"] = {GetEnvironmentProperty("sunBrightness")}
-            DEFAULT_ENVIRONMENT["rain"] = {GetEnvironmentProperty("rain")}
-            DEFAULT_ENVIRONMENT["brightness"] = {GetEnvironmentProperty("brightness")}
-            DEFAULT_ENVIRONMENT["exposure"] = {GetEnvironmentProperty("exposure")}
+            DEFAULT_ENVIRONMENT["fogcolor"] = { GetEnvironmentProperty("fogcolor") }
+            DEFAULT_ENVIRONMENT["fogParams"] = { GetEnvironmentProperty("fogParams") }
+            DEFAULT_ENVIRONMENT["snowamount"] = { GetEnvironmentProperty("snowamount") }
+            DEFAULT_ENVIRONMENT["snowdir"] = { GetEnvironmentProperty("snowdir") }
+            DEFAULT_ENVIRONMENT["sunBrightness"] = { GetEnvironmentProperty("sunBrightness") }
+            DEFAULT_ENVIRONMENT["rain"] = { GetEnvironmentProperty("rain") }
+            DEFAULT_ENVIRONMENT["brightness"] = { GetEnvironmentProperty("brightness") }
+            DEFAULT_ENVIRONMENT["exposure"] = { GetEnvironmentProperty("exposure") }
 
-            DEFAULT_POSTPROCESSING["saturation"] = {GetPostProcessingProperty("saturation")}
-            DEFAULT_POSTPROCESSING["colorbalance"] = {GetPostProcessingProperty("colorbalance")}
+            DEFAULT_POSTPROCESSING["saturation"] = { GetPostProcessingProperty("saturation") }
+            DEFAULT_POSTPROCESSING["colorbalance"] = { GetPostProcessingProperty("colorbalance") }
 
             ContextTacticalInit()
         end
@@ -324,6 +324,7 @@ function tick(delta)
 
     local aim_pos = FdGetAimPos()
 
+
     -- Check if currently in tactical mode, prevents user from firing if no valid target
     if STATES.tactical.enabled then
         ContextTacticalTick(delta)
@@ -334,8 +335,8 @@ function tick(delta)
     end
 
     UI_HELPERS.shell_telemetry.combined_transform,
-        UI_HELPERS.shell_telemetry.arrow_pitch_pos,
-        UI_HELPERS.shell_telemetry.arrow_heading_pos =
+    UI_HELPERS.shell_telemetry.arrow_pitch_pos,
+    UI_HELPERS.shell_telemetry.arrow_heading_pos =
         FdDrawShellImpactGizmo(
             {
                 aim_pos,
@@ -376,7 +377,7 @@ function tick(delta)
         pitch = STATES.selected_attack_angle,
         heading = STATES.selected_attack_heading,
         sprite = shell_sprite,
-        snd_whistle = LoadLoop("MOD/assets/snd/"..shell_whistle..".ogg")
+        snd_whistle = LoadLoop("MOD/assets/snd/" .. shell_whistle .. ".ogg")
     }, DEFAULT_SHELL)
 
     shell.destination = aim_pos
@@ -401,7 +402,7 @@ function update(delta)
         ShellTick(shell, delta)
 
         if shell.state == SHELL_STATE.DETONATED then
-            FdLog("Shell "..i.." detonated. Removing...")
+            FdLog("Shell " .. i .. " detonated. Removing...")
             table.remove(SHELLS, i)
         end
     end
@@ -410,9 +411,9 @@ function update(delta)
     if shells_length < G_MAX_SHELLS then return end
 
     local trim_amount = shells_length - G_MAX_SHELLS
-    FdLog("Removing "..trim_amount.." shells from table...")
+    FdLog("Removing " .. trim_amount .. " shells from table...")
 
-    for _=1, trim_amount do
+    for _ = 1, trim_amount do
         table.remove(SHELLS, 1)
     end
 end
@@ -434,55 +435,66 @@ function draw()
     end
 
     UiPush()
-        UiTranslate(80, UiMiddle() + UiMiddle() / 1.85)
-        UiColor(0.4, 0.4, 0.4)
-        UiAlign("left")
-        UiFont("regular.ttf", 26)
-        UiTextShadow(0, 0, 0, 1, 1, 1)
+    UiTranslate(80, UiMiddle() + UiMiddle() / 1.85)
+    UiColor(0.4, 0.4, 0.4)
+    UiAlign("left")
+    UiFont("regular.ttf", 26)
+    UiTextShadow(0, 0, 0, 1, 1, 1)
 
-        UiPush()
-            UiColor(1, 1, 1)
-            UiText("<"..KEYBINDS["KEYBIND_TACTICAL_TOGGLE"].."> | Toggle Tactical Mode", true)
-            UiText("<"..KEYBINDS["KEYBIND_CYCLE_SHELLS"].."> | Cycle shells ["..values.name.."]", true)
-            UiText("<"..KEYBINDS["KEYBIND_CYCLE_VARIANTS"].."> | Cycle variants ["..values.variants[STATES.selected_variant].name.."]", true)
-            UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_ATTACK"].."> + <Move Mouse> | Change shell incoming pitch/heading", true)
-            UiText("Hold <"..KEYBINDS["KEYBIND_ADJUST_INACCURACY"].."> + <Scroll> | Change shell inaccuracy ["..STATES.shell_inaccuracy.." meter(s)]", true)
+    UiPush()
+    UiColor(1, 1, 1)
+    UiText("<" .. KEYBINDS["KEYBIND_TACTICAL_TOGGLE"] .. "> | Toggle Tactical Mode", true)
+    UiText("<" .. KEYBINDS["KEYBIND_CYCLE_SHELLS"] .. "> | Cycle shells [" .. values.name .. "]", true)
+    UiText(
+        "<" .. KEYBINDS["KEYBIND_CYCLE_VARIANTS"] ..
+        "> | Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]", true)
+    UiText("Hold <" .. KEYBINDS["KEYBIND_ADJUST_ATTACK"] .. "> + <Move Mouse> | Change shell incoming pitch/heading",
+        true)
+    UiText(
+        "Hold <" ..
+        KEYBINDS["KEYBIND_ADJUST_INACCURACY"] ..
+        "> + <Scroll> | Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]", true)
 
-            if not(STATES.quicksalvo.enabled) then
-                UiColor(1, 1, 1)
-                UiText("<Right Mouse> | Quick Salvo mode: OFF", true)
+    if not (STATES.quicksalvo.enabled) then
+        UiColor(1, 1, 1)
+        UiText("<Right Mouse> | Quick Salvo mode: OFF", true)
 
-                UiColor(1, 0.2, 0.2)
-                UiText("<Left Mouse> | Fire "..values.name, true)
-            else
-                if #QUICK_SALVO > 0 then
-                    UiColor(1, 0.3, 0.3)
-                    UiText("<Right Mouse> | Quick Salvo mode: Launch "..#QUICK_SALVO.." shells", true)
-                else
-                    UiColor(1, 1, 0.1)
-                    UiText("<Right Mouse> | Quick Salvo mode: ON", true)
-                end
+        UiColor(1, 0.2, 0.2)
+        UiText("<Left Mouse> | Fire " .. values.name, true)
+    else
+        if #QUICK_SALVO > 0 then
+            UiColor(1, 0.3, 0.3)
+            UiText("<Right Mouse> | Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells", true)
+        else
+            UiColor(1, 1, 0.1)
+            UiText("<Right Mouse> | Quick Salvo mode: ON", true)
+        end
 
-                UiColor(1, 1, 1)
-                UiText("<Left Mouse> | Mark location for salvo", true)
-                UiText("<"..KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"].."> | Toggle Quick Salvo Markers ["..FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers).."]", true)
+        UiColor(1, 1, 1)
+        UiText("<Left Mouse> | Mark location for salvo", true)
+        UiText(
+            "<" ..
+            KEYBINDS["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"] ..
+            "> | Toggle Quick Salvo Markers [" .. FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers) .. "]", true)
 
-                if #QUICK_SALVO > 0 then
-                    UiColor(1, 1, 0.1)
-                    UiText("<"..KEYBINDS["KEYBIND_GENERAL_CANCEL"].."> | Cancel salvo", true)
-                end
-            end
+        if #QUICK_SALVO > 0 then
+            UiColor(1, 1, 0.1)
+            UiText("<" .. KEYBINDS["KEYBIND_GENERAL_CANCEL"] .. "> | Cancel salvo", true)
+        end
+    end
 
-            if HasKey("savegame.mod.crash_disclaimer") then
-                UiFont("bold.ttf", 26)
-                UiColor(0.3, 1, 0.3)
-                UiText("", true)
-                UiText("NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for your patience.", true)
-                UiText("NOTICE: Press 'K' to dismiss and never show this message again.", true)
-            end
+    if HasKey("savegame.mod.crash_disclaimer") then
+        UiFont("bold.ttf", 26)
+        UiColor(0.3, 1, 0.3)
+        UiText("", true)
+        UiText(
+            "NOTICE: The crash to desktop issue has been resolved. Quicksaving should work as intended. Thank you for your patience.",
+            true)
+        UiText("NOTICE: Press 'K' to dismiss and never show this message again.", true)
+    end
 
-            UiColor(0.4, 0.4, 0.4)
-        UiPop()
+    UiColor(0.4, 0.4, 0.4)
+    UiPop()
     UiPop()
 end
 

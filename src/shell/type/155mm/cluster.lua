@@ -1,10 +1,10 @@
 function ShellSecTickCluster(self, delta, _)
     local sprite = LoadSprite("MOD/assets/img/" .. "bomblet" .. ".png")
 
---    local sounds = {
---        "155mm_shell_cluster_submunition_explode_01",
---        "155mm_shell_cluster_submunition_explode_02",
---    }
+    --    local sounds = {
+    --        "155mm_shell_cluster_submunition_explode_01",
+    --        "155mm_shell_cluster_submunition_explode_02",
+    --    }
 
     local function subInit()
         self.secondary.submunitions = {}

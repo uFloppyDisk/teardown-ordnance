@@ -7,13 +7,14 @@ CAMERA_DEFAULT_FOV = nil
 function ContextTacticalInit()
     if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
-    STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
+    STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0),
+        QuatEuler(-90, 0, 0))
     CAMERA_DEFAULT_FOV = CfgGetValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
     CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
     STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
     STATES.tactical.camera_settings.current_camera_fov = CAMERA_CURRENT_FOV
 
-    STATES.tactical.camera_defaults = {unpack(STATES.tactical.camera_settings)}
+    STATES.tactical.camera_defaults = { unpack(STATES.tactical.camera_settings) }
 end
 
 ---@param delta number Time elapsed since last tick.
@@ -68,7 +69,7 @@ function ContextTacticalTick(delta)
         translate = translate * 0.33
     end
 
-    FdWatch("Translate", pos_translate[1].." "..pos_translate[2].." "..pos_translate[3])
+    FdWatch("Translate", pos_translate[1] .. " " .. pos_translate[2] .. " " .. pos_translate[3])
     FdWatch("Camera Position", STATES.tactical.camera_settings.camera_transform.pos)
 
     -- User input + modifiers to translate vector
@@ -88,7 +89,8 @@ function ContextTacticalTick(delta)
     if not InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
-            STATES.tactical.camera_settings.target_camera_fov = FdClamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
+            STATES.tactical.camera_settings.target_camera_fov = FdClamp(
+            STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
     end
@@ -119,7 +121,8 @@ local function drawGrid(metres, width, world_depth, opacity)
     local alpha = opacity or 1
 
     local ui_width, ui_height = UiWidth(), UiHeight()
-    local point_below = Vec(STATES.tactical.camera_settings.camera_transform.pos[1], 0, STATES.tactical.camera_settings.camera_transform.pos[3])
+    local point_below = Vec(STATES.tactical.camera_settings.camera_transform.pos[1], 0,
+        STATES.tactical.camera_settings.camera_transform.pos[3])
 
     local current_point, current_point_inverted = {}, {}
     local wx, wz = math.ceil(point_below[1] / step) * step, math.ceil(point_below[3] / step) * step
@@ -129,30 +132,30 @@ local function drawGrid(metres, width, world_depth, opacity)
         local step_invert = ((iter * 2) - 1) * step
         local wxi, wzi = wx - step_invert, wz - step_invert
 
-        current_point = {UiWorldToPixel(Vec(wx, grid_world_depth, wz))}
+        current_point = { UiWorldToPixel(Vec(wx, grid_world_depth, wz)) }
         current_point[4], current_point[5] = wx, wz
 
-        current_point_inverted = {UiWorldToPixel(Vec(wxi, grid_world_depth, wzi))}
+        current_point_inverted = { UiWorldToPixel(Vec(wxi, grid_world_depth, wzi)) }
         current_point_inverted[4], current_point_inverted[5] = wxi, wzi
 
         UiPush()
-            UiColor(0, 0, 0, alpha)
-            UiPush()
-                UiTranslate(current_point[1], 0)
-                UiRect(grid_width, ui_height)
-            UiPop()
-            UiPush()
-                UiTranslate(0, current_point[2])
-                UiRect(ui_width, grid_width)
-            UiPop()
-            UiPush()
-                UiTranslate(current_point_inverted[1], 0)
-                UiRect(grid_width, ui_height)
-            UiPop()
-            UiPush()
-                UiTranslate(0, current_point_inverted[2])
-                UiRect(ui_width, grid_width)
-            UiPop()
+        UiColor(0, 0, 0, alpha)
+        UiPush()
+        UiTranslate(current_point[1], 0)
+        UiRect(grid_width, ui_height)
+        UiPop()
+        UiPush()
+        UiTranslate(0, current_point[2])
+        UiRect(ui_width, grid_width)
+        UiPop()
+        UiPush()
+        UiTranslate(current_point_inverted[1], 0)
+        UiRect(grid_width, ui_height)
+        UiPop()
+        UiPush()
+        UiTranslate(0, current_point_inverted[2])
+        UiRect(ui_width, grid_width)
+        UiPop()
         UiPop()
 
         wx, wz = wx + step, wz + step
@@ -173,9 +176,9 @@ local function drawHUDMarker(pos, initial_rect_size, colour)
     local rect_w, rect_h = rect_size, rect_size
 
     UiPush()
-        UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
-        UiColor(unpack(rect_colour))
-        UiRect(rect_w, rect_h)
+    UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
+    UiColor(unpack(rect_colour))
+    UiRect(rect_w, rect_h)
     UiPop()
 end
 
@@ -187,9 +190,9 @@ local function drawCursor()
     if not STATES.tactical.hitscan.hit then return end
 
     local opacity = FdMapToRange(
-      FdClamp(STATES.selected_attack_angle, 20, 84),
-          78, 84,
-          1, 0.65
+        FdClamp(STATES.selected_attack_angle, 20, 84),
+        78, 84,
+        1, 0.65
     )
 
     drawHUDMarker(STATES.tactical.hitscan.pos, 7, FdGetRGBA(COLOUR["yellow_dark"], opacity))
@@ -210,146 +213,147 @@ local function drawQueuedSalvo(display)
         local shell_type = SHELL_VALUES[shell.type]
 
         UiPush()
-            UiTranslate(rect_size * 1.33, 0)
-            UiColor(1, 1, 1)
-            UiAlign("left")
-            UiFont("regular.ttf", 18)
-            UiTextShadow(0, 0, 0, 1, 1, 1)
+        UiTranslate(rect_size * 1.33, 0)
+        UiColor(1, 1, 1)
+        UiAlign("left")
+        UiFont("regular.ttf", 18)
+        UiTextShadow(0, 0, 0, 1, 1, 1)
 
-            UiText(shell_type.name, true)
-            UiText(shell_type.variants[shell.variant].name)
+        UiText(shell_type.name, true)
+        UiText(shell_type.variants[shell.variant].name)
         UiPop()
     end
 
     for _, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
-        rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
+        rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))),
+            5, 15)
 
         UiPush()
-            UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
+        UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
 
-            drawShellInfo(shell)
+        drawShellInfo(shell)
 
-            UiColor(unpack(FdGetRGBA(COLOUR["red"], 0.75)))
-            UiRect(rect_w, rect_h)
+        UiColor(unpack(FdGetRGBA(COLOUR["red"], 0.75)))
+        UiRect(rect_w, rect_h)
         UiPop()
     end
 end
 
 function ContextTacticalDraw()
     UiPush()
-        UiMakeInteractive()
+    UiMakeInteractive()
 
-        UiPush()
-            if not InputDown(CfgGetValue("KEYBIND_ADJUST_ATTACK")) then
-                STATES.tactical.mouse_pos = {UiGetMousePos()}
-            end
+    UiPush()
+    if not InputDown(CfgGetValue("KEYBIND_ADJUST_ATTACK")) then
+        STATES.tactical.mouse_pos = { UiGetMousePos() }
+    end
 
-            local m_pos = STATES.tactical.mouse_pos
+    local m_pos = STATES.tactical.mouse_pos
 
-            STATES.tactical.hitscan.pos,
-              STATES.tactical.hitscan.hit,
-              STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos[1], m_pos[2])
+    STATES.tactical.hitscan.pos,
+    STATES.tactical.hitscan.hit,
+    STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos[1], m_pos[2])
 
-            FdWatch("Mouse Position", "{"..m_pos[1]..", "..m_pos[2].."}")
-        UiPop()
+    FdWatch("Mouse Position", "{" .. m_pos[1] .. ", " .. m_pos[2] .. "}")
+    UiPop()
 
-        local unit_fov = FdMapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
+    local unit_fov = FdMapToRange(CAMERA_CURRENT_FOV, 25, 120, 0, 1)
 
-        if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
-            local world_depth = 0
-            if InputDown('space') and STATES.tactical.hitscan.hit then
-                world_depth = STATES.tactical.hitscan.pos[2]
-            end
-
-            drawGrid(10, 1, world_depth, FdClamp(FdMapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
-            drawGrid(50, 2, world_depth, 0.5)
+    if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
+        local world_depth = 0
+        if InputDown('space') and STATES.tactical.hitscan.hit then
+            world_depth = STATES.tactical.hitscan.pos[2]
         end
 
-        drawPlayer()
-        drawCursor()
-        drawQueuedSalvo(STATES.quicksalvo.markers)
+        drawGrid(10, 1, world_depth, FdClamp(FdMapToRange(unit_fov, 0.35, 0.75, 0.5, 0), 0, 0.5))
+        drawGrid(50, 2, world_depth, 0.5)
+    end
 
-        UiPush()
-            UiTranslate(80, UiMiddle() / 6)
-            UiColor(1, 1, 1)
-            UiAlign("left")
-            UiFont("regular.ttf", 48)
-            UiTextShadow(0, 0, 0, 1, 1, 1)
+    drawPlayer()
+    drawCursor()
+    drawQueuedSalvo(STATES.quicksalvo.markers)
 
-            local ui_title = "Tactical Ordnance Mode"
-            UiText(ui_title, true)
+    UiPush()
+    UiTranslate(80, UiMiddle() / 6)
+    UiColor(1, 1, 1)
+    UiAlign("left")
+    UiFont("regular.ttf", 48)
+    UiTextShadow(0, 0, 0, 1, 1, 1)
 
-            UiPush()
-                local x = UiGetTextSize(ui_title)
-                UiTranslate(x, 0)
-                FdDrawUIShellImpactGizmo(true, COLOUR["yellow_dark"], 0, 0, {true, true})
-            UiPop()
+    local ui_title = "Tactical Ordnance Mode"
+    UiText(ui_title, true)
 
-            UiFont("regular.ttf", 22)
-            UiPush()
-                UiColor(unpack(COLOUR["white"]))
-                UiRect(20, 20)
-                UiTranslate(24, 16)
-                UiColor(unpack(COLOUR["white"]))
-                UiText("Player position")
-            UiPop()
-            UiTranslate(0, 28)
-            UiPush()
-                UiColor(unpack(COLOUR["yellow_dark"]))
-                UiRect(20, 20)
-                UiTranslate(24, 16)
-                UiColor(unpack(COLOUR["white"]))
-                UiText("Valid target", true)
-            UiPop()
-            UiTranslate(0, 28)
-            UiPush()
-                UiColor(unpack(COLOUR["red"]))
-                UiRect(20, 20)
-                UiTranslate(24, 16)
-                UiColor(unpack(COLOUR["white"]))
-                UiText("Quick Salvo target", true)
-            UiPop()
-            UiTranslate(0, 48)
-            UiPush()
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
-                UiTranslate(24, 0)
-                UiText("|")
-                UiTranslate(8, 0)
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
-                UiTranslate(16, 0)
-                UiText("- Up | Down")
-            UiPop()
-            UiTranslate(0, 28)
-            UiPush()
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
-                UiTranslate(24, 0)
-                UiText("|")
-                UiTranslate(8, 0)
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
-                UiTranslate(16, 0)
-                UiText("- Left | Right")
-            UiPop()
-            UiTranslate(0, 28)
-            UiPush()
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
-                UiTranslate(24, 0)
-                UiText("|")
-                UiTranslate(8, 0)
-                UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
-                UiTranslate(16, 0)
-                UiText("- Elevation Down | Up")
-            UiPop()
-            UiTranslate(0, 28)
-            UiText(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER").." - Center player", true)
-            UiText("Scroll - Camera zoom", true)
-            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")].." - Fast camera", true)
-            UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")].." - Slow camera", true)
+    UiPush()
+    local x = UiGetTextSize(ui_title)
+    UiTranslate(x, 0)
+    FdDrawUIShellImpactGizmo(true, COLOUR["yellow_dark"], 0, 0, { true, true })
+    UiPop()
 
-            if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
-                UiText("Space (hold) - Snap grid to target elevation")
-            end
+    UiFont("regular.ttf", 22)
+    UiPush()
+    UiColor(unpack(COLOUR["white"]))
+    UiRect(20, 20)
+    UiTranslate(24, 16)
+    UiColor(unpack(COLOUR["white"]))
+    UiText("Player position")
+    UiPop()
+    UiTranslate(0, 28)
+    UiPush()
+    UiColor(unpack(COLOUR["yellow_dark"]))
+    UiRect(20, 20)
+    UiTranslate(24, 16)
+    UiColor(unpack(COLOUR["white"]))
+    UiText("Valid target", true)
+    UiPop()
+    UiTranslate(0, 28)
+    UiPush()
+    UiColor(unpack(COLOUR["red"]))
+    UiRect(20, 20)
+    UiTranslate(24, 16)
+    UiColor(unpack(COLOUR["white"]))
+    UiText("Quick Salvo target", true)
+    UiPop()
+    UiTranslate(0, 48)
+    UiPush()
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
+    UiTranslate(24, 0)
+    UiText("|")
+    UiTranslate(8, 0)
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
+    UiTranslate(16, 0)
+    UiText("- Up | Down")
+    UiPop()
+    UiTranslate(0, 28)
+    UiPush()
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
+    UiTranslate(24, 0)
+    UiText("|")
+    UiTranslate(8, 0)
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
+    UiTranslate(16, 0)
+    UiText("- Left | Right")
+    UiPop()
+    UiTranslate(0, 28)
+    UiPush()
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
+    UiTranslate(24, 0)
+    UiText("|")
+    UiTranslate(8, 0)
+    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
+    UiTranslate(16, 0)
+    UiText("- Elevation Down | Up")
+    UiPop()
+    UiTranslate(0, 28)
+    UiText(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER") .. " - Center player", true)
+    UiText("Scroll - Camera zoom", true)
+    UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")] .. " - Fast camera", true)
+    UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")] .. " - Slow camera", true)
 
-        UiPop()
+    if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
+        UiText("Space (hold) - Snap grid to target elevation")
+    end
+
+    UiPop()
     UiPop()
 end
