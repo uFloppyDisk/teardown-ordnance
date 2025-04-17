@@ -228,7 +228,6 @@ function ShellSecTickIncendiary(self, delta, variant)
     end
 
     FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
-    return true
 end
 
 function PhysBodyIncendiaryTick(shapes, body)
