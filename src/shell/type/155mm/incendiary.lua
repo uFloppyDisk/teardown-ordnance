@@ -1,3 +1,12 @@
+---@class (exact) SubIncendiary : Submunition
+---@field active boolean
+---@field body body_handle
+---@field brightness number
+---@field ignite_delay number
+---@field smoke_radius number
+
+---Initialize submunitions
+---@param self Shell
 local function subInit(self)
     -- self.secondary.inertia = VecScale(self.secondary.inertia, 0.5)
     self.secondary.submunitions = {}
@@ -7,8 +16,10 @@ local function subInit(self)
         local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
         local transform = Transform(self.position, rotation)
 
+        ---@type SubIncendiary
         local sub = FdObjectNew({
             active = true,
+            body = nil,
             brightness = 2,
             transform = TransformCopy(transform),
             velocity = Vec(math.random() * 20 + 35, 0, 0),
@@ -28,6 +39,11 @@ local function subInit(self)
     FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
 end
 
+---Tick submunitions
+---@param self Shell
+---@param variant any
+---@param delta number
+---@param sub SubIncendiary
 local function subTick(self, variant, delta, sub)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
     local timer_elapsed = variant.secondary.timer - self.secondary.timer
@@ -137,13 +153,17 @@ local function subTick(self, variant, delta, sub)
 
     local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.25), sub.rotation)
 
+    ---@type entity_handle
     sub.body = Spawn("MOD/assets/vox/white_phosphorus.xml", transform_spawn)[2]
-    table.insert(BODIES, {
+
+    ---@type ManagedBody
+    local body = {
         valid = true,
         created_at = ELAPSED_TIME,
         type = "IN",
         handle = sub.body
-    })
+    }
+    table.insert(BODIES, body)
 
     SetBodyDynamic(sub.body, true)
     SetBodyActive(sub.body, true)
@@ -206,6 +226,10 @@ local function subTick(self, variant, delta, sub)
     return nil
 end
 
+---Incendiary shell tick entrypoint
+---@param self Shell
+---@param delta number
+---@param variant any
 function ShellSecTickIncendiary(self, delta, variant)
     if self.secondary.timer < 0 then return true end
 
@@ -216,6 +240,8 @@ function ShellSecTickIncendiary(self, delta, variant)
     if #self.secondary.submunitions == 0 then return true end
 
     for _, sub in ipairs(self.secondary.submunitions) do
+        ---@cast sub SubIncendiary
+
         if sub.active then
             local transform_new = subTick(self, variant, delta, sub)
 
@@ -230,6 +256,9 @@ function ShellSecTickIncendiary(self, delta, variant)
     FdWatch("SUBMUNITIONS(amount)", #self.secondary.submunitions)
 end
 
+---Incendiary submunitions managed body tick entrypoint
+---@param shapes shape_handle[]
+---@param body ManagedBody
 function PhysBodyIncendiaryTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 

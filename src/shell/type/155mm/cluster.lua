@@ -1,3 +1,8 @@
+---@class (exact) SubCluster : Submunition
+---@field index number
+
+---Initialize submunitions
+---@param self Shell
 local function subInit(self)
     self.secondary.submunitions = {}
 
@@ -6,6 +11,7 @@ local function subInit(self)
         local rotation = QuatEuler(0, math.random() * 360, math.random() * -160 + 80)
         local transform = Transform(self.position, rotation)
 
+        ---@type SubCluster
         local sub = FdObjectNew({
             index = i,
             transform = TransformCopy(transform),
@@ -20,6 +26,10 @@ local function subInit(self)
     end
 end
 
+---Tick submunitions
+---@param self SubCluster
+---@param delta number
+---@param sprite sprite_handle
 local function subTick(self, delta, sprite)
     local gravity = math.abs(G_VEC_GRAVITY[2])
     local world_down = TransformToLocalVec(self.transform, Vec(0, -1, 0))
@@ -70,6 +80,10 @@ local function subTick(self, delta, sprite)
     return nil
 end
 
+---Cluster shell tick entrypoint
+---@param self Shell
+---@param delta number
+---@param _ any
 function ShellSecTickCluster(self, delta, _)
     local sprite = LoadSprite("MOD/assets/img/" .. "bomblet" .. ".png")
 
@@ -95,6 +109,7 @@ function ShellSecTickCluster(self, delta, _)
     end
 
     for index, sub in ipairs(self.secondary.submunitions) do
+        ---@cast sub SubCluster
         local transform_new = subTick(sub, delta, sprite)
 
         sub.transform = transform_new

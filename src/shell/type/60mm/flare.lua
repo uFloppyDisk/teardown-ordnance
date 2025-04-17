@@ -1,3 +1,7 @@
+---Flare shell tick entrypoint
+---@param self Shell
+---@param delta number
+---@param variant any
 function ShellSecTickFlare(self, delta, variant)
     self.position = VecAdd(self.position, VecScale(self.vel_current, delta))
 
