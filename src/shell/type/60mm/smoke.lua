@@ -1,3 +1,11 @@
+---@class (exact) SubSmoke : Submunition
+---@field body body_handle
+---
+---@class (exact) ManagedBodyWithTtl : ManagedBody
+---@field ttl number
+
+---Initialize submunitions
+---@param self Shell
 local function subInit(self)
     self.secondary.submunitions = {}
 
@@ -11,6 +19,7 @@ local function subInit(self)
         local rotation = QuatEuler(0, math.random() * 360, random_pitch)
         local transform = Transform(position_origin, rotation)
 
+        ---@type SubSmoke
         local sub = FdObjectNew({
             transform = TransformCopy(transform),
             velocity = Vec(FdMapToRange(math.random(), 0, 1, 10, 25), 0, 0)
@@ -23,8 +32,11 @@ local function subInit(self)
         vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
         sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
+        ---@type entity_handle
         sub.body = Spawn("MOD/assets/vox/white_phosphorus_small.xml", transform)[2]
-        table.insert(BODIES, {
+
+        ---@type ManagedBodyWithTtl
+        local body = {
             valid = true,
             created_at = ELAPSED_TIME,
             type = "SM",
@@ -34,7 +46,8 @@ local function subInit(self)
                 pitch_ratio_min, 0.8,
                 1, 0.01
             ), 0.01, 1)
-        })
+        }
+        table.insert(BODIES, body)
 
         SetBodyDynamic(sub.body, true)
         SetBodyActive(sub.body, true)
@@ -53,6 +66,9 @@ local function subInit(self)
     end
 end
 
+---Spawn white phosphorus
+---@param self Shell
+---@param variant any
 local function doIgnitedWP(self, variant)
     ParticleReset()
 
@@ -84,6 +100,11 @@ local function doIgnitedWP(self, variant)
     SpawnParticle(self.position, G_VEC_WIND, variant.secondary.timer)
 end
 
+---Spawn smoke many body
+---@param self Shell
+---@param variant any
+---@param radius number?
+---@param offset vector_t?
 local function doBodyPrimary(self, variant, radius, offset)
     radius = radius or variant.secondary.radius
     offset = offset or Vec(0, 0, 0)
@@ -107,6 +128,15 @@ local function doBodyPrimary(self, variant, radius, offset)
     end
 end
 
+---Spawn smoke mushroom head
+---@param self Shell
+---@param variant any
+---@param velocity number
+---@param range number?
+---@param radius number?
+---@param angles number[]?
+---@param offset_position vector_t?
+---@param offset_distance number?
 local function doMushroomHead(self, variant, velocity, range, radius, angles, offset_position, offset_distance)
     range = range or velocity
     radius = radius or (variant.secondary.radius / 2)
@@ -161,6 +191,10 @@ local function doMushroomHead(self, variant, velocity, range, radius, angles, of
     end
 end
 
+---Smoke shell tick entrypoint
+---@param self Shell
+---@param _ any
+---@param variant any
 function ShellSecTickSmoke(self, _, variant)
     local timer_ratio = self.secondary.timer / variant.secondary.timer
 
@@ -199,6 +233,9 @@ function ShellSecTickSmoke(self, _, variant)
     end
 end
 
+---Smoke submunitions managed body tick entrypoint
+---@param shapes shape_handle[]
+---@param body ManagedBody
 function PhysBodySmokeTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
 
