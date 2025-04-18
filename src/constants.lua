@@ -853,18 +853,18 @@ SHELL_VALUES = {
 
 ---@class (exact) Shell
 ---@field state SHELL_STATE
----@field secondary { active: boolean, timer: number, intensity: number, particle_spread: vector_t, inertia: vector_t, submunitions: Submunition[]?, [any]: any }
+---@field secondary { active: boolean, timer: number, intensity: number, particle_spread: TVec, inertia: TVec, submunitions: Submunition[]?, [any]: any }
 ---@field type number
 ---@field variant number
 ---@field flight_time number
 ---@field inaccuracy number
----@field destination vector_t|nil
----@field eta vector_t|nil
+---@field destination TVec|nil
+---@field eta TVec|nil
 ---@field pitch number
 ---@field heading number
----@field position vector_t|nil
----@field vel_previous vector_t|nil
----@field vel_current vector_t|nil
+---@field position TVec|nil
+---@field vel_previous TVec|nil
+---@field vel_current TVec|nil
 ---@field kinetic_energy number
 ---@field hit_once boolean
 ---@field sprite number|nil
@@ -904,8 +904,8 @@ DEFAULT_SHELL = {
 }
 
 ---@class (exact) Submunition
----@field transform transform_t|nil
----@field velocity vector_t|nil
+---@field transform TTransform|nil
+---@field velocity TVec|nil
 DEFAULT_SUBMUNITION = {
     transform = nil,
     velocity = nil
@@ -913,7 +913,7 @@ DEFAULT_SUBMUNITION = {
 
 ---@class (exact) ManagedBody
 ---@field created_at number
----@field handle body_handle
+---@field handle number
 ---@field type string
 ---@field valid boolean
 

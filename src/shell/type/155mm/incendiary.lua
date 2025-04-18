@@ -1,6 +1,6 @@
 ---@class (exact) SubIncendiary : Submunition
 ---@field active boolean
----@field body body_handle
+---@field body number
 ---@field brightness number
 ---@field ignite_delay number
 ---@field smoke_radius number
@@ -153,7 +153,7 @@ local function subTick(self, variant, delta, sub)
 
     local transform_spawn = Transform(VecLerp(position_hit, sub.transform.pos, 0.25), sub.rotation)
 
-    ---@type entity_handle
+    ---@type number
     sub.body = Spawn("MOD/assets/vox/white_phosphorus.xml", transform_spawn)[2]
 
     ---@type ManagedBody
@@ -257,7 +257,7 @@ function ShellSecTickIncendiary(self, delta, variant)
 end
 
 ---Incendiary submunitions managed body tick entrypoint
----@param shapes shape_handle[]
+---@param shapes number[]
 ---@param body ManagedBody
 function PhysBodyIncendiaryTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end

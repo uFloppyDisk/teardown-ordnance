@@ -19,11 +19,11 @@ function ShellDrawSprite(self)
 end
 
 ---Calculate origin of fragmentation to prevent level geometry from absorbing it all
----@param source_pos vector_t
+---@param source_pos TVec
 ---@param source_dist number
 ---@param check_dist number
----@param shape shape_handle Shape handle for shape bounds calculation
----@return vector_t
+---@param shape number Shape handle for shape bounds calculation
+---@return TVec
 local function solveFragOrigin(source_pos, source_dist, check_dist, shape)
     source_pos = VecCopy(source_pos)
     QueryRequire('large')
@@ -272,10 +272,10 @@ local function tickActive(self, delta)
     end
 
     ---Solve shell ballistics
-    ---@param pos_hit vector_t
+    ---@param pos_hit TVec
     ---@param radius number
     ---@return boolean
-    ---@return vector_t?
+    ---@return TVec?
     local function solveBallistics(pos_hit, radius)
         local trigger_detonation = false
         local material_initial = GetShapeMaterialAtPosition(shape_initial, (pos_hit))

@@ -29,7 +29,7 @@ end
 ---Tick submunitions
 ---@param self SubCluster
 ---@param delta number
----@param sprite sprite_handle
+---@param sprite number
 local function subTick(self, delta, sprite)
     local gravity = math.abs(G_VEC_GRAVITY[2])
     local world_down = TransformToLocalVec(self.transform, Vec(0, -1, 0))

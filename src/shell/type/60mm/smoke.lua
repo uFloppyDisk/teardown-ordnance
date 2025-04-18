@@ -1,5 +1,5 @@
 ---@class (exact) SubSmoke : Submunition
----@field body body_handle
+---@field body number
 ---
 ---@class (exact) ManagedBodyWithTtl : ManagedBody
 ---@field ttl number
@@ -32,7 +32,7 @@ local function subInit(self)
         vel_to_sub = VecScale(vel_to_sub, VecLength(self.secondary.inertia))
         sub.velocity = VecAdd(sub.velocity, vel_to_sub)
 
-        ---@type entity_handle
+        ---@type number
         sub.body = Spawn("MOD/assets/vox/white_phosphorus_small.xml", transform)[2]
 
         ---@type ManagedBodyWithTtl
@@ -104,7 +104,7 @@ end
 ---@param self Shell
 ---@param variant any
 ---@param radius number?
----@param offset vector_t?
+---@param offset TVec?
 local function doBodyPrimary(self, variant, radius, offset)
     radius = radius or variant.secondary.radius
     offset = offset or Vec(0, 0, 0)
@@ -135,7 +135,7 @@ end
 ---@param range number?
 ---@param radius number?
 ---@param angles number[]?
----@param offset_position vector_t?
+---@param offset_position TVec?
 ---@param offset_distance number?
 local function doMushroomHead(self, variant, velocity, range, radius, angles, offset_position, offset_distance)
     range = range or velocity
@@ -234,7 +234,7 @@ function ShellSecTickSmoke(self, _, variant)
 end
 
 ---Smoke submunitions managed body tick entrypoint
----@param shapes shape_handle[]
+---@param shapes number[]
 ---@param body ManagedBody
 function PhysBodySmokeTick(shapes, body)
     if IsShapeBroken(shapes[1]) then return true end
