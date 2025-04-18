@@ -16,7 +16,6 @@ jobs:
         run: |
           cd mod
           rm -rf .??*
-          rm -rf api
       - name: Package mod
         run: |
           REPO=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)
