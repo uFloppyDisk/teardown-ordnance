@@ -260,7 +260,7 @@ end
 ---@param colour TColour
 ---@param lines integer Amount of vertical lines to draw.
 ---@return table position # Ending position of the line based on distance, pitch, and heading.
----@return table position_horizontal # Ending position of the line based only on the heading and distance.
+---@return TVec position_horizontal # Ending position of the line based only on the heading and distance.
 function FdDrawPitchHeadingLine(transform, pitch, length, colour, lines, quick_salvo)
     transform = transform or Transform(Vec(0, 0, 0), QuatEuler(0, 0, 0))
     pitch = pitch or 90
@@ -470,7 +470,7 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
     UiPush()
     UiTranslate(size_hypo, 0)
 
-    do         -- shadows
+    do -- shadows
         UiPush()
         UiColor(0, 0, 0, 0.125)
 
@@ -532,7 +532,7 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
         UiPop()
     end
 
-    do     -- Hypotenuse
+    do -- Hypotenuse
         local size_adj = size + 4
         UiPush()
         UiAlign('bottom')
