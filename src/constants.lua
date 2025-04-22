@@ -911,10 +911,11 @@ DEFAULT_SUBMUNITION = {
     velocity = nil
 }
 
----@class (exact) ManagedBody
+---@class ManagedBody
 ---@field created_at number
 ---@field handle number
 ---@field type string
 ---@field valid boolean
+---@field [any] any
 
 -- #endregion

@@ -1,0 +1,6 @@
+<prefab version="1.6.2">
+	<group pos="0.1 0.0 -0.1">
+		<vox pos="-0.1 0.0 0.1" file="MOD/assets/vox/props/frag3.vox" color="0 0 0" />
+	</group>
+</prefab>
+
