@@ -124,7 +124,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
 
     if hit_final then return true, line_end end
 
-    if math.random() > 0.66 then
+    if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() > 0.66 then
         local frag_variant = math.ceil(math.random() * 3)
 
         ---@type ManagedBodyWithTtl

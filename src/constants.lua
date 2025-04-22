@@ -119,6 +119,12 @@ CONFIG_VARIABLES = {
         value_type = "boolean",
         value_default = true
     },
+    ["G_SPAWN_PHYSICAL_FRAGMENTATION"] = {
+        variable = G_CONFIG_ROOT .. ".fragmentation.physical_frag",
+
+        value_type = "boolean",
+        value_default = true
+    },
     ["G_FRAGMENTATION_DEBUG"] = {
         variable = G_CONFIG_ROOT .. ".fragmentation.debug_mode",
 
@@ -345,6 +351,12 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         mapping = CONFIG_VARIABLES["G_SIMULATE_FRAGMENTATION"],
         name = "Simulate Fragmentation"
+    },
+    {
+        category = "fragmentation",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SPAWN_PHYSICAL_FRAGMENTATION"],
+        name = "Physical Fragmentation"
     },
     {
         category = "fragmentation",
