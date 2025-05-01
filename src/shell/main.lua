@@ -132,7 +132,8 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
             valid = true,
             created_at = ELAPSED_TIME,
             type = "frag",
-            handle = Spawn("MOD/assets/vox/frag" .. frag_variant .. ".xml", line_end)[1],
+            handle = Spawn("MOD/assets/vox/frag" .. frag_variant .. ".xml",
+                Transform(VecLerp(self.position, line_end.pos, 0.25), line_end.rot))[1],
             shouldHandle = true,
             ttl = 40,
         }
