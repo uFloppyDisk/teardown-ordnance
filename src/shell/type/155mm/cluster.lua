@@ -66,6 +66,10 @@ local function subTick(self, delta, sprite)
         return nil
     end
 
+    if math.random() > 0.5 then
+        PlaySound(SND["bomblet_explode"], position_hit, 10, false,
+            1 + (math.random() * 0.3 * math.random(-1, 1)))
+    end
     Explosion(position_hit, 1)
     MakeHole(position_hit, 3, 1.3, 0.5, false)
 
@@ -86,11 +90,6 @@ end
 ---@param _ any
 function ShellSecTickCluster(self, delta, _)
     local sprite = LoadSprite("MOD/assets/img/" .. "bomblet" .. ".png")
-
-    --    local sounds = {
-    --        "155mm_shell_cluster_submunition_explode_01",
-    --        "155mm_shell_cluster_submunition_explode_02",
-    --    }
 
     if self.secondary.timer < 0 then
         self.state = SHELL_STATE.DETONATED

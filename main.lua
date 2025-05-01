@@ -93,6 +93,9 @@ function init()
     SND_UI["cancel"]         = LoadSound("MOD/assets/snd/menu_cancel.ogg")
     SND_UI["salvo_mark"]     = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 
+    SND                      = {}
+    SND["bomblet_explode"]   = LoadSound("MOD/assets/snd/155mm_shell_cluster_submunition_explode0.ogg", 100)
+
     ResetToDefaultState()
 end
 
