@@ -3,7 +3,7 @@
 function PhysBodyFragTick(shapes, body)
     local vec = GetBodyVelocity(body.handle)
 
-    if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+    if CfgGetValue("G_FRAGMENTATION_DEBUG") and STATES.enabled then
         DrawBodyHighlight(body.handle, 1)
         DrawBodyOutline(body.handle, 1, 0, 0, 1)
     end
