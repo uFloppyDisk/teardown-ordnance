@@ -1,11 +1,19 @@
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
 function PhysBodyFragTick(shapes, body)
+    local pos = GetBodyTransform(body.handle).pos
     local vec = GetBodyVelocity(body.handle)
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") and STATES.enabled then
         DrawBodyHighlight(body.handle, 1)
         DrawBodyOutline(body.handle, 1, 0, 0, 1)
+    end
+
+    if body.shouldHandle and body.bbr == nil then
+        body.bbr = BLACKBODY[((math.random(1, 2) * 10) + math.random(0, 9)) * 100]
+    elseif body.bbr ~= nil then
+        PointLight(pos, FdGetUnpackedRGBA(body.bbr, 1))
+        if math.random() > 0.9 then body.bbr = nil end
     end
 
     if not body.shouldHandle or VecLength(vec) <= 40 then
