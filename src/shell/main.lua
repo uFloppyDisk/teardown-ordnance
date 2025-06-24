@@ -37,11 +37,17 @@ end
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
 function PhysBodyFragTick(shapes, body)
+    local pos = GetBodyTransform(body.handle).pos
     local vec = GetBodyVelocity(body.handle)
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") and STATES.enabled then
         DrawBodyHighlight(body.handle, 1)
         DrawBodyOutline(body.handle, 1, 0, 0, 1)
+    end
+
+    if body.kelvin ~= nil and IsPointInWater(pos) then
+        body.kelvin = nil
+        setShapesBlackbodyRadiation(shapes, 0)
     end
 
     if body.kelvin ~= nil and math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then
