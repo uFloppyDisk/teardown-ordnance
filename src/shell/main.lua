@@ -18,6 +18,21 @@ local function setLightColourInShapes(shapes, colour)
     end
 end
 
+---Set blackbody radiation using input kelvin
+---@param shapes number[]
+---@param kelvin number
+---@return boolean isEmissive
+local function setShapesBlackbodyRadiation(shapes, kelvin)
+    local bbr = BLACKBODY[kelvin]
+    if not bbr then
+        setLightColourInShapes(shapes, nil)
+        return false
+    end
+
+    setLightColourInShapes(shapes, FdGetRGBA(bbr))
+    return true
+end
+
 ---@param shapes number[]
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
@@ -31,13 +46,9 @@ function PhysBodyFragTick(shapes, body)
 
     if body.kelvin ~= nil and math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then
         body.kelvin = body.kelvin - 100
-        local bbr = BLACKBODY[body.kelvin]
-        if bbr then
-            setLightColourInShapes(shapes, FdGetRGBA(bbr))
-        else
-            body.kelvin = nil
-            setLightColourInShapes(shapes, nil)
-        end
+        local isEmissive = setShapesBlackbodyRadiation(shapes, body.kelvin)
+
+        if not isEmissive then body.kelvin = nil end
     end
 
     if not body.shouldHandle or VecLength(vec) <= 40 then
@@ -182,8 +193,8 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         )
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
 
-        local bbr = BLACKBODY[frag.kelvin]
-        if bbr then setLightColourInShapes(GetBodyShapes(frag.handle), FdGetRGBA(bbr)) end
+        local isEmissive = setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin)
+        if not isEmissive then frag.kelvin = nil end
     end
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") then
