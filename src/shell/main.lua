@@ -5,12 +5,12 @@ local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.75
 local PHYSICAL_FRAG_VELOCITY_BASE = 100
 local PHYSICAL_FRAG_VELOCITY_VARI = 150
 
----Set Colour to all shapes in body
----@param body_handle number
+---Set light colour to all shapes in table
+---@param shapes number[]
 ---@param colour TColour|nil
-local function setBodyColour(body_handle, colour)
+local function setLightColourInShapes(shapes, colour)
     colour = colour or { 0, 0, 0, 0 }
-    for _, shape in ipairs(GetBodyShapes(body_handle)) do
+    for _, shape in ipairs(shapes) do
         SetShapeEmissiveScale(shape, colour[4])
         for _, light in ipairs(GetShapeLights(shape)) do
             SetLightColor(light, FdGetUnpackedRGBA(colour))
@@ -18,6 +18,7 @@ local function setBodyColour(body_handle, colour)
     end
 end
 
+---@param shapes number[]
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
 function PhysBodyFragTick(shapes, body)
@@ -32,10 +33,10 @@ function PhysBodyFragTick(shapes, body)
         body.kelvin = body.kelvin - 100
         local bbr = BLACKBODY[body.kelvin]
         if bbr then
-            setBodyColour(body.handle, FdGetRGBA(bbr))
+            setLightColourInShapes(shapes, FdGetRGBA(bbr))
         else
             body.kelvin = nil
-            setBodyColour(body.handle, nil)
+            setLightColourInShapes(shapes, nil)
         end
     end
 
@@ -182,7 +183,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
 
         local bbr = BLACKBODY[frag.kelvin]
-        if bbr then setBodyColour(frag.handle, FdGetRGBA(bbr)) end
+        if bbr then setLightColourInShapes(GetBodyShapes(frag.handle), FdGetRGBA(bbr)) end
     end
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") then
