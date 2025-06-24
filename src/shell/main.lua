@@ -1,3 +1,10 @@
+local PHYSICAL_FRAG_SPAWN_CHANCE = 0.33
+local PHYSICAL_FRAG_TTL = 40
+local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
+local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.1
+local PHYSICAL_FRAG_VELOCITY_BASE = 100
+local PHYSICAL_FRAG_VELOCITY_VARI = 150
+
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
 function PhysBodyFragTick(shapes, body)
@@ -13,7 +20,7 @@ function PhysBodyFragTick(shapes, body)
         body.bbr = BLACKBODY[((math.random(1, 2) * 10) + math.random(0, 9)) * 100]
     elseif body.bbr ~= nil then
         PointLight(pos, FdGetUnpackedRGBA(body.bbr, 1))
-        if math.random() > 0.9 then body.bbr = nil end
+        if math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then body.bbr = nil end
     end
 
     if not body.shouldHandle or VecLength(vec) <= 40 then
@@ -132,7 +139,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
 
     if hit_final then return true, line_end end
 
-    if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() > 0.66 then
+    if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() < PHYSICAL_FRAG_SPAWN_CHANCE then
         local frag_variant = math.ceil(math.random() * 3)
 
         ---@type ManagedBodyWithTtl
@@ -141,9 +148,9 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
             created_at = ELAPSED_TIME,
             type = "frag",
             handle = Spawn("MOD/assets/vox/frag" .. frag_variant .. ".xml",
-                Transform(VecLerp(self.position, line_end.pos, 0.25), line_end.rot))[1],
+                Transform(VecLerp(self.position, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot))[1],
             shouldHandle = true,
-            ttl = 40,
+            ttl = PHYSICAL_FRAG_TTL,
         }
 
         table.insert(BODIES, frag)
@@ -151,7 +158,8 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         SetBodyVelocity(
             frag.handle,
             VecScale(
-                VecNormalize(TransformToParentVec(line_end, Vec(1, 0, 0))), math.random() * 50 + 300
+                VecNormalize(TransformToParentVec(line_end, Vec(1, 0, 0))),
+                math.random() * PHYSICAL_FRAG_VELOCITY_VARI + PHYSICAL_FRAG_VELOCITY_BASE
             )
         )
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
