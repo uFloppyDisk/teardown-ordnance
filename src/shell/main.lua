@@ -1,14 +1,26 @@
 local PHYSICAL_FRAG_SPAWN_CHANCE = 0.33
 local PHYSICAL_FRAG_TTL = 40
 local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
-local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.1
+local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.75
 local PHYSICAL_FRAG_VELOCITY_BASE = 100
 local PHYSICAL_FRAG_VELOCITY_VARI = 150
+
+---Set Colour to all shapes in body
+---@param body_handle number
+---@param colour TColour|nil
+local function setBodyColour(body_handle, colour)
+    colour = colour or { 0, 0, 0, 0 }
+    for _, shape in ipairs(GetBodyShapes(body_handle)) do
+        SetShapeEmissiveScale(shape, colour[4])
+        for _, light in ipairs(GetShapeLights(shape)) do
+            SetLightColor(light, FdGetUnpackedRGBA(colour))
+        end
+    end
+end
 
 ---@param body ManagedBody
 ---@diagnostic disable-next-line:unused-local
 function PhysBodyFragTick(shapes, body)
-    local pos = GetBodyTransform(body.handle).pos
     local vec = GetBodyVelocity(body.handle)
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") and STATES.enabled then
@@ -16,11 +28,15 @@ function PhysBodyFragTick(shapes, body)
         DrawBodyOutline(body.handle, 1, 0, 0, 1)
     end
 
-    if body.shouldHandle and body.bbr == nil then
-        body.bbr = BLACKBODY[((math.random(1, 2) * 10) + math.random(0, 9)) * 100]
-    elseif body.bbr ~= nil then
-        PointLight(pos, FdGetUnpackedRGBA(body.bbr, 1))
-        if math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then body.bbr = nil end
+    if body.kelvin ~= nil and math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then
+        body.kelvin = body.kelvin - 100
+        local bbr = BLACKBODY[body.kelvin]
+        if bbr then
+            setBodyColour(body.handle, FdGetRGBA(bbr))
+        else
+            body.kelvin = nil
+            setBodyColour(body.handle, nil)
+        end
     end
 
     if not body.shouldHandle or VecLength(vec) <= 40 then
@@ -151,6 +167,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
                 Transform(VecLerp(self.position, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot))[1],
             shouldHandle = true,
             ttl = PHYSICAL_FRAG_TTL,
+            kelvin = math.random(10, 27) * 100,
         }
 
         table.insert(BODIES, frag)
@@ -163,6 +180,9 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
             )
         )
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
+
+        local bbr = BLACKBODY[frag.kelvin]
+        if bbr then setBodyColour(frag.handle, FdGetRGBA(bbr)) end
     end
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") then
