@@ -2,6 +2,8 @@ local PHYSICAL_FRAG_SPAWN_CHANCE = 0.33
 local PHYSICAL_FRAG_TTL = 40
 local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
 local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.75
+local PHYSICAL_FRAG_BBR_DECAY_RATE = 100       -- Must be divisible by 100
+local PHYSICAL_FRAG_BBR_LUMINOSITY_BASE = 0.25 -- Emissive scale 0-1
 local PHYSICAL_FRAG_VELOCITY_BASE = 100
 local PHYSICAL_FRAG_VELOCITY_VARI = 150
 
@@ -21,15 +23,18 @@ end
 ---Set blackbody radiation using input kelvin
 ---@param shapes number[]
 ---@param kelvin number
+---@param luminosity? number emissive scale
 ---@return boolean isEmissive
-local function setShapesBlackbodyRadiation(shapes, kelvin)
+local function setShapesBlackbodyRadiation(shapes, kelvin, luminosity)
+    luminosity = luminosity or 1
+
     local bbr = BLACKBODY[kelvin]
     if not bbr then
         setLightColourInShapes(shapes, nil)
         return false
     end
 
-    setLightColourInShapes(shapes, FdGetRGBA(bbr))
+    setLightColourInShapes(shapes, FdGetRGBA(bbr, luminosity))
     return true
 end
 
@@ -51,8 +56,8 @@ function PhysBodyFragTick(shapes, body)
     end
 
     if body.kelvin ~= nil and math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then
-        body.kelvin = body.kelvin - 100
-        local isEmissive = setShapesBlackbodyRadiation(shapes, body.kelvin)
+        body.kelvin = body.kelvin - PHYSICAL_FRAG_BBR_DECAY_RATE
+        local isEmissive = setShapesBlackbodyRadiation(shapes, body.kelvin, PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
 
         if not isEmissive then body.kelvin = nil end
     end
@@ -199,7 +204,8 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         )
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
 
-        local isEmissive = setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin)
+        local isEmissive = setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin,
+            PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
         if not isEmissive then frag.kelvin = nil end
     end
 
