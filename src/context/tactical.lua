@@ -4,6 +4,8 @@ CAMERA_ELEVATION_OFFSET_MIN = 20
 CAMERA_CURRENT_FOV = nil
 CAMERA_DEFAULT_FOV = nil
 
+local HUD_HINT_KEYBIND_MIN_WIDTH = 28
+
 function ContextTacticalInit()
     if STATES.tactical.camera_settings.camera_transform ~= nil then return end
 
@@ -90,7 +92,7 @@ function ContextTacticalTick(delta)
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
             STATES.tactical.camera_settings.target_camera_fov = FdClamp(
-            STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
+                STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
     end
@@ -316,39 +318,51 @@ function ContextTacticalDraw()
     UiPop()
     UiTranslate(0, 48)
     UiPush()
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
-    UiTranslate(24, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("|")
     UiTranslate(8, 0)
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
-    UiTranslate(16, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("- Up | Down")
     UiPop()
     UiTranslate(0, 28)
     UiPush()
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
-    UiTranslate(24, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("|")
     UiTranslate(8, 0)
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
-    UiTranslate(16, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("- Left | Right")
     UiPop()
     UiTranslate(0, 28)
     UiPush()
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
-    UiTranslate(24, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("|")
     UiTranslate(8, 0)
-    UiText(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
-    UiTranslate(16, 0)
+    do
+        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
+        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
+    end
     UiText("- Elevation Down | Up")
     UiPop()
     UiTranslate(0, 28)
-    UiText(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER") .. " - Center player", true)
+    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_CENTER_PLAYER") .. " - Center player", true)
     UiText("Scroll - Camera zoom", true)
-    UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST")] .. " - Fast camera", true)
-    UiText(CONFIG_KEYBIND_FRIENDLYNAMES[CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW")] .. " - Slow camera", true)
+    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST") .. " - Fast camera", true)
+    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW") .. " - Slow camera", true)
 
     if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
         UiText("Space (hold) - Snap grid to target elevation")
