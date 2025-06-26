@@ -118,6 +118,15 @@ local function renderSlider(option)
     wrapSlider(option)
 end
 
+local function renderSectionBreak(option)
+    UiPush()
+        UiAlign("center")
+        local width = UiText(option.name, true)
+        UiTranslate(0, -(MENU.spacing_option / 1.5))
+        UiRect(MENU.spacing_tab + width, 2)
+    UiPop()
+end
+
 local function modalSetKey(option)
     UiBlur(0.5)
     UiPush()
@@ -343,6 +352,7 @@ end
 local function renderOption(option)
     if option.type == "textbutton" then renderTextButton(option) end
     if option.type == "slider" then renderSlider(option) end
+    if option.type == "section_break" then renderSectionBreak(option) end
 
     UiTranslate(0, option.height + 20)
 end

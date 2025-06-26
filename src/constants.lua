@@ -430,8 +430,20 @@ CONFIG_OPTIONS = {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
+        name = "Toggle Quick Salvo Marker Visibility"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_GENERAL_CANCEL"],
         name = "Cancel"
+    },
+    {
+        category = "keybind",
+        type = "section_break",
+        name = "Tactical Mode Keybinds"
     },
     {
         category = "keybind",
@@ -445,14 +457,7 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_CENTER_PLAYER"],
-        name = "Tactical: Center Player"
-    },
-    {
-        category = "keybind",
-        type = "textbutton",
-        variant = "keybinding",
-        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
-        name = "Toggle Quick Salvo Marker Visibility"
+        name = "Center Player"
     },
     -- {
     --     category = "keybind",
