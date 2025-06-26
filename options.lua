@@ -352,7 +352,7 @@ local function renderMenu()
     local filter = CONFIG_MENUS[STATES.menu].filter
 
     UiPush()
-        UiTranslate(UiCenter(), 250)
+        UiTranslate(UiCenter(), 100)
         UiAlign("center middle")
 
         -- Title
