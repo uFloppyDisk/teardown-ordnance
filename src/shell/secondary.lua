@@ -3,8 +3,11 @@ function PhysBodyTick(body)
 
     local disp_manage = {
         ["IN"] = PhysBodyIncendiaryTick,
-        ["SM"] = PhysBodySmokeTick
+        ["SM"] = PhysBodySmokeTick,
+        ["frag"] = PhysBodyFragTick,
     }
+
+    if not FdAssertTableKeys(disp_manage, body.type) then return false end
 
     local shapes = GetBodyShapes(body.handle)
     return disp_manage[body.type](shapes, body)

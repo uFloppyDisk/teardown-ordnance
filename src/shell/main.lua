@@ -1,3 +1,75 @@
+local PHYSICAL_FRAG_SPAWN_CHANCE = CfgGetValue("PHYSICAL_FRAGMENTATION_SPAWN_CHANCE")
+local PHYSICAL_FRAG_TTL = 40
+local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
+local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.75
+local PHYSICAL_FRAG_BBR_DECAY_RATE = 100       -- Must be divisible by 100
+local PHYSICAL_FRAG_BBR_LUMINOSITY_BASE = 0.25 -- Emissive scale 0-1
+local PHYSICAL_FRAG_VELOCITY_BASE = 100
+local PHYSICAL_FRAG_VELOCITY_VARI = 150
+
+---Set light colour to all shapes in table
+---@param shapes number[]
+---@param colour TColour|nil
+local function setLightColourInShapes(shapes, colour)
+    colour = colour or { 0, 0, 0, 0 }
+    for _, shape in ipairs(shapes) do
+        SetShapeEmissiveScale(shape, colour[4])
+        for _, light in ipairs(GetShapeLights(shape)) do
+            SetLightColor(light, FdGetUnpackedRGBA(colour))
+        end
+    end
+end
+
+---Set blackbody radiation using input kelvin
+---@param shapes number[]
+---@param kelvin number
+---@param luminosity? number emissive scale
+---@return boolean isEmissive
+local function setShapesBlackbodyRadiation(shapes, kelvin, luminosity)
+    luminosity = luminosity or 1
+
+    local bbr = BLACKBODY[kelvin]
+    if not bbr then
+        setLightColourInShapes(shapes, nil)
+        return false
+    end
+
+    setLightColourInShapes(shapes, FdGetRGBA(bbr, luminosity))
+    return true
+end
+
+---@param shapes number[]
+---@param body ManagedBody
+---@diagnostic disable-next-line:unused-local
+function PhysBodyFragTick(shapes, body)
+    local pos = GetBodyTransform(body.handle).pos
+    local vec = GetBodyVelocity(body.handle)
+
+    if CfgGetValue("G_FRAGMENTATION_DEBUG") and STATES.enabled then
+        DrawBodyHighlight(body.handle, 1)
+        DrawBodyOutline(body.handle, 1, 0, 0, 1)
+    end
+
+    if body.kelvin ~= nil and IsPointInWater(pos) then
+        body.kelvin = nil
+        setShapesBlackbodyRadiation(shapes, 0)
+    end
+
+    if body.kelvin ~= nil and math.random() < PHYSICAL_FRAG_BBR_DECAY_CHANCE then
+        body.kelvin = body.kelvin - PHYSICAL_FRAG_BBR_DECAY_RATE
+        local isEmissive = setShapesBlackbodyRadiation(shapes, body.kelvin, PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
+
+        if not isEmissive then body.kelvin = nil end
+    end
+
+    if not body.shouldHandle or VecLength(vec) <= 40 then
+        body.shouldHandle = false
+        return
+    end
+
+    SetBodyVelocity(body.handle, VecScale(vec, 0.85))
+end
+
 ---Draw shell sprite
 ---@param self any
 function ShellDrawSprite(self)
@@ -78,7 +150,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         MakeHole(hit_pos, rand_frag_size * 3, rand_frag_size * 2, rand_frag_size)
 
         if not CfgGetValue("G_FRAGMENTATION_DEBUG") then
-            return true
+            return true, transform_new
         end
 
         local point_colour = COLOUR["white"]
@@ -90,7 +162,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         FdAddToDebugTable(DEBUG_LINES, { pos, hit_pos, FdGetRGBA(COLOUR["white"], 0.5) })
         FRAG_STATS[2] = FRAG_STATS[2] + 1
 
-        return true
+        return true, transform_new
     end
 
     FRAG_STATS[1] = FRAG_STATS[1] + 1
@@ -104,7 +176,38 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
 
     local hit_final, line_end = checkHit(rotation)
 
-    if hit_final then return true end
+    if hit_final then return true, line_end end
+
+    if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() < PHYSICAL_FRAG_SPAWN_CHANCE then
+        local frag_variant = math.ceil(math.random() * 3)
+
+        ---@type ManagedBodyWithTtl
+        local frag = {
+            valid = true,
+            created_at = ELAPSED_TIME,
+            type = "frag",
+            handle = Spawn("MOD/assets/vox/frag" .. frag_variant .. ".xml",
+                Transform(VecLerp(self.position, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot))[1],
+            shouldHandle = true,
+            ttl = PHYSICAL_FRAG_TTL,
+            kelvin = math.random(10, 27) * 100,
+        }
+
+        table.insert(BODIES, frag)
+
+        SetBodyVelocity(
+            frag.handle,
+            VecScale(
+                VecNormalize(TransformToParentVec(line_end, Vec(1, 0, 0))),
+                math.random() * PHYSICAL_FRAG_VELOCITY_VARI + PHYSICAL_FRAG_VELOCITY_BASE
+            )
+        )
+        SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
+
+        local isEmissive = setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin,
+            PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
+        if not isEmissive then frag.kelvin = nil end
+    end
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") then
         if line_end == nil then return false end
@@ -113,7 +216,7 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         FRAG_STATS[3] = FRAG_STATS[3] + 1
     end
 
-    return false
+    return false, line_end
 end
 
 local function detonate(self, pos)

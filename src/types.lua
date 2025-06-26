@@ -4,4 +4,4 @@
 ---@alias TDebugLine table<TVec, TVec, TColour>
 
 ---@alias TConfigMapping { variable: string, value_type: "boolean" | "int" | "float" | "string", value_default: any  }
----@alias TConfigOption { type: string, mapping: TConfigMapping, name: string, category?: string, variant?: string, value_unit?: string, value_digits?: number, value_min?: number, value_max?: number }
+---@alias TConfigOption { type: string, mapping: TConfigMapping, name: string, category?: string, variant?: string, value_unit?: string, value_digits?: number, value_min?: number, value_max?: number, value_display_factor?: number, value_display_exp?: number }

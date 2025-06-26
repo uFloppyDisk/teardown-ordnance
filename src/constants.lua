@@ -21,6 +21,67 @@ COLOUR = {
     ["green"]       = { 0.2, 1, 0.2, 1 },
 }
 
+-- Source: http://www.vendian.org/mncharity/dir3/blackbody/UnstableURLs/bbr_color.html
+---@type { [number]: TColour}
+BLACKBODY = {
+    [1000] = { 1.0000, 0.0401, 0.0000 },
+    [1100] = { 1.0000, 0.0631, 0.0000 },
+    [1200] = { 1.0000, 0.0860, 0.0000 },
+    [1300] = { 1.0000, 0.1085, 0.0000 },
+    [1400] = { 1.0000, 0.1303, 0.0000 },
+    [1500] = { 1.0000, 0.1515, 0.0000 },
+    [1600] = { 1.0000, 0.1718, 0.0000 },
+    [1700] = { 1.0000, 0.1912, 0.0000 },
+    [1800] = { 1.0000, 0.2097, 0.0000 },
+    [1900] = { 1.0000, 0.2272, 0.0000 },
+    [2000] = { 1.0000, 0.2484, 0.0061 },
+    [2100] = { 1.0000, 0.2709, 0.0153 },
+    [2200] = { 1.0000, 0.2930, 0.0257 },
+    [2300] = { 1.0000, 0.3149, 0.0373 },
+    [2400] = { 1.0000, 0.3364, 0.0501 },
+    [2500] = { 1.0000, 0.3577, 0.0640 },
+    [2600] = { 1.0000, 0.3786, 0.0790 },
+    [2700] = { 1.0000, 0.3992, 0.0950 },
+    [2800] = { 1.0000, 0.4195, 0.1119 },
+    [2900] = { 1.0000, 0.4394, 0.1297 },
+    [3000] = { 1.0000, 0.4589, 0.1483 },
+    [3100] = { 1.0000, 0.4781, 0.1677 },
+    [3200] = { 1.0000, 0.4970, 0.1879 },
+    [3300] = { 1.0000, 0.5155, 0.2087 },
+    [3400] = { 1.0000, 0.5336, 0.2301 },
+    [3500] = { 1.0000, 0.5515, 0.2520 },
+    [3600] = { 1.0000, 0.5689, 0.2745 },
+    [3700] = { 1.0000, 0.5860, 0.2974 },
+    [3800] = { 1.0000, 0.6028, 0.3207 },
+    [3900] = { 1.0000, 0.6193, 0.3444 },
+    [4000] = { 1.0000, 0.6354, 0.3684 },
+    [4100] = { 1.0000, 0.6511, 0.3927 },
+    [4200] = { 1.0000, 0.6666, 0.4172 },
+    [4300] = { 1.0000, 0.6817, 0.4419 },
+    [4400] = { 1.0000, 0.6966, 0.4668 },
+    [4500] = { 1.0000, 0.7111, 0.4919 },
+    [4600] = { 1.0000, 0.7253, 0.5170 },
+    [4700] = { 1.0000, 0.7392, 0.5422 },
+    [4800] = { 1.0000, 0.7528, 0.5675 },
+    [4900] = { 1.0000, 0.7661, 0.5928 },
+    [5000] = { 1.0000, 0.7792, 0.6180 },
+    [5100] = { 1.0000, 0.7919, 0.6433 },
+    [5200] = { 1.0000, 0.8044, 0.6685 },
+    [5300] = { 1.0000, 0.8167, 0.6937 },
+    [5400] = { 1.0000, 0.8286, 0.7187 },
+    [5500] = { 1.0000, 0.8403, 0.7437 },
+    [5600] = { 1.0000, 0.8518, 0.7686 },
+    [5700] = { 1.0000, 0.8630, 0.7933 },
+    [5800] = { 1.0000, 0.8740, 0.8179 },
+    [5900] = { 1.0000, 0.8847, 0.8424 },
+    [6000] = { 1.0000, 0.8952, 0.8666 },
+    [6100] = { 1.0000, 0.9055, 0.8907 },
+    [6200] = { 1.0000, 0.9156, 0.9147 },
+    [6300] = { 1.0000, 0.9254, 0.9384 },
+    [6400] = { 1.0000, 0.9351, 0.9619 },
+    [6500] = { 1.0000, 0.9445, 0.9853 },
+}
+
 -- #endregion
 
 -- #region Enums
@@ -118,6 +179,18 @@ CONFIG_VARIABLES = {
 
         value_type = "boolean",
         value_default = true
+    },
+    ["G_SPAWN_PHYSICAL_FRAGMENTATION"] = {
+        variable = G_CONFIG_ROOT .. ".fragmentation.physical_frag",
+
+        value_type = "boolean",
+        value_default = true
+    },
+    ["PHYSICAL_FRAGMENTATION_SPAWN_CHANCE"] = {
+        variable = G_CONFIG_ROOT .. ".fragmentation.physical_frag.spawn_chance",
+
+        value_type = "float",
+        value_default = 0.2
     },
     ["G_FRAGMENTATION_DEBUG"] = {
         variable = G_CONFIG_ROOT .. ".fragmentation.debug_mode",
@@ -367,6 +440,25 @@ CONFIG_OPTIONS = {
 
         value_min = 10,
         value_max = 100
+    },
+    {
+        category = "fragmentation",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SPAWN_PHYSICAL_FRAGMENTATION"],
+        name = "Physical Fragmentation"
+    },
+    {
+        category = "fragmentation",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["PHYSICAL_FRAGMENTATION_SPAWN_CHANCE"],
+        name = "Phys. Fragment Spawn Chance",
+
+        value_unit = "%",
+        value_display_factor = 100,
+
+        value_min = 0.05,
+        value_max = 1,
+        value_digits = 2,
     },
     {
         category = "tactical",
@@ -911,10 +1003,11 @@ DEFAULT_SUBMUNITION = {
     velocity = nil
 }
 
----@class (exact) ManagedBody
+---@class ManagedBody
 ---@field created_at number
 ---@field handle number
 ---@field type string
 ---@field valid boolean
+---@field [any] any
 
 -- #endregion
