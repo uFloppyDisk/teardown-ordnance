@@ -11,7 +11,7 @@ MENU = {
     spacing_tab = 25,
     spacing_option = 20,
     option = {
-        vertical_space = 20,
+        vertical_space = 10,
     },
     offset_rect_correction = -8,
     offset_option_slider = {-5, -7}

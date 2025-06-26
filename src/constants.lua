@@ -440,20 +440,20 @@ CONFIG_OPTIONS = {
         mapping = CONFIG_VARIABLES["KEYBIND_GENERAL_CANCEL"],
         name = "Cancel"
     },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO"],
-    --     name = "Toggle/Launch Quick Salvo"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
-    --     name = "Fire/Mark Shell"
-    -- },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO"],
+        name = "Toggle/Launch Quick Salvo"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
+        name = "Fire/Mark Shell"
+    },
     {
         category = "keybind",
         type = "section_break",
