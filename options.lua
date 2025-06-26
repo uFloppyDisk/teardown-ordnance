@@ -10,6 +10,9 @@
 MENU = {
     spacing_tab = 25,
     spacing_option = 20,
+    option = {
+        vertical_space = 20,
+    },
     offset_rect_correction = -8,
     offset_option_slider = {-5, -7}
 }
@@ -345,7 +348,7 @@ local function renderOption(option)
     if option.type == "slider" then renderSlider(option) end
     if option.type == "section_break" then renderSectionBreak(option) end
 
-    UiTranslate(0, option.height + 20)
+    UiTranslate(0, option.height + MENU.option.vertical_space)
 end
 
 local function renderMenu()
