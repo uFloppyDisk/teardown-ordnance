@@ -186,6 +186,12 @@ CONFIG_VARIABLES = {
         value_type = "boolean",
         value_default = true
     },
+    ["PHYSICAL_FRAGMENTATION_SPAWN_CHANCE"] = {
+        variable = G_CONFIG_ROOT .. ".fragmentation.physical_frag.spawn_chance",
+
+        value_type = "float",
+        value_default = 0.2
+    },
     ["G_FRAGMENTATION_DEBUG"] = {
         variable = G_CONFIG_ROOT .. ".fragmentation.debug_mode",
 
@@ -415,12 +421,6 @@ CONFIG_OPTIONS = {
     },
     {
         category = "fragmentation",
-        type = "textbutton",
-        mapping = CONFIG_VARIABLES["G_SPAWN_PHYSICAL_FRAGMENTATION"],
-        name = "Physical Fragmentation"
-    },
-    {
-        category = "fragmentation",
         type = "slider",
         mapping = CONFIG_VARIABLES["SHELL_FRAGMENTATION_AMOUNT"],
         name = "Amount per shell",
@@ -440,6 +440,25 @@ CONFIG_OPTIONS = {
 
         value_min = 10,
         value_max = 100
+    },
+    {
+        category = "fragmentation",
+        type = "textbutton",
+        mapping = CONFIG_VARIABLES["G_SPAWN_PHYSICAL_FRAGMENTATION"],
+        name = "Physical Fragmentation"
+    },
+    {
+        category = "fragmentation",
+        type = "slider",
+        mapping = CONFIG_VARIABLES["PHYSICAL_FRAGMENTATION_SPAWN_CHANCE"],
+        name = "Phys. Fragment Spawn Chance",
+
+        value_unit = "%",
+        value_display_factor = 100,
+
+        value_min = 0.05,
+        value_max = 1,
+        value_digits = 2,
     },
     {
         category = "tactical",
