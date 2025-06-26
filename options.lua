@@ -198,17 +198,8 @@ local function modalSetKey(option)
                         break
                     end
 
-                    local duplicate_bind = false
-                    local all_binds = ListKeys(G_CONFIG_KEYBINDS_ROOT)
-                    for _, variable in ipairs(all_binds) do
-                        if GetString(G_CONFIG_KEYBINDS_ROOT.."."..variable) == input then
-                            STATES.set_keybind.msg_error_duplicate_bind = true
-                            duplicate_bind = true
-                            break
-                        end
-                    end
-
-                    if duplicate_bind then
+                    if CfgCheckConflict(G_CONFIG_KEYBINDS_ROOT, input) then
+                        STATES.set_keybind.msg_error_duplicate_bind = true
                         break
                     end
 

@@ -224,61 +224,61 @@ CONFIG_VARIABLES = {
 
     -- Tactical Mode
     ["KEYBIND_TACTICAL_TOGGLE"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "toggle",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".toggle",
 
         value_type = "string",
         value_default = "M"
     },
     ["KEYBIND_TACTICAL_CENTER_PLAYER"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "center_player",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".center_player",
 
         value_type = "string",
         value_default = "H"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.z_negative",
 
         value_type = "string",
         value_default = "W"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.z_positive",
 
         value_type = "string",
         value_default = "S"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.x_negative",
 
         value_type = "string",
         value_default = "A"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.x_positive",
 
         value_type = "string",
         value_default = "D"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.y_negative",
 
         value_type = "string",
         value_default = "R"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.y_positive",
 
         value_type = "string",
         value_default = "F"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_FAST"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_fast",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.mod_fast",
 
         value_type = "string",
         value_default = "shift"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_slow",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.mod_slow",
 
         value_type = "string",
         value_default = "ctrl"

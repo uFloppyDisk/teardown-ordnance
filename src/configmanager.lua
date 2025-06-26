@@ -79,6 +79,31 @@ function CfgCheckIntegrity()
     return true
 end
 
+---Check config keys depth-first recursively
+---@param parent string
+---@param check_value any
+---@param stop? boolean
+---@nodiscard
+---@return boolean
+function CfgCheckConflict(parent, check_value, stop)
+    local children = ListKeys(parent)
+    for _, variable in ipairs(children) do
+        local current = parent .. "." .. variable
+
+        local value = GetString(current)
+        if value ~= nil and value == check_value then
+            return true
+        end
+
+        if not stop then
+            local has_conflict = CfgCheckConflict(current, check_value, stop)
+            if has_conflict then return true end
+        end
+    end
+
+    return false
+end
+
 ---Reset config to defaults (or clear completely)
 ---@param no_restore? boolean Whether to clear config without restoring defaults
 function CfgReset(no_restore)
