@@ -407,7 +407,7 @@ local function renderMenu()
                 local width, height = UiGetTextSize("Restore Defaults")
                 if UiTextButton("Restore Defaults", width, height) then
                     for _, option in ipairs(OPTIONS) do
-                        if option.category == "keybind" then
+                        if option.category == "keybind" and option.mapping then
                             CfgSetValue(option.mapping, option.mapping.value_default)
                         end
                     end
@@ -528,7 +528,7 @@ local function reset(force_reset)
 
                         if STATES.confirm_reset == 1 then
                             for _, option in ipairs(OPTIONS) do
-                                option:setRegValue(option.mapping.value_default)
+                                if option.mapping then option:setRegValue(option.mapping.value_default) end
                             end
                         end
 
