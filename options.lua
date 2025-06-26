@@ -103,6 +103,21 @@ local function drawButtonKeybinding(option)
     return option.value
 end
 
+local function renderTextButton(option)
+    if option.variant then
+        if option.variant == "keybinding" then
+            wrapButton(option, drawButtonKeybinding)
+            return
+        end
+    end
+
+    wrapButton(option)
+end
+
+local function renderSlider(option)
+    wrapSlider(option)
+end
+
 local function modalSetKey(option)
     UiBlur(0.5)
     UiPush()
@@ -326,25 +341,15 @@ local function renderMasthead(font_reg, font_selected)
 end
 
 local function renderOption(option)
-    if option.type == "textbutton" then
-        if option.variant then
-            if option.variant == "keybinding" then
-                wrapButton(option, drawButtonKeybinding)
-                return
-            end
-        end
+    if option.type == "textbutton" then renderTextButton(option) end
+    if option.type == "slider" then renderSlider(option) end
 
-        wrapButton(option)
-        return
-    end
-
-    if option.type == "slider" then
-        wrapSlider(option)
-        return
-    end
+    UiTranslate(0, option.height + 20)
 end
 
 local function renderMenu()
+    local filter = CONFIG_MENUS[STATES.menu].filter
+
     UiPush()
         UiTranslate(UiCenter(), 250)
         UiAlign("center middle")
@@ -360,7 +365,7 @@ local function renderMenu()
         -- Options
         UiFont("regular.ttf", 28)
 
-        if CONFIG_MENUS[STATES.menu].filter == "advanced" then
+        if filter == "advanced" then
             UiPush()
                 UiFont("bold.ttf", 24)
                 UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
@@ -375,18 +380,8 @@ local function renderMenu()
         end
 
         for _, option in ipairs(OPTIONS) do
-            if CONFIG_MENUS[STATES.menu].filter ~= nil then
-                if option.category == CONFIG_MENUS[STATES.menu].filter then
-                    renderOption(option)
-
-                    UiTranslate(0, option.height + 20)
-                end
-            else
-                if option.category == nil or option.category == "" then
-                    renderOption(option)
-
-                    UiTranslate(0, option.height + 20)
-                end
+            if option.category == filter or (filter == nil and option.category == "") then
+                renderOption(option)
             end
         end
 
@@ -394,7 +389,7 @@ local function renderMenu()
 
         UiFont("bold.ttf", 28)
 
-        if CONFIG_MENUS[STATES.menu].filter == "keybind" then
+        if filter == "keybind" then
             UiPush()
                 UiFont("bold.ttf", 20)
                 UiButtonHoverColor(1, 0.3, 0)
