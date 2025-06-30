@@ -297,61 +297,61 @@ CONFIG_VARIABLES = {
 
     -- Tactical Mode
     ["KEYBIND_TACTICAL_TOGGLE"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "toggle",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".toggle",
 
         value_type = "string",
         value_default = "M"
     },
     ["KEYBIND_TACTICAL_CENTER_PLAYER"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "center_player",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".center_player",
 
         value_type = "string",
         value_default = "H"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.z_negative",
 
         value_type = "string",
         value_default = "W"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Z_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.z_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.z_positive",
 
         value_type = "string",
         value_default = "S"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.x_negative",
 
         value_type = "string",
         value_default = "A"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_X_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.x_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.x_positive",
 
         value_type = "string",
         value_default = "D"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_negative",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.y_negative",
 
         value_type = "string",
         value_default = "R"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_Y_POS"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.y_positive",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.y_positive",
 
         value_type = "string",
         value_default = "F"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_FAST"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_fast",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.mod_fast",
 
         value_type = "string",
         value_default = "shift"
     },
     ["KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW"] = {
-        variable = G_CONFIG_KEYBINDS_TAC .. "translate.mod_slow",
+        variable = G_CONFIG_KEYBINDS_TAC .. ".translate.mod_slow",
 
         value_type = "string",
         value_default = "ctrl"
@@ -522,8 +522,34 @@ CONFIG_OPTIONS = {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
+        name = "Toggle Quick Salvo Marker Visibility"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_GENERAL_CANCEL"],
         name = "Cancel"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO"],
+        name = "Toggle/Launch Quick Salvo"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
+        name = "Fire/Mark Shell"
+    },
+    {
+        category = "keybind",
+        type = "section_break",
+        name = "Tactical Mode Keybinds"
     },
     {
         category = "keybind",
@@ -537,71 +563,50 @@ CONFIG_OPTIONS = {
         type = "textbutton",
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_CENTER_PLAYER"],
-        name = "Tactical: Center Player"
+        name = "Center Player"
     },
     {
         category = "keybind",
         type = "textbutton",
         variant = "keybinding",
-        mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO_MARKERS"],
-        name = "Toggle Quick Salvo Marker Visibility"
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"],
+        name = "Move North"
     },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_NEG"],
-    --     name = "TAC: Move Up"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_POS"],
-    --     name = "TAC: Move Down"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_NEG"],
-    --     name = "TAC: Move Left"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_POS"],
-    --     name = "TAC: Move Right"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_POS"],
-    --     name = "TAC: Elevation Up"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"],
-    --     name = "TAC: Elevation Down"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_TOGGLE_QUICKSALVO"],
-    --     name = "Toggle/Launch Quick Salvo"
-    -- },
-    -- {
-    --     category = "keybind",
-    --     type = "textbutton",
-    --     variant = "keybinding",
-    --     mapping = CONFIG_VARIABLES["KEYBIND_PRIMARY_FIRE"],
-    --     name = "Fire/Mark Shell"
-    -- },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Z_POS"],
+        name = "Move South"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_NEG"],
+        name = "Move West"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_X_POS"],
+        name = "Move East"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_POS"],
+        name = "Elevation Up"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_TACTICAL_TRANSLATE_Y_NEG"],
+        name = "Elevation Down"
+    },
     {
         category = "advanced",
         type = "textbutton",

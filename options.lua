@@ -10,6 +10,9 @@
 MENU = {
     spacing_tab = 25,
     spacing_option = 20,
+    option = {
+        vertical_space = 10,
+    },
     offset_rect_correction = -8,
     offset_option_slider = {-5, -7}
 }
@@ -103,6 +106,30 @@ local function drawButtonKeybinding(option)
     return option.value
 end
 
+local function renderTextButton(option)
+    if option.variant then
+        if option.variant == "keybinding" then
+            wrapButton(option, drawButtonKeybinding)
+            return
+        end
+    end
+
+    wrapButton(option)
+end
+
+local function renderSlider(option)
+    wrapSlider(option)
+end
+
+local function renderSectionBreak(option)
+    UiPush()
+        UiAlign("center")
+        local width = UiText(option.name, true)
+        UiTranslate(0, -(MENU.spacing_option / 1.5))
+        UiRect(MENU.spacing_tab + width, 2)
+    UiPop()
+end
+
 local function modalSetKey(option)
     UiBlur(0.5)
     UiPush()
@@ -174,17 +201,8 @@ local function modalSetKey(option)
                         break
                     end
 
-                    local duplicate_bind = false
-                    local all_binds = ListKeys(G_CONFIG_KEYBINDS_ROOT)
-                    for _, variable in ipairs(all_binds) do
-                        if GetString(G_CONFIG_KEYBINDS_ROOT.."."..variable) == input then
-                            STATES.set_keybind.msg_error_duplicate_bind = true
-                            duplicate_bind = true
-                            break
-                        end
-                    end
-
-                    if duplicate_bind then
+                    if CfgCheckConflict(G_CONFIG_KEYBINDS_ROOT, input) then
+                        STATES.set_keybind.msg_error_duplicate_bind = true
                         break
                     end
 
@@ -326,27 +344,18 @@ local function renderMasthead(font_reg, font_selected)
 end
 
 local function renderOption(option)
-    if option.type == "textbutton" then
-        if option.variant then
-            if option.variant == "keybinding" then
-                wrapButton(option, drawButtonKeybinding)
-                return
-            end
-        end
+    if option.type == "textbutton" then renderTextButton(option) end
+    if option.type == "slider" then renderSlider(option) end
+    if option.type == "section_break" then renderSectionBreak(option) end
 
-        wrapButton(option)
-        return
-    end
-
-    if option.type == "slider" then
-        wrapSlider(option)
-        return
-    end
+    UiTranslate(0, option.height + MENU.option.vertical_space)
 end
 
 local function renderMenu()
+    local filter = CONFIG_MENUS[STATES.menu].filter
+
     UiPush()
-        UiTranslate(UiCenter(), 250)
+        UiTranslate(UiCenter(), 100)
         UiAlign("center middle")
 
         -- Title
@@ -360,7 +369,7 @@ local function renderMenu()
         -- Options
         UiFont("regular.ttf", 28)
 
-        if CONFIG_MENUS[STATES.menu].filter == "advanced" then
+        if filter == "advanced" then
             UiPush()
                 UiFont("bold.ttf", 24)
                 UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
@@ -375,18 +384,8 @@ local function renderMenu()
         end
 
         for _, option in ipairs(OPTIONS) do
-            if CONFIG_MENUS[STATES.menu].filter ~= nil then
-                if option.category == CONFIG_MENUS[STATES.menu].filter then
-                    renderOption(option)
-
-                    UiTranslate(0, option.height + 20)
-                end
-            else
-                if option.category == nil or option.category == "" then
-                    renderOption(option)
-
-                    UiTranslate(0, option.height + 20)
-                end
+            if option.category == filter or (filter == nil and option.category == "") then
+                renderOption(option)
             end
         end
 
@@ -394,7 +393,7 @@ local function renderMenu()
 
         UiFont("bold.ttf", 28)
 
-        if CONFIG_MENUS[STATES.menu].filter == "keybind" then
+        if filter == "keybind" then
             UiPush()
                 UiFont("bold.ttf", 20)
                 UiButtonHoverColor(1, 0.3, 0)
@@ -402,7 +401,7 @@ local function renderMenu()
                 local width, height = UiGetTextSize("Restore Defaults")
                 if UiTextButton("Restore Defaults", width, height) then
                     for _, option in ipairs(OPTIONS) do
-                        if option.category == "keybind" then
+                        if option.category == "keybind" and option.mapping then
                             CfgSetValue(option.mapping, option.mapping.value_default)
                         end
                     end
@@ -523,7 +522,7 @@ local function reset(force_reset)
 
                         if STATES.confirm_reset == 1 then
                             for _, option in ipairs(OPTIONS) do
-                                option:setRegValue(option.mapping.value_default)
+                                if option.mapping then option:setRegValue(option.mapping.value_default) end
                             end
                         end
 

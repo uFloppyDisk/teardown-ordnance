@@ -634,3 +634,24 @@ function FdSplitString(str, sep)
     FdWatch("test", t)
     return t
 end
+
+---Return keybind hint prefix for use in building HUD
+---@param key string Config mapping key
+---@param options? { pre?: string, post?: string }
+---@nodiscard
+---@return string
+function HudKeybindHintPrefix(key, options)
+    options = options or {}
+
+    local s = "<"
+    local e = ">"
+    if options.pre then
+        s = options.pre .. s
+    end
+
+    if options.post then
+        e = e .. options.post
+    end
+
+    return string.format("%s%s%s | ", s, CfgGetKeyFriendlyName(key), e)
+end
