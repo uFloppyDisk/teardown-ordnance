@@ -14,7 +14,7 @@ function KeybindHint(bind, label, size)
     end
 
     FdUiContainer(function()
-        FdUiKeyIcon(CfgGetKeyFriendlyName(bind), scale)
+        FdUiKeyIcon(bind, scale)
         if label then
             UiTranslate(8, 8 * scale)
             UiText(label, true)

@@ -123,12 +123,11 @@ function CfgReset(no_restore)
     FdLog("Config has been reset.")
 end
 
----Get friendly name for key, otherwise return default value or config_key.
+---Get keybind key using config_key, otherwise return config_key
 ---@param config_key string
 ---@return string
-function CfgGetKeyFriendlyName(config_key)
+function CfgGetKeybind(config_key)
     local fallback = config_key
-
     local mapping = CONFIG_VARIABLES[config_key]
     if mapping == nil then
         return fallback
@@ -141,11 +140,18 @@ function CfgGetKeyFriendlyName(config_key)
         return fallback
     end
 
-    fallback = value
+    return value
+end
+
+---Get friendly name for key, otherwise return config_key.
+---@param config_key string
+---@return string
+function CfgGetKeyFriendlyName(config_key)
+    local value = CfgGetKeybind(config_key)
 
     local friendly_name = CONFIG_KEYBIND_FRIENDLYNAMES[value]
     if friendly_name == nil then
-        return fallback
+        return value
     end
 
     return friendly_name

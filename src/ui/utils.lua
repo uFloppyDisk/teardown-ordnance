@@ -23,14 +23,17 @@ local function normalizeTranslateAxis(translate)
 end
 
 ---Draw key icon image
----@param text string
+---@param bind string
 ---@param scale? number Size multiple of icon resolution
 ---@param translate? boolean | [boolean, boolean]
 ---@return number Key icon width
 ---@return number Key icon height
-function FdUiKeyIcon(text, scale, translate)
+function FdUiKeyIcon(bind, scale, translate)
     scale = scale or 1
     local img = UI_IMAGE.KEY_IDLE
+
+    local label = CfgGetKeyFriendlyName(bind) or bind
+    local is_pressed = InputDown(CfgGetKeybind(bind))
 
     local w, h = FdUiContainer(function()
         UiAlign("left middle")
@@ -41,19 +44,36 @@ function FdUiKeyIcon(text, scale, translate)
 
         UiColor(1, 1, 1, 1)
 
-        local text_width, text_height = UiGetTextSize(text)
-        local w = string.len(text) == 1 and img.size[1] * scale or
+        local text_width, text_height = UiGetTextSize(label)
+        local w = string.len(label) == 1 and img.size[1] * scale or
             math.max(img.size[1] * scale, text_width + img.slice.x + img.padding)
-        local h = string.len(text) == 1 and img.size[2] * scale or
+        local h = string.len(label) == 1 and img.size[2] * scale or
             math.max(img.size[2] * scale, text_height + img.slice.y + img.padding)
 
+        UiBeginFrame()
+
+        UiPush()
+
+        UiFrameSkipItem(true)
+        if is_pressed then UiTranslate(1, 1) end
         UiImageBox(img.src, w, h, img.slice.x, img.slice.y)
 
         UiTranslate(img.slice.x * scale, -6 * scale)
         UiTextAlignment("center")
 
         UiColor(0, 0, 0, 1)
-        UiText(text, false)
+        UiText(label, false)
+
+        UiPop()
+
+        UiPush()
+        UiColor(0, 0, 0, 0)
+        UiRect(w, h)
+        UiPop()
+
+        local fw, fh = UiEndFrame()
+
+        UiFrameOccupy(fw, fh)
     end, translate)
 
     return w, h
