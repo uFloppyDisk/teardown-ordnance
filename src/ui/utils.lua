@@ -53,6 +53,14 @@ function FdUiKeyIcon(bind, scale, translate)
         UiBeginFrame()
 
         UiPush()
+        UiColor(0, 0, 0, 0)
+        UiRect(w, h)
+        UiColor(0, 0, 0, 0.5)
+        UiTranslate(2, 2)
+        UiRoundedRect(w, h, 3)
+        UiPop()
+
+        UiPush()
 
         UiFrameSkipItem(true)
         if is_pressed then UiTranslate(1, 1) end
@@ -64,11 +72,6 @@ function FdUiKeyIcon(bind, scale, translate)
         UiColor(0, 0, 0, 1)
         UiText(label, false)
 
-        UiPop()
-
-        UiPush()
-        UiColor(0, 0, 0, 0)
-        UiRect(w, h)
         UiPop()
 
         local fw, fh = UiEndFrame()
