@@ -93,6 +93,8 @@ function init()
     SND_UI["cancel"]         = LoadSound("MOD/assets/snd/menu_cancel.ogg")
     SND_UI["salvo_mark"]     = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 
+    FdUiLoadImageMetadata()
+
     ResetToDefaultState()
 end
 
@@ -435,7 +437,7 @@ function draw()
     end
 
     UiPush()
-    UiTranslate(80, UiMiddle() + UiMiddle() / 1.85)
+    UiTranslate(80, UiMiddle() + UiMiddle() / 3)
     UiColor(0.4, 0.4, 0.4)
     UiAlign("left")
     UiFont("regular.ttf", 26)
@@ -443,44 +445,35 @@ function draw()
 
     UiPush()
     UiColor(1, 1, 1)
-    UiText(HudKeybindHintPrefix("KEYBIND_TACTICAL_TOGGLE") .. "Toggle Tactical Mode", true)
-    UiText(HudKeybindHintPrefix("KEYBIND_CYCLE_SHELLS") .. "Cycle shells [" .. values.name .. "]", true)
-    UiText(HudKeybindHintPrefix("KEYBIND_CYCLE_VARIANTS") ..
-        "Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]", true)
-    UiText(
-        HudKeybindHintPrefix("KEYBIND_ADJUST_ATTACK", { pre = "Hold ", post = " + <Move Mouse>" }) ..
-        "Change shell incoming pitch/heading",
-        true)
-    UiText(
-        HudKeybindHintPrefix("KEYBIND_ADJUST_INACCURACY", { pre = "Hold ", post = " + <Scroll>" }) ..
-        "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]", true)
+    KeybindHint("KEYBIND_TACTICAL_TOGGLE", "Toggle Tactical Mode")
+    KeybindHint("KEYBIND_CYCLE_SHELLS", "Cycle shells [" .. values.name .. "]")
+    KeybindHint("KEYBIND_CYCLE_VARIANTS", "Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]")
+    KeybindHint("KEYBIND_ADJUST_ATTACK", "Change shell incoming pitch/heading")
+    KeybindHint("KEYBIND_ADJUST_INACCURACY", "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]")
 
-    local primary_action_str = HudKeybindHintPrefix("KEYBIND_PRIMARY_FIRE")
-    local secondary_action_str = HudKeybindHintPrefix("KEYBIND_TOGGLE_QUICKSALVO")
     if not (STATES.quicksalvo.enabled) then
         UiColor(1, 1, 1)
-        UiText(secondary_action_str .. "Quick Salvo mode: OFF", true)
+        KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: OFF")
 
         UiColor(1, 0.2, 0.2)
-        UiText(primary_action_str .. "Fire " .. values.name, true)
+        KeybindHint("KEYBIND_PRIMARY_FIRE", "Fire " .. values.name)
     else
         if #QUICK_SALVO > 0 then
             UiColor(1, 0.3, 0.3)
-            UiText(secondary_action_str .. "Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells", true)
+            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells")
         else
             UiColor(1, 1, 0.1)
-            UiText(secondary_action_str .. "Quick Salvo mode: ON", true)
+            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: ON")
         end
 
         UiColor(1, 1, 1)
-        UiText(primary_action_str .. "Mark location for salvo", true)
-        UiText(
-            HudKeybindHintPrefix("KEYBIND_TOGGLE_QUICKSALVO_MARKERS") ..
-            "Toggle Quick Salvo Markers [" .. FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers) .. "]", true)
+        KeybindHint("KEYBIND_PRIMARY_FIRE", "Mark location for salvo")
+        KeybindHint("KEYBIND_TOGGLE_QUICKSALVO_MARKERS",
+            "Toggle Quick Salvo Markers [" .. FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers) .. "]")
 
         if #QUICK_SALVO > 0 then
             UiColor(1, 1, 0.1)
-            UiText(HudKeybindHintPrefix("KEYBIND_GENERAL_CANCEL") .. "Cancel salvo", true)
+            KeybindHint("KEYBIND_GENERAL_CANCEL", "Cancel salvo")
         end
     end
 
