@@ -37,7 +37,7 @@ local KEY = function(icon, _)
 
     UiPush()
     UiAlign("left middle")
-    UiTranslate(slice.x, -6 * icon.scale)
+    UiTranslate(slice.x * 0.6, -6 * icon.scale)
     UiColor(0, 0, 0, 1)
     UiText(icon.label, false)
     UiPop()
