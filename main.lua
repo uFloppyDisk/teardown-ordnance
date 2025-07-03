@@ -453,6 +453,8 @@ function draw()
         KeybindHint("KEYBIND_ADJUST_INACCURACY", "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]")
     end, { false, true })
 
+    UiTranslate(0, 2)
+
     --Secondary action
     FdUiContainer(function()
         if not STATES.quicksalvo.enabled then
@@ -471,6 +473,8 @@ function draw()
         KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells")
     end, { false, true })
 
+    UiTranslate(0, 4)
+
     --Primary action
     FdUiContainer(function()
         if STATES.quicksalvo.enabled then
@@ -481,6 +485,8 @@ function draw()
         UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
         KeybindHint("KEYBIND_PRIMARY_FIRE", "Fire " .. values.name)
     end, { false, true })
+
+    UiTranslate(0, 4)
 
     --Quicksalvo actions
     FdUiContainer(function()
