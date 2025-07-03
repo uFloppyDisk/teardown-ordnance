@@ -445,37 +445,56 @@ function draw()
 
     UiPush()
     UiColor(1, 1, 1)
-    KeybindHint("KEYBIND_TACTICAL_TOGGLE", "Toggle Tactical Mode")
-    KeybindHint("KEYBIND_CYCLE_SHELLS", "Cycle shells [" .. values.name .. "]")
-    KeybindHint("KEYBIND_CYCLE_VARIANTS", "Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]")
-    KeybindHint("KEYBIND_ADJUST_ATTACK", "Change shell incoming pitch/heading")
-    KeybindHint("KEYBIND_ADJUST_INACCURACY", "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]")
+    FdUiContainer(function()
+        KeybindHint("KEYBIND_TACTICAL_TOGGLE", "Toggle Tactical Mode")
+        KeybindHint("KEYBIND_CYCLE_SHELLS", "Cycle shells [" .. values.name .. "]")
+        KeybindHint("KEYBIND_CYCLE_VARIANTS", "Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]")
+        KeybindHint("KEYBIND_ADJUST_ATTACK", "Change shell incoming pitch/heading")
+        KeybindHint("KEYBIND_ADJUST_INACCURACY", "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]")
+    end, { false, true })
 
-    if not (STATES.quicksalvo.enabled) then
-        UiColor(1, 1, 1)
-        KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: OFF")
-
-        UiColor(1, 0.2, 0.2)
-        KeybindHint("KEYBIND_PRIMARY_FIRE", "Fire " .. values.name)
-    else
-        if #QUICK_SALVO > 0 then
-            UiColor(1, 0.3, 0.3)
-            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells")
-        else
-            UiColor(1, 1, 0.1)
-            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: ON")
+    --Secondary action
+    FdUiContainer(function()
+        if not STATES.quicksalvo.enabled then
+            UiColor(FdGetUnpackedRGBA(COLOUR["white"]))
+            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: OFF")
+            return
         end
 
+        if #QUICK_SALVO <= 0 then
+            UiColor(FdGetUnpackedRGBA(COLOUR["yellow"]))
+            KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: ON")
+            return
+        end
+
+        UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
+        KeybindHint("KEYBIND_TOGGLE_QUICKSALVO", "Quick Salvo mode: Launch " .. #QUICK_SALVO .. " shells")
+    end, { false, true })
+
+    --Primary action
+    FdUiContainer(function()
+        if STATES.quicksalvo.enabled then
+            KeybindHint("KEYBIND_PRIMARY_FIRE", "Mark location for salvo")
+            return
+        end
+
+        UiColor(FdGetUnpackedRGBA(COLOUR["red"]))
+        KeybindHint("KEYBIND_PRIMARY_FIRE", "Fire " .. values.name)
+    end, { false, true })
+
+    --Quicksalvo actions
+    FdUiContainer(function()
         UiColor(1, 1, 1)
-        KeybindHint("KEYBIND_PRIMARY_FIRE", "Mark location for salvo")
         KeybindHint("KEYBIND_TOGGLE_QUICKSALVO_MARKERS",
             "Toggle Quick Salvo Markers [" .. FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers) .. "]")
+
+        if not STATES.quicksalvo.enabled then return end
 
         if #QUICK_SALVO > 0 then
             UiColor(1, 1, 0.1)
             KeybindHint("KEYBIND_GENERAL_CANCEL", "Cancel salvo")
         end
-    end
+    end, { false, true })
 
     if HasKey("savegame.mod.crash_disclaimer") then
         UiFont("bold.ttf", 26)
