@@ -1,19 +1,19 @@
-local MOUSE_INPUTS = {
-    ["lmb"] = UI_IMAGE.MOUSE_PRIMARY,
-    ["rmb"] = UI_IMAGE.MOUSE_SECONDARY,
-    ["mmb"] = UI_IMAGE.MOUSE_MIDDLE,
-    ["scroll"] = UI_IMAGE.MOUSE_PLATE,
+local INPUTS = {
+    ["lmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_PRIMARY },
+    ["rmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_SECONDARY },
+    ["mmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_MIDDLE },
+    ["scroll"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
+    ["_default"] = { type = "key", img = UI_IMAGE.KEY_IDLE },
 }
 
 local function getScaledDimensions(dim, scale)
     if dim == nil then return {} end
-    return { x = dim.x or dim[1] * scale, y = dim.y or dim[2] * scale }
+    return { x = (dim.x or dim[1]) * scale, y = (dim.y or dim[2]) * scale }
 end
 
-local KEY = function(icon, _)
-    local img = UI_IMAGE.KEY_IDLE
-    local size = getScaledDimensions(img.size, icon.scale)
-    local slice = getScaledDimensions(img.slice, icon.scale)
+local KEY = function(icon)
+    local size = getScaledDimensions(icon.img.size, icon.scale)
+    local slice = getScaledDimensions(icon.img.slice, icon.scale)
 
     local text_width, text_height = UiGetTextSize(icon.label)
     local w = string.len(icon.label) == 1 and size.x or
@@ -33,11 +33,12 @@ local KEY = function(icon, _)
 
     UiFrameSkipItem(true)
     if icon.is_pressed then UiTranslate(1, 1) end
-    UiImageBox(img.src, w, h, slice.x, slice.y)
+    UiImageBox(icon.img.src, w, h, slice.x, slice.y)
 
     UiPush()
-    UiAlign("left middle")
-    UiTranslate(slice.x * 0.6, -6 * icon.scale)
+    UiTextLineSpacing(0)
+    UiTranslate(slice.x + 3, -10 * icon.scale)
+    UiFont("bold.ttf", math.floor(math.max(10, 36 * icon.scale)))
     UiColor(0, 0, 0, 1)
     UiText(icon.label, false)
     UiPop()
@@ -45,9 +46,9 @@ local KEY = function(icon, _)
     UiPop()
 end
 
-local MOUSE = function(icon, bind)
+local MOUSE = function(icon)
     local img_plate = UI_IMAGE.MOUSE_PLATE
-    local img_button = MOUSE_INPUTS[bind]
+    local img_button = icon.img
     local img_shadow = UI_IMAGE.MOUSE_SHADOW
 
     local img_plate_size = getScaledDimensions(img_plate.size, icon.scale)
@@ -81,44 +82,53 @@ end
 ---Return appropriate UI draw function and type name for input type
 ---@param bind string
 ---@return function
----@return string
+---@return table
 ---@nodiscard
 local function getInputFnType(bind)
-    for value, _ in pairs(MOUSE_INPUTS) do
-        if value == bind then return MOUSE, "mouse" end
+    local function typeToFn(t)
+        return ({
+            ["key"] = KEY,
+            ["mouse"] = MOUSE,
+        })[t] or KEY
     end
 
-    return KEY, "key"
+    for input, def in pairs(INPUTS) do
+        if input == bind then
+            return typeToFn(def.type), def
+        end
+    end
+
+    return typeToFn(INPUTS["_default"].type), INPUTS["_default"]
 end
 
 ---Draw input icon image with press state
 ---@param key string
----@param scale? number Size multiple of icon resolution
+---@param size? number 1:1 size in pixels (minimum size if 9-slice)
 ---@param translate? boolean | [boolean, boolean]
 ---@return number Key icon width
 ---@return number Key icon height
-function InputIcon(key, scale, translate)
+function InputIcon(key, size, translate)
     local bind = CfgGetKeybind(key)
+    local Icon, def = getInputFnType(bind)
 
     local icon = {
-        scale = scale or 1,
+        scale = (size or def.img.size[2]) / def.img.size[2],
         label = CfgGetKeyFriendlyName(key) or key,
+        bind = bind,
         is_pressed = InputDown(bind),
+        img = def.img,
     }
-
-    local Icon, _ = getInputFnType(bind)
 
     local w, h = FdUiContainer(function()
         UiAlign("left middle")
 
-        UiFont("bold.ttf", math.floor(math.max(10, 28 * icon.scale)))
         UiTextUniformHeight(true)
         UiTextShadow(0, 0, 0, 0, 0)
 
         UiColor(1, 1, 1, 1)
 
         UiBeginFrame()
-        Icon(icon, bind)
+        Icon(icon)
         local fw, fh = UiEndFrame()
 
         UiFrameOccupy(fw, fh)
