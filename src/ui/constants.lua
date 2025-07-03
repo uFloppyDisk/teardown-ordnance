@@ -1,7 +1,7 @@
 UI_IMAGE = {
     KEY_IDLE = {
         src = "img/ui/key_idle.png",
-        slice = { x = 12.5, y = 8 },
+        slice = { x = 8, y = 8 },
         padding = 8,
     },
     MOUSE_PLATE = {
