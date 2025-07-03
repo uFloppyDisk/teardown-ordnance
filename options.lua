@@ -14,7 +14,7 @@ MENU = {
         vertical_space = 10,
     },
     offset_rect_correction = -8,
-    offset_option_slider = {-5, -7}
+    offset_option_slider = {-5, -7},
 }
 
 -- #region Components
@@ -183,35 +183,47 @@ local function modalSetKey(option)
                     UiPop()
                 end
 
-                local input = InputLastPressedKey()
+                local input = (function ()
+                    local mouse_btns = { "lmb", "rmb", "mmb" }
+                    for _, btn in ipairs(mouse_btns) do
+                        if InputPressed(btn) then
+                            return btn
+                        end
+                    end
 
-                -- Ad lib loop to enable use of break for flow control
-                while string.len(input) > 0 do
+                    local key = InputLastPressedKey()
+                    if key then return key end
+
+                    return nil
+                end)()
+
+                local _ = (function ()
+                    if input == nil or string.len(input) <= 0 then return end
+
                     if input == "return" or input == "esc" then
                         STATES.set_keybind.active = false
                         STATES.set_keybind.target = nil
                         STATES.set_keybind.msg_error_duplicate_bind = false
-                        break
+                        return
                     end
 
                     if input == CfgGetValue(option.mapping) then
                         STATES.set_keybind.active = false
                         STATES.set_keybind.target = nil
                         STATES.set_keybind.msg_error_duplicate_bind = false
-                        break
+                        return
                     end
 
                     if CfgCheckConflict(G_CONFIG_KEYBINDS_ROOT, input) then
                         STATES.set_keybind.msg_error_duplicate_bind = true
-                        break
+                        return
                     end
 
                     CfgSetValue(option.mapping, input)
                     STATES.set_keybind.active = false
                     STATES.set_keybind.target = nil
                     STATES.set_keybind.msg_error_duplicate_bind = false
-                    break
-                end
+                end)()
         UiModalEnd()
     UiPop()
 end
