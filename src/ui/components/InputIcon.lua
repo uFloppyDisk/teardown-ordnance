@@ -93,7 +93,7 @@ local MOUSE = function(icon)
     if icon.is_pressed then setActiveColour() end
     UiImageBox(img_button.src, size.x, size.y, 0, 0)
 
-    local can_be_active = icon.are_previous_pressed
+    local can_be_active = icon.can_be_active
 
     local _ = (function()
         if icon.bind ~= "mousemove" and icon.bind ~= "mousedx" and icon.bind ~= "mousedy" then return end
@@ -199,16 +199,16 @@ local function getInputFnType(bind)
     return typeToFn(INPUTS["_default"].type), INPUTS["_default"]
 end
 
----Draw input icon image with press state
+---Draw input icon image with pressed and active state
 ---@param key string
 ---@param size? number 1:1 size in pixels (minimum size if 9-slice)
 ---@param translate? boolean | [boolean, boolean]
----@param are_previous_pressed? boolean Carry pressed state of previous binds
+---@param can_be_active? boolean Should input show activity, defaults to true
 ---@return number Key icon width
 ---@return number Key icon height
 ---@return table icon icon data
-function InputIcon(key, size, translate, are_previous_pressed)
-    if are_previous_pressed == nil then are_previous_pressed = true end
+function InputIcon(key, size, translate, can_be_active)
+    if can_be_active == nil then can_be_active = true end
     local bind = CfgGetKeybind(key)
     local Icon, def = getInputFnType(bind)
 
@@ -217,7 +217,7 @@ function InputIcon(key, size, translate, are_previous_pressed)
         label = CfgGetKeyFriendlyName(key) or key,
         bind = bind,
         is_pressed = InputDown(bind),
-        are_previous_pressed = are_previous_pressed,
+        can_be_active = can_be_active,
         img = def.img,
     }
 
