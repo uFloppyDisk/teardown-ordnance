@@ -68,10 +68,37 @@ end
 
 local MOUSE = function(icon)
     local img_plate = UI_IMAGE.MOUSE_PLATE
-    local img_button = icon.img
     local img_shadow = UI_IMAGE.MOUSE_SHADOW
 
     local size = getScaledDimensions(img_plate.size, icon.scale)
+
+    local bound_to_btn =
+        icon.bind == "lmb" or
+        icon.bind == "rmb" or
+        icon.bind == "mmb"
+    local bound_to_move =
+        icon.bind == "mousemove" or
+        icon.bind == "mousedx" or
+        icon.bind == "mousedy"
+    local bound_to_scroll = icon.bind == "scroll"
+
+    local dx, dy = (function()
+        if not bound_to_move then return 0, 0 end
+
+        local dx = InputValue("mousedx")
+        local dy = InputValue("mousedy")
+
+        if directionMagnitude(dx, dy) <= MOUSE_MOVE_THRESHOLD then
+            return dx, dy
+        end
+
+        if dx >= dy then
+            return dx, (math.abs(dy) > MOUSE_MOVE_THRESHOLD and dy) or 0
+        end
+
+        return (math.abs(dx) > MOUSE_MOVE_THRESHOLD and dx) or 0, dy
+    end)()
+
 
     UiPush()
     UiColor(0, 0, 0, 0)
@@ -81,45 +108,39 @@ local MOUSE = function(icon)
     UiPush()
     UiFrameSkipItem(true)
 
+    local can_be_active = icon.can_be_active
+    if can_be_active and bound_to_move then
+        UiTranslate(
+            FdClamp(dx / MOUSE_MOVE_MAGNITUDE, 0, 1),
+            FdClamp(dy / MOUSE_MOVE_MAGNITUDE, 0, 1)
+        )
+    end
+
     UiPush()
     UiTranslate(2, 2)
     UiImageBox(img_shadow.src, size.x, size.y, 0, 0)
     UiPop()
 
     UiPush()
+
     if icon.is_pressed then UiTranslate(1, 1) end
     UiImageBox(img_plate.src, size.x, size.y, 0, 0)
 
-    if icon.is_pressed then setActiveColour() end
-    UiImageBox(img_button.src, size.x, size.y, 0, 0)
+    local _ = (function()
+        if not bound_to_btn then return end
 
-    local can_be_active = icon.can_be_active
+        if icon.is_pressed then setActiveColour() end
+        UiImageBox(icon.img.src, size.x, size.y, 0, 0)
+    end)()
 
     local _ = (function()
-        if icon.bind ~= "mousemove" and icon.bind ~= "mousedx" and icon.bind ~= "mousedy" then return end
+        if not bound_to_move then return end
 
         local img_move = UI_IMAGE.MOUSE_MOVE_BASE
         local img_move_up = UI_IMAGE.MOUSE_MOVE_UP
         local img_move_down = UI_IMAGE.MOUSE_MOVE_DOWN
         local img_move_left = UI_IMAGE.MOUSE_MOVE_LEFT
         local img_move_right = UI_IMAGE.MOUSE_MOVE_RIGHT
-
-        local dx, dy = (function()
-            local dx = InputValue("mousedx")
-            local dy = InputValue("mousedy")
-
-            if directionMagnitude(dx, dy) <= MOUSE_MOVE_THRESHOLD then
-                return dx, dy
-            end
-
-            if dx >= dy then
-                return dx, (math.abs(dy) > MOUSE_MOVE_THRESHOLD and dy) or 0
-            end
-
-            return (math.abs(dx) > MOUSE_MOVE_THRESHOLD and dx) or 0, dy
-        end)()
-
-        local has_direction = hasDirection(dx, dy)
 
         UiPush()
         if can_be_active then
@@ -138,7 +159,7 @@ local MOUSE = function(icon)
             UiImageBox(img_move_down.src, size.x, size.y, 0, 0)
         end
 
-        if not can_be_active or not has_direction then return end
+        if not can_be_active or not hasDirection(dx, dy) then return end
 
         UiPush()
         setActiveColour(directionMagnitude(dx, dy) / MOUSE_MOVE_MAGNITUDE)
@@ -150,7 +171,7 @@ local MOUSE = function(icon)
     end)()
 
     local _ = (function()
-        if icon.bind ~= "scroll" then return end
+        if not bound_to_scroll then return end
 
         local img_scroll = UI_IMAGE.MOUSE_SCROLL_BASE
         local img_scroll_up = UI_IMAGE.MOUSE_SCROLL_UP
