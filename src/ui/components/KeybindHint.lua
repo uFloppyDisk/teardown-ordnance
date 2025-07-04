@@ -1,6 +1,8 @@
 local SIZE_BASE = 36
 local SIZE_SMALL = 24
 
+local GAP_BETWEEN = 12
+
 ---Draw keybind hint with label
 ---@param bind string | string[]
 ---@param label? string
@@ -16,10 +18,29 @@ function KeybindHint(bind, label, size)
 
     FdUiContainer(function()
         local are_previous_pressed = true
-        for _, b in ipairs(bind) do
-            local _, _, icon = InputIcon(b, size_target, { true, false }, are_previous_pressed)
+        local plus_pos = {}
+        local scale = 0
+
+        for index, current_bind in ipairs(bind) do
+            local w, _, icon = InputIcon(current_bind, size_target, { true, false }, are_previous_pressed)
+            if index ~= #bind then UiTranslate(GAP_BETWEEN, 0) end
+
             are_previous_pressed = are_previous_pressed and icon.is_pressed
+            if index > 1 then table.insert(plus_pos, w) end
+            scale = math.max(scale, icon.scale)
         end
+
+        UiPush()
+        UiAlign("center middle")
+        UiFont("bold.ttf", 56 * scale)
+        UiColor(1, 1, 1)
+        UiTranslate(GAP_BETWEEN / 2, 0)
+        for i = #plus_pos, 1, -1 do
+            UiTranslate(-plus_pos[i] - GAP_BETWEEN, 0)
+            UiText("+")
+        end
+        UiPop()
+
         if label then
             UiPush()
             UiAlign("left middle")
