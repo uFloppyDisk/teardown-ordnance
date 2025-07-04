@@ -337,7 +337,7 @@ function ContextTacticalDraw()
         KeybindHint("Space", "Snap grid to target elevation", "sm")
     end
 
-    UiText("Scroll - Camera zoom", true)
+    KeybindHint("scroll", "Camera zoom", "sm")
 
     UiPop()
     UiPop()

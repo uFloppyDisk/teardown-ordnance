@@ -3,6 +3,9 @@ local INPUTS = {
     ["rmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_SECONDARY },
     ["mmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_MIDDLE },
     ["scroll"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
+    ["mousemove"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
+    ["mousedx"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
+    ["mousedy"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
     ["_default"] = { type = "key", img = UI_IMAGE.KEY_IDLE },
 }
 
@@ -10,6 +13,8 @@ local function getScaledDimensions(dim, scale)
     if dim == nil then return {} end
     return { x = (dim.x or dim[1]) * scale, y = (dim.y or dim[2]) * scale }
 end
+
+local setActiveColour = function() UiColor(FdGetUnpackedRGBA(COLOUR["red"])) end
 
 local KEY = function(icon)
     local size = getScaledDimensions(icon.img.size, icon.scale)
@@ -51,13 +56,11 @@ local MOUSE = function(icon)
     local img_button = icon.img
     local img_shadow = UI_IMAGE.MOUSE_SHADOW
 
-    local img_plate_size = getScaledDimensions(img_plate.size, icon.scale)
-    local img_button_size = getScaledDimensions(img_button.size, icon.scale)
-    local img_shadow_size = getScaledDimensions(img_shadow.size, icon.scale)
+    local size = getScaledDimensions(img_plate.size, icon.scale)
 
     UiPush()
     UiColor(0, 0, 0, 0)
-    UiRect(img_plate_size.x, img_plate_size.y)
+    UiRect(size.x, size.y)
     UiPop()
 
     UiPush()
@@ -65,17 +68,82 @@ local MOUSE = function(icon)
 
     UiPush()
     UiTranslate(2, 2)
-    UiImageBox(img_shadow.src, img_shadow_size.x, img_shadow_size.y, 0, 0)
+    UiImageBox(img_shadow.src, size.x, size.y, 0, 0)
     UiPop()
 
     UiPush()
     if icon.is_pressed then UiTranslate(1, 1) end
-    UiImageBox(img_plate.src, img_plate_size.x, img_plate_size.y, 0, 0)
+    UiImageBox(img_plate.src, size.x, size.y, 0, 0)
 
-    if icon.is_pressed then UiColor(FdGetUnpackedRGBA(COLOUR["red"])) end
-    UiImageBox(img_button.src, img_button_size.x, img_button_size.y, 0, 0)
+    if icon.is_pressed then setActiveColour() end
+    UiImageBox(img_button.src, size.x, size.y, 0, 0)
+
+    local can_be_active = icon.are_previous_pressed
+
+    local _ = (function()
+        if icon.bind ~= "mousemove" and icon.bind ~= "mousedx" and icon.bind ~= "mousedy" then return end
+
+        local img_move = UI_IMAGE.MOUSE_MOVE_BASE
+        local img_move_up = UI_IMAGE.MOUSE_MOVE_UP
+        local img_move_down = UI_IMAGE.MOUSE_MOVE_DOWN
+        local img_move_left = UI_IMAGE.MOUSE_MOVE_LEFT
+        local img_move_right = UI_IMAGE.MOUSE_MOVE_RIGHT
+
+        local dx = InputValue("mousedx")
+        local dy = InputValue("mousedy")
+
+        UiPush()
+        if can_be_active and dx == 0 and dy == 0 then setActiveColour() end
+        UiImageBox(img_move.src, size.x, size.y, 0, 0)
+        UiPop()
+
+        if icon.bind == "mousemove" or icon.bind == "mousedx" then
+            UiImageBox(img_move_left.src, size.x, size.y, 0, 0)
+            UiImageBox(img_move_right.src, size.x, size.y, 0, 0)
+        end
+
+        if icon.bind == "mousemove" or icon.bind == "mousedy" then
+            UiImageBox(img_move_up.src, size.x, size.y, 0, 0)
+            UiImageBox(img_move_down.src, size.x, size.y, 0, 0)
+        end
+
+        if not can_be_active then return end
+        if dx == 0 and dy == 0 then return end
+
+        UiPush()
+        setActiveColour()
+
+        UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0)
+        UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0)
+
+        UiPop()
+    end)()
+
+    local _ = (function()
+        if icon.bind ~= "scroll" then return end
+
+        local img_scroll = UI_IMAGE.MOUSE_SCROLL_BASE
+        local img_scroll_up = UI_IMAGE.MOUSE_SCROLL_UP
+        local img_scroll_down = UI_IMAGE.MOUSE_SCROLL_DOWN
+
+        UiImageBox(img_scroll.src, size.x, size.y, 0, 0)
+        UiImageBox(img_scroll_up.src, size.x, size.y, 0, 0)
+        UiImageBox(img_scroll_down.src, size.x, size.y, 0, 0)
+
+        if not can_be_active then return end
+
+        local value = InputValue("mousewheel")
+        if value == 0 then return end
+
+        UiPush()
+        setActiveColour()
+
+        UiImageBox((value < 0 and img_scroll_down.src) or img_scroll_up.src, size.x, size.y, 0, 0)
+
+        UiPop()
+    end)()
+
     UiPop()
-
     UiPop()
 end
 

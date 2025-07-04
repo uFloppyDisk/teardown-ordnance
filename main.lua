@@ -448,8 +448,8 @@ function draw()
             KeybindHint("KEYBIND_CYCLE_SHELLS", "Cycle shells [" .. values.name .. "]")
             KeybindHint("KEYBIND_CYCLE_VARIANTS",
                 "Cycle variants [" .. values.variants[STATES.selected_variant].name .. "]")
-            KeybindHint("KEYBIND_ADJUST_ATTACK", "Change shell incoming pitch/heading")
-            KeybindHint("KEYBIND_ADJUST_INACCURACY",
+            KeybindHint({ "KEYBIND_ADJUST_ATTACK", "mousemove" }, "Change shell incoming pitch/heading")
+            KeybindHint({ "KEYBIND_ADJUST_INACCURACY", "scroll" },
                 "Change shell inaccuracy [" .. STATES.shell_inaccuracy .. " meter(s)]")
         end, { false, true })
 

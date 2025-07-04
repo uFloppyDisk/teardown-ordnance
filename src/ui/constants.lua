@@ -16,6 +16,30 @@ UI_IMAGE = {
     MOUSE_MIDDLE = {
         src = "img/ui/mouse_middle.png",
     },
+    MOUSE_MOVE_BASE = {
+        src = "img/ui/mouse_move.png",
+    },
+    MOUSE_MOVE_UP = {
+        src = "img/ui/mouse_move_up.png",
+    },
+    MOUSE_MOVE_DOWN = {
+        src = "img/ui/mouse_move_down.png",
+    },
+    MOUSE_MOVE_LEFT = {
+        src = "img/ui/mouse_move_left.png",
+    },
+    MOUSE_MOVE_RIGHT = {
+        src = "img/ui/mouse_move_right.png",
+    },
+    MOUSE_SCROLL_BASE = {
+        src = "img/ui/mouse_scroll.png",
+    },
+    MOUSE_SCROLL_UP = {
+        src = "img/ui/mouse_scroll_up.png",
+    },
+    MOUSE_SCROLL_DOWN = {
+        src = "img/ui/mouse_scroll_down.png",
+    },
     MOUSE_SHADOW = {
         src = "img/ui/mouse_shadow.png",
     },
