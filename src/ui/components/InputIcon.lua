@@ -105,9 +105,12 @@ end
 ---@param key string
 ---@param size? number 1:1 size in pixels (minimum size if 9-slice)
 ---@param translate? boolean | [boolean, boolean]
+---@param are_previous_pressed? boolean Carry pressed state of previous binds
 ---@return number Key icon width
 ---@return number Key icon height
-function InputIcon(key, size, translate)
+---@return table icon icon data
+function InputIcon(key, size, translate, are_previous_pressed)
+    if are_previous_pressed == nil then are_previous_pressed = true end
     local bind = CfgGetKeybind(key)
     local Icon, def = getInputFnType(bind)
 
@@ -116,6 +119,7 @@ function InputIcon(key, size, translate)
         label = CfgGetKeyFriendlyName(key) or key,
         bind = bind,
         is_pressed = InputDown(bind),
+        are_previous_pressed = are_previous_pressed,
         img = def.img,
     }
 
@@ -134,5 +138,5 @@ function InputIcon(key, size, translate)
         UiFrameOccupy(fw, fh)
     end, translate)
 
-    return w, h
+    return w, h, icon
 end
