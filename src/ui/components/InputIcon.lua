@@ -1,3 +1,6 @@
+local MOUSE_MOVE_THRESHOLD = 5
+local MOUSE_MOVE_MAGNITUDE = 10
+
 local INPUTS = {
     ["lmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_PRIMARY },
     ["rmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_SECONDARY },
@@ -14,7 +17,19 @@ local function getScaledDimensions(dim, scale)
     return { x = (dim.x or dim[1]) * scale, y = (dim.y or dim[2]) * scale }
 end
 
-local setActiveColour = function() UiColor(FdGetUnpackedRGBA(COLOUR["red"])) end
+local function directionMagnitude(n1, n2)
+    return VecLength(VecAdd(Vec(n1, 0, 0), Vec(0, n2, 0)))
+end
+
+local function hasDirection(n1, n2)
+    return directionMagnitude(n1, n2) ~= 0
+end
+
+local setActiveColour = function(mag)
+    mag = mag or 1
+    local saturation = (1 - 0.2) * FdClamp(mag, 0, 1)
+    UiColor(1, 1 - saturation, 1 - saturation, 1)
+end
 
 local KEY = function(icon)
     local size = getScaledDimensions(icon.img.size, icon.scale)
@@ -89,11 +104,27 @@ local MOUSE = function(icon)
         local img_move_left = UI_IMAGE.MOUSE_MOVE_LEFT
         local img_move_right = UI_IMAGE.MOUSE_MOVE_RIGHT
 
-        local dx = InputValue("mousedx")
-        local dy = InputValue("mousedy")
+        local dx, dy = (function()
+            local dx = InputValue("mousedx")
+            local dy = InputValue("mousedy")
+
+            if directionMagnitude(dx, dy) <= MOUSE_MOVE_THRESHOLD then
+                return dx, dy
+            end
+
+            if dx >= dy then
+                return dx, (math.abs(dy) > MOUSE_MOVE_THRESHOLD and dy) or 0
+            end
+
+            return (math.abs(dx) > MOUSE_MOVE_THRESHOLD and dx) or 0, dy
+        end)()
+
+        local has_direction = hasDirection(dx, dy)
 
         UiPush()
-        if can_be_active and dx == 0 and dy == 0 then setActiveColour() end
+        if can_be_active then
+            setActiveColour(1 / (directionMagnitude(dx, dy) / MOUSE_MOVE_MAGNITUDE))
+        end
         UiImageBox(img_move.src, size.x, size.y, 0, 0)
         UiPop()
 
@@ -107,14 +138,13 @@ local MOUSE = function(icon)
             UiImageBox(img_move_down.src, size.x, size.y, 0, 0)
         end
 
-        if not can_be_active then return end
-        if dx == 0 and dy == 0 then return end
+        if not can_be_active or not has_direction then return end
 
         UiPush()
-        setActiveColour()
+        setActiveColour(directionMagnitude(dx, dy) / MOUSE_MOVE_MAGNITUDE)
 
-        UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0)
-        UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0)
+        if dx ~= 0 then UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0) end
+        if dy ~= 0 then UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0) end
 
         UiPop()
     end)()
