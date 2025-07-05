@@ -334,7 +334,7 @@ function ContextTacticalDraw()
     KeybindHint("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW", "Slow camera", "sm")
 
     if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
-        KeybindHint("Space", "Snap grid to target elevation", "sm")
+        KeybindHint("Space", "(hold) Snap grid to target elevation", "sm")
     end
 
     KeybindHint("scroll", "Camera zoom", "sm")
