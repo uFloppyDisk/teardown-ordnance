@@ -1,5 +1,7 @@
 local MOUSE_MOVE_THRESHOLD = 5
 local MOUSE_MOVE_MAGNITUDE = 10
+local DAMPENED_RANGE = 255
+local DAMPENED_DURATION = 0.2
 
 local INPUTS = {
     ["lmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_PRIMARY },
@@ -10,6 +12,12 @@ local INPUTS = {
     ["mousedx"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
     ["mousedy"] = { type = "mouse", img = UI_IMAGE.MOUSE_PLATE },
     ["_default"] = { type = "key", img = UI_IMAGE.KEY_IDLE },
+}
+
+local dampened = {
+    scroll = 0,
+    dx = 0,
+    dy = 0,
 }
 
 local function getScaledDimensions(dim, scale)
@@ -23,6 +31,20 @@ end
 
 local function hasDirection(n1, n2)
     return directionMagnitude(n1, n2) ~= 0
+end
+
+local function dampenValue(key, value, max, min_magnitude)
+    max = max or 1
+    min_magnitude = (min_magnitude ~= nil and min_magnitude) or 0
+
+    if math.abs(value) <= min_magnitude then return end
+
+    dampened[key] = FdClamp(value / max * DAMPENED_RANGE, -DAMPENED_RANGE, DAMPENED_RANGE)
+    SetValueInTable(dampened, key, 0, "linear", DAMPENED_DURATION)
+end
+
+local function dampenedToScale(key)
+    return dampened[key] / DAMPENED_RANGE
 end
 
 local setActiveColour = function(mag)
@@ -82,7 +104,7 @@ local MOUSE = function(icon)
         icon.bind == "mousedy"
     local bound_to_scroll = icon.bind == "scroll"
 
-    local dx, dy = (function()
+    local pre_dx, pre_dy = (function()
         if not bound_to_move then return 0, 0 end
 
         local dx = InputValue("mousedx")
@@ -99,6 +121,11 @@ local MOUSE = function(icon)
         return (math.abs(dx) > MOUSE_MOVE_THRESHOLD and dx) or 0, dy
     end)()
 
+    dampenValue("dx", pre_dx, MOUSE_MOVE_MAGNITUDE)
+    dampenValue("dy", pre_dy, MOUSE_MOVE_MAGNITUDE)
+
+    local dx = dampenedToScale("dx")
+    local dy = dampenedToScale("dy")
 
     UiPush()
     UiColor(0, 0, 0, 0)
@@ -110,10 +137,7 @@ local MOUSE = function(icon)
 
     local can_be_active = icon.can_be_active
     if can_be_active and bound_to_move then
-        UiTranslate(
-            FdClamp(dx / MOUSE_MOVE_MAGNITUDE, 0, 1),
-            FdClamp(dy / MOUSE_MOVE_MAGNITUDE, 0, 1)
-        )
+        UiTranslate(dx, dy)
     end
 
     UiPush()
@@ -144,7 +168,7 @@ local MOUSE = function(icon)
 
         UiPush()
         if can_be_active then
-            setActiveColour(1 / (directionMagnitude(dx, dy) / MOUSE_MOVE_MAGNITUDE))
+            setActiveColour(1 - directionMagnitude(dx, dy))
         end
         UiImageBox(img_move.src, size.x, size.y, 0, 0)
         UiPop()
@@ -162,9 +186,11 @@ local MOUSE = function(icon)
         if not can_be_active or not hasDirection(dx, dy) then return end
 
         UiPush()
-        setActiveColour(directionMagnitude(dx, dy) / MOUSE_MOVE_MAGNITUDE)
 
+        setActiveColour(math.abs(dx))
         if dx ~= 0 then UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0) end
+
+        setActiveColour(math.abs(dy))
         if dy ~= 0 then UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0) end
 
         UiPop()
@@ -183,13 +209,13 @@ local MOUSE = function(icon)
 
         if not can_be_active then return end
 
-        local value = InputValue("mousewheel")
-        if value == 0 then return end
+        dampenValue("scroll", InputValue("mousewheel"), 1)
+        if dampened.scroll == 0 then return end
 
         UiPush()
-        setActiveColour()
+        setActiveColour(math.abs(dampened.scroll) / DAMPENED_RANGE)
 
-        UiImageBox((value < 0 and img_scroll_down.src) or img_scroll_up.src, size.x, size.y, 0, 0)
+        UiImageBox((dampened.scroll < 0 and img_scroll_down.src) or img_scroll_up.src, size.x, size.y, 0, 0)
 
         UiPop()
     end)()
