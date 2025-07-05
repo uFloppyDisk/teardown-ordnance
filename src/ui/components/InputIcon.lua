@@ -1,4 +1,4 @@
-local MOUSE_MOVE_THRESHOLD = 5
+local MOUSE_MOVE_THRESHOLD = 3
 local MOUSE_MOVE_MAGNITUDE = 10
 local DAMPENED_RANGE = 255
 local DAMPENED_DURATION = 0.2
@@ -137,7 +137,7 @@ local MOUSE = function(icon)
 
     local can_be_active = icon.can_be_active
     if can_be_active and bound_to_move then
-        UiTranslate(dx, dy)
+        UiTranslate(dx * 0.5, dy * 0.5)
     end
 
     UiPush()
