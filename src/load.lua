@@ -8,6 +8,8 @@
 #include "src/constants.lua"
 #include "src/state.lua"
 
+#include "src/ui/load.lua"
+
 #include "src/shell/type/60mm/flare.lua"
 #include "src/shell/type/60mm/smoke.lua"
 #include "src/shell/type/155mm/cluster.lua"

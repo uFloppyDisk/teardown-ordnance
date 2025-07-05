@@ -317,56 +317,27 @@ function ContextTacticalDraw()
     UiText("Quick Salvo target", true)
     UiPop()
     UiTranslate(0, 48)
-    UiPush()
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Z_NEG"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("|")
-    UiTranslate(8, 0)
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Z_POS"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("- Up | Down")
-    UiPop()
-    UiTranslate(0, 28)
-    UiPush()
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_X_NEG"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("|")
-    UiTranslate(8, 0)
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_X_POS"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("- Left | Right")
-    UiPop()
-    UiTranslate(0, 28)
-    UiPush()
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Y_NEG"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("|")
-    UiTranslate(8, 0)
-    do
-        local width = UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_Y_POS"))
-        UiTranslate(math.max(HUD_HINT_KEYBIND_MIN_WIDTH, width + 8), 0)
-    end
-    UiText("- Elevation Down | Up")
-    UiPop()
-    UiTranslate(0, 28)
-    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_CENTER_PLAYER") .. " - Center player", true)
-    UiText("Scroll - Camera zoom", true)
-    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST") .. " - Fast camera", true)
-    UiText(CfgGetKeyFriendlyName("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW") .. " - Slow camera", true)
+    FdUiContainer(function()
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_Z_NEG", nil, "sm")
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_Z_POS", "Up | Down", "sm")
+    end, { false, true })
+    FdUiContainer(function()
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_X_NEG", nil, "sm")
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_X_POS", "Left | Right", "sm")
+    end, { false, true })
+    FdUiContainer(function()
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_Y_NEG", nil, "sm")
+        KeybindHint("KEYBIND_TACTICAL_TRANSLATE_Y_POS", "Lower | Raise", "sm")
+    end, { false, true })
+    KeybindHint("KEYBIND_TACTICAL_CENTER_PLAYER", "Center player", "sm")
+    KeybindHint("KEYBIND_TACTICAL_TRANSLATE_MOD_FAST", "Fast camera", "sm")
+    KeybindHint("KEYBIND_TACTICAL_TRANSLATE_MOD_SLOW", "Slow camera", "sm")
 
     if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
-        UiText("Space (hold) - Snap grid to target elevation")
+        KeybindHint("Space", "(hold) Snap grid to target elevation", "sm")
     end
+
+    KeybindHint("scroll", "Camera zoom", "sm")
 
     UiPop()
     UiPop()
