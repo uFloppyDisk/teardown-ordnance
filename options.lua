@@ -1,6 +1,7 @@
 ---@diagnostic disable:undefined-global
 ---@diagnostic disable:exp-in-action
 #include "src/utils.lua"
+#include "src/ui/load.lua"
 #include "src/configmanager.lua"
 #include "src/constants.lua"
 #include "src/class/Option.lua"
@@ -16,6 +17,25 @@ MENU = {
     offset_rect_correction = -8,
     offset_option_slider = {-5, -7},
 }
+
+local function getTextSizeMax(fonts, text, size)
+    size = size or UiFontHeight()
+
+    local max_width = 0
+    local max_height = 0
+
+    UiPush()
+    for _, font in ipairs(fonts) do
+        UiFont(font, size)
+        local w, h = UiGetTextSize(text)
+
+        max_width = math.max(max_width, w)
+        max_height = math.max(max_height, h)
+    end
+    UiPop()
+
+    return max_width, max_height
+end
 
 -- #region Components
 
@@ -235,23 +255,33 @@ end
 local function renderMasthead(font_reg, font_selected)
     local function renderTab(index)
         local menu = CONFIG_MENUS[index]
-        UiPush()
+        local w, h = getTextSizeMax({ font_reg.type, font_selected.type }, menu.title, font_reg.size)
+
+        FdUiContainer(function ()
+            UiWindow(w, h)
+
+            UiTranslate(UiCenter(), UiMiddle())
+            UiAlign("center middle")
+            UiFont(font_reg.type, font_reg.size)
+
+            UiPush()
             if index == STATES.menu then
                 UiFont(font_selected.type, font_selected.size)
-                UiText(menu.title)
-            else
-                if UiTextButton(menu.title, menu.button_width, menu.button_height) then
-                    STATES.menu = index
-                end
             end
-        UiPop()
 
-        UiTranslate(menu.button_width + MENU.spacing_tab, 0)
+            if UiTextButton(menu.title, w, h) then
+                STATES.menu = index
+            end
+            UiPop()
+
+            UiFrameOccupy(w, h)
+        end, { true, false })
+
+        UiTranslate(MENU.spacing_tab, 0)
     end
 
     local function renderMiddle(offsets)
         UiPush()
-            UiAlign("left")
             UiTranslate((offsets[2] / 2) * -1, 0)
 
             local index = math.floor(#CONFIG_MENUS / 2) + 1
@@ -302,19 +332,9 @@ local function renderMasthead(font_reg, font_selected)
     local masthead_offsets = { 0, 0, 0 }
     local max_line_width = MENU.spacing_tab * (#CONFIG_MENUS - 1)
     for index, menu in ipairs(CONFIG_MENUS) do
-        UiPush()
-            UiFont(font_selected.type, font_selected.size)
-            local line_width, _ = UiGetTextSize(menu.title)
-            max_line_width = max_line_width + line_width
-        UiPop()
-        UiPush()
-            if index == STATES.menu then
-                UiFont(font_selected.type, font_selected.size)
-            end
-            local width, height = UiGetTextSize(menu.title)
-        UiPop()
-        CONFIG_MENUS[index].button_width = width
-        CONFIG_MENUS[index].button_height = height
+        local width, _ = getTextSizeMax({ font_reg.type, font_selected.type }, menu.title)
+
+        max_line_width = max_line_width + width
 
         if (#CONFIG_MENUS % 2 == 0) then
             if (index <= (#CONFIG_MENUS / 2)) then
@@ -334,9 +354,11 @@ local function renderMasthead(font_reg, font_selected)
     end
 
     UiPush()
-        UiAlign("left")
         UiButtonHoverColor(0.7, 0.7, 0.7, 1)
-        UiButtonPressDist(0, 4)
+        UiButtonPressDist(0, 0)
+        UiButtonTextHandling(0)
+        UiTranslate(0, -8)
+        UiAlign("middle")
         renderLeftSide(masthead_offsets)
         renderRightSide(masthead_offsets)
     UiPop()
