@@ -50,7 +50,7 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function init()
-    RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/lasergun.vox")
+    RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/tacpad.xml")
     SetBool("game.tool.ordnance.enabled", true)
 
     if CfgInit() then
