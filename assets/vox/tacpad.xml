@@ -1,0 +1,10 @@
+<scene version="1.7.0">
+    <body dynamic="true">
+        <vox pos="0.2 0.0 0.1375" scale="0.25" file="MOD/assets/vox/tacpad.vox">
+            <screen tags="screen" pos="-0.2 0.0 -0.1375" rot="-90 0 0" bulge="0" resolution="100 100" size="0.4 0.225" script="MOD/src/tool.lua" enabled="true" emissive="1" fxraster="0.1" fxca="2" fxnoise="0.2">
+                <light pos="0.0 0.0 0.0" type="area" color=".8 .8 1" scale="4" size="1.2 .8" fogiter="2" sound="monitor0.ogg"/>
+            </screen>
+        </vox>
+    </body>
+</scene>
+
