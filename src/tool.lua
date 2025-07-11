@@ -1,11 +1,23 @@
+#include "constants.lua"
+#include "shared/events.lua"
+
 local TIME = 0
 local INTERVAL = 600
 
-local SCREEN_SAFE_BOUND_THICKNESS = 2
 local SCREEN_MARGIN = { x = 75, y = 50 }
+
+local SELECTED_SHELL = 1
+local SELECTED_VARIANT = 1
 
 ---@diagnostic disable-next-line: lowercase-global
 function init()
+    FdRegisterEventListener(EVENT.CHANGE_SHELL, function(id)
+        SELECTED_SHELL = tonumber(id)
+    end)
+
+    FdRegisterEventListener(EVENT.CHANGE_VARIANT, function(id)
+        SELECTED_VARIANT = tonumber(id)
+    end)
 end
 
 ---@diagnostic disable-next-line: lowercase-global
@@ -17,31 +29,32 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function draw()
+    UiPush()
+    UiTranslate(SCREEN_MARGIN.x, SCREEN_MARGIN.y)
+
+    do
+        local tlx, tly, brx, bry = UiGetCurrentWindow()
+        local width = brx - tlx
+        local height = bry - tly
+
+        UiWindow(width - SCREEN_MARGIN.x * 2, height - SCREEN_MARGIN.y * 2)
+    end
+
+    local rad = TIME % INTERVAL / INTERVAL * math.pi * 2
     local tlx, tly, brx, bry = UiGetCurrentWindow()
     local width = brx - tlx
     local height = bry - tly
-
-    local rad = TIME % INTERVAL / INTERVAL * math.pi * 2
 
     UiColor(0, 1, 0, 0.25 + math.sin(rad) * 0.25)
     UiRect(width, height)
 
     UiPush()
-    UiTranslate(SCREEN_MARGIN.x, SCREEN_MARGIN.y)
-
-    UiPush()
+    UiTranslate(UiCenter(), SCREEN_MARGIN.y / 2)
+    UiAlign("center top")
+    UiFont("bold.ttf", 36)
     UiColor(1, 1, 1, 1)
-
-    local bound_length = height / 6
-    for i = 1, 4, 1 do
-        local dim = i % 2 == 0 and height or width
-        local margin = i % 2 == 0 and SCREEN_MARGIN.y or SCREEN_MARGIN.x
-
-        UiRect(bound_length, SCREEN_SAFE_BOUND_THICKNESS)
-        UiRect(SCREEN_SAFE_BOUND_THICKNESS, bound_length)
-        UiTranslate(dim - margin * 2, 0)
-        UiRotate(-90)
-    end
+    UiText(SHELL_VALUES[SELECTED_SHELL].name, true)
+    UiText(SHELL_VALUES[SELECTED_SHELL].variants[SELECTED_VARIANT].name, true)
     UiPop()
 
     UiPop()

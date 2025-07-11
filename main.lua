@@ -1,4 +1,5 @@
 #include "src/load.lua"
+#include "src/shared/events.lua"
 
 ELAPSED_TIME = 0
 
@@ -306,7 +307,10 @@ function tick(delta)
 
         if SHELL_VALUES[STATES.selected_shell].variants[STATES.selected_variant] == nil then
             STATES.selected_variant = 1
+            FdTriggerEvent(EVENT.CHANGE_VARIANT, STATES.selected_variant)
         end
+
+        FdTriggerEvent(EVENT.CHANGE_SHELL, STATES.selected_shell)
 
         PlaySound(SND_UI["select"], sound_pos, 0.6)
     end
@@ -317,6 +321,7 @@ function tick(delta)
             PlaySound(SND_UI["cancel"], sound_pos, 0.4)
         else
             STATES.selected_variant = (STATES.selected_variant % #SHELL_VALUES[STATES.selected_shell].variants) + 1
+            FdTriggerEvent(EVENT.CHANGE_VARIANT, STATES.selected_variant)
             PlaySound(SND_UI["select"], sound_pos, 0.6)
         end
     end
