@@ -3,7 +3,7 @@ local MOUSE_MOVE_MAGNITUDE = 10
 local DAMPENED_RANGE = 255
 local DAMPENED_DURATION = 0.2
 
-local INPUTS = {
+_INPUTS = {
     ["lmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_PRIMARY },
     ["rmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_SECONDARY },
     ["mmb"] = { type = "mouse", img = UI_IMAGE.MOUSE_MIDDLE },
@@ -237,13 +237,13 @@ local function getInputFnType(bind)
         })[t] or KEY
     end
 
-    for input, def in pairs(INPUTS) do
+    for input, def in pairs(_INPUTS) do
         if input == bind then
             return typeToFn(def.type), def
         end
     end
 
-    return typeToFn(INPUTS["_default"].type), INPUTS["_default"]
+    return typeToFn(_INPUTS["_default"].type), _INPUTS["_default"]
 end
 
 ---Draw input icon image with pressed and active state
