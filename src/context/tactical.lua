@@ -88,14 +88,17 @@ function ContextTacticalTick(delta)
     STATES.tactical.camera_settings.camera_transform = camera_transform_new
 
     -- Camera zoom key event
-    if not InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
+    local _ = (function()
+        if InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then return end
+        if STATES.quicksalvo.enabled and InputDown(CfgGetValue("KEYBIND_ADJUST_DELAY")) then return end
+
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
             STATES.tactical.camera_settings.target_camera_fov = FdClamp(
                 STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
-    end
+    end)()
 
     -- Camera reset key event
     if InputPressed(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER")) then
