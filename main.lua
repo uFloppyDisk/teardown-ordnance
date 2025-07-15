@@ -96,6 +96,8 @@ function init()
     FdUiLoadImageMetadata()
 
     ResetToDefaultState()
+
+    if G_DEV then SetPlayerSpawnTool("ordnance") end
 end
 
 ---@diagnostic disable-next-line: lowercase-global
