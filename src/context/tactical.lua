@@ -227,7 +227,7 @@ local function drawQueuedSalvo(display)
         UiText(shell_type.name, true)
         UiText(shell_type.variants[shell.variant].name, true)
         if not (is_next and STATES.quicksalvo.enabled) then
-            UiText((is_next and FdRound(DELAYS.quick_salvo, 3) or shell.delay) .. " second(s)", true)
+            UiText((is_next and FdFixedDecimal(DELAYS.quick_salvo, 3) or shell.delay) .. " second(s)", true)
         end
         UiPop()
     end
