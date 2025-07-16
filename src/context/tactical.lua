@@ -227,7 +227,24 @@ local function drawQueuedSalvo(display)
         UiText(shell_type.name, true)
         UiText(shell_type.variants[shell.variant].name, true)
         if not (is_next and STATES.quicksalvo.enabled) then
-            UiText((is_next and FdFixedDecimal(DELAYS.quick_salvo, 3) or shell.delay) .. " second(s)", true)
+            FdUiContainer(function()
+                local delay_seconds = (is_next and FdFixedDecimal(DELAYS.quick_salvo, 3) or shell.delay)
+
+                if is_next then
+                    local width = UiText("Firing in ")
+                    UiTranslate(width, 0)
+                end
+
+                UiPush()
+                UiFont("RobotoMono-Regular.ttf", 18)
+                local width = UiText(delay_seconds .. " ")
+                UiPop()
+
+                if not is_next then
+                    UiTranslate(width, 0)
+                    UiText("second(s)")
+                end
+            end, { false, true })
         end
         UiPop()
     end
