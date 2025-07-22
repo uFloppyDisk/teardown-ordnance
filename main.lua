@@ -4,6 +4,7 @@ ELAPSED_TIME = 0
 
 SHELLS = {}
 BODIES = {}
+---@type Shell[]
 QUICK_SALVO = {}
 
 DEBUG_LINES = {}
@@ -153,10 +154,14 @@ function tick(delta)
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
             ShellInit(salvo_shell)
-            DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+
+            local next_shell = QUICK_SALVO[1]
+            if next_shell ~= nil then
+                DELAYS.quick_salvo = next_shell.delay
+            end
         end
     else
-        DELAYS.quick_salvo = G_QUICK_SALVO_DELAY
+        DELAYS.quick_salvo = 0
     end
 
     if GetPlayerVehicle() ~= 0 then
@@ -254,6 +259,19 @@ function tick(delta)
             local offset = value * InputValue("mousewheel")
             STATES.shell_inaccuracy = FdClamp(STATES.shell_inaccuracy + offset, 0, 150)
         end
+    elseif InputDown(CfgGetValue("KEYBIND_ADJUST_DELAY")) and STATES.quicksalvo.enabled then
+        SetBool("game.input.locktool", true)
+
+        if InputValue("mousewheel") ~= 0 then
+            local value = 0.1
+            if G_QUICK_SALVO_DELAY >= 4.99 then value = 0.5 end
+            if G_QUICK_SALVO_DELAY >= 14.99 then value = 1 end
+            if G_QUICK_SALVO_DELAY >= 30 then value = 2 end
+            if G_QUICK_SALVO_DELAY >= 60 then value = 5 end
+
+            local offset = value * InputValue("mousewheel")
+            G_QUICK_SALVO_DELAY = FdClamp(G_QUICK_SALVO_DELAY + offset, 0, 120)
+        end
     elseif InputDown(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then -- User change heading and angle of attack event
         SetBool("game.input.locktool", true)
 
@@ -315,10 +333,6 @@ function tick(delta)
     if InputPressed(CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO")) then
         STATES.quicksalvo.enabled = not STATES.quicksalvo.enabled
         PlaySound(SND_UI["select"], sound_pos, 0.6)
-
-        if not STATES.quicksalvo.enabled and #QUICK_SALVO > 0 then
-            ShellInit(table.remove(QUICK_SALVO, 1))
-        end
     end
 
     if InputPressed(CfgGetValue("KEYBIND_TOGGLE_QUICKSALVO_MARKERS")) then
@@ -394,6 +408,7 @@ function tick(delta)
 
     -- Queue shell in quick salvo
     shell.state = SHELL_STATE.QUEUED
+    shell.delay = G_QUICK_SALVO_DELAY
     table.insert(QUICK_SALVO, shell)
 
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
@@ -491,6 +506,9 @@ function draw()
                 "Toggle Quick Salvo Markers [" .. FdGetEnumValue(DISPLAY_STATE, STATES.quicksalvo.markers) .. "]")
 
             if not STATES.quicksalvo.enabled then return end
+
+            KeybindHint({ "KEYBIND_ADJUST_DELAY", "scroll" },
+                "Change shell delay [" .. G_QUICK_SALVO_DELAY .. " second(s)]")
 
             if #QUICK_SALVO > 0 then
                 UiColor(1, 1, 0.1)

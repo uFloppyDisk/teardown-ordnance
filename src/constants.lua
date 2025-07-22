@@ -270,6 +270,12 @@ CONFIG_VARIABLES = {
         value_type = "string",
         value_default = "Z"
     },
+    ["KEYBIND_ADJUST_DELAY"] = {
+        variable = G_CONFIG_KEYBINDS_ROOT .. ".adjust_delay",
+
+        value_type = "string",
+        value_default = "X"
+    },
     ["KEYBIND_GENERAL_CANCEL"] = {
         variable = G_CONFIG_KEYBINDS_ROOT .. ".cancel",
 
@@ -517,6 +523,13 @@ CONFIG_OPTIONS = {
         variant = "keybinding",
         mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_INACCURACY"],
         name = "Adjust Inaccuracy (Hold)"
+    },
+    {
+        category = "keybind",
+        type = "textbutton",
+        variant = "keybinding",
+        mapping = CONFIG_VARIABLES["KEYBIND_ADJUST_DELAY"],
+        name = "Adjust Quick Salvo per-shell delay (Hold)"
     },
     {
         category = "keybind",
@@ -966,6 +979,7 @@ SHELL_VALUES = {
 ---@field hit_once boolean
 ---@field sprite number|nil
 ---@field snd_whistle number|nil
+---@field delay? number
 DEFAULT_SHELL = {
     state = SHELL_STATE.NONE,
 

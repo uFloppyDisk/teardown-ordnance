@@ -17,6 +17,29 @@ function FdRound(number, digits)
     return math.floor((number * power) + 0.5) / power
 end
 
+---Return string of number with fixed decimal places
+---@param number number
+---@param places integer
+---@return string
+function FdFixedDecimal(number, places)
+    number = FdRound(number, places)
+    local DECIMAL_OFFSET = 3
+
+    if places <= 0 then
+        return tostring(number)
+    end
+
+    local whole, decimal = math.modf(number)
+    if decimal == 0 then
+        return whole .. "." .. string.rep("0", places)
+    end
+
+    local decimal_str = string.sub(tostring(decimal), DECIMAL_OFFSET, DECIMAL_OFFSET + places - 1)
+    local pad_amount = math.max(0, places - string.len(decimal_str))
+
+    return whole .. "." .. decimal_str .. string.rep("0", pad_amount)
+end
+
 ---@param input number
 ---@param in_start number
 ---@param in_end number
@@ -72,12 +95,11 @@ function FdAddToDebugTable(target, value)
     table.insert(target, value)
 end
 
----@param msg number|string
-function FdLog(msg)
+---@vararg any
+function FdLog(...)
     if not G_DEV then return end
 
-    ---@cast msg string
-    DebugPrint(msg)
+    DebugPrint(table.concat(arg, " "))
 end
 
 ---@param name string

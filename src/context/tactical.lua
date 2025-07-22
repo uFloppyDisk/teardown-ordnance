@@ -88,14 +88,17 @@ function ContextTacticalTick(delta)
     STATES.tactical.camera_settings.camera_transform = camera_transform_new
 
     -- Camera zoom key event
-    if not InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
+    local _ = (function()
+        if InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then return end
+        if STATES.quicksalvo.enabled and InputDown(CfgGetValue("KEYBIND_ADJUST_DELAY")) then return end
+
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
             STATES.tactical.camera_settings.target_camera_fov = FdClamp(
                 STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
-    end
+    end)()
 
     -- Camera reset key event
     if InputPressed(CfgGetValue("KEYBIND_TACTICAL_CENTER_PLAYER")) then
@@ -208,7 +211,7 @@ local function drawQueuedSalvo(display)
     local rect_size = 10
     local rect_w, rect_h = rect_size, rect_size
 
-    local function drawShellInfo(shell)
+    local function drawShellInfo(shell, is_next)
         if display ~= DISPLAY_STATE.VISIBLE then return end
         if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
 
@@ -222,11 +225,31 @@ local function drawQueuedSalvo(display)
         UiTextShadow(0, 0, 0, 1, 1, 1)
 
         UiText(shell_type.name, true)
-        UiText(shell_type.variants[shell.variant].name)
+        UiText(shell_type.variants[shell.variant].name, true)
+        if not (is_next and STATES.quicksalvo.enabled) then
+            FdUiContainer(function()
+                local delay_seconds = (is_next and FdFixedDecimal(DELAYS.quick_salvo, 3) or shell.delay)
+
+                if is_next then
+                    local width = UiText("Firing in ")
+                    UiTranslate(width, 0)
+                end
+
+                UiPush()
+                UiFont("RobotoMono-Regular.ttf", 18)
+                local width = UiText(delay_seconds .. " ")
+                UiPop()
+
+                if not is_next then
+                    UiTranslate(width, 0)
+                    UiText("second(s)")
+                end
+            end, { false, true })
+        end
         UiPop()
     end
 
-    for _, shell in ipairs(QUICK_SALVO) do
+    for index, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
         rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))),
             5, 15)
@@ -234,7 +257,7 @@ local function drawQueuedSalvo(display)
         UiPush()
         UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
 
-        drawShellInfo(shell)
+        drawShellInfo(shell, index == 1)
 
         UiColor(unpack(FdGetRGBA(COLOUR["red"], 0.75)))
         UiRect(rect_w, rect_h)
