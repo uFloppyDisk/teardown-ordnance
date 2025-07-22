@@ -454,7 +454,7 @@ function draw()
     end
 
     FdUiContainer(function()
-        UiTranslate(80, UiMiddle() + UiMiddle() / 3)
+        UiTranslate(80, UiHeight() - 375)
         UiColor(1, 1, 1)
         UiAlign("left")
         UiFont("regular.ttf", 26)
