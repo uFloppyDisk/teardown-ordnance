@@ -1,7 +1,5 @@
 ---@meta _
 
----Teardown API v1.6.0
-
 ---@class TVec
 ---@field [0] number
 ---@field [1] number
@@ -142,7 +140,7 @@ function GetTime() return 0 end
 --- 	local dt = GetTimeStep()
 --- 	DebugPrint("tick dt: " .. dt)
 --- end
----
+--- 
 --- function update()
 --- 	local dt = GetTimeStep()
 --- 	DebugPrint("update dt: " .. dt)
@@ -216,6 +214,8 @@ function InputDown(input) return false end
 ---@return number value Depends on input type
 function InputValue(input) return 0 end
 
+function IsControllerButtonDown(...) end
+
 --- All player input is "forgotten" by the game after calling this function
 ---
 --- Example:
@@ -253,7 +253,7 @@ function InputResetOnTransition() end
 --- Example:
 --- ```lua
 --- #include "ui/ui_helpers.lua"
----
+--- 
 --- function update()
 --- 	if LastInputDevice() == UI_DEVICE_GAMEPAD then
 --- 		DebugPrint("Last input was from gamepad")
@@ -327,29 +327,29 @@ function SetValueInTable(tableId, memberName, newValue, type, length) end
 --- Example:
 --- ```lua
 --- function tick()
----
+--- 
 ---     -- Primary button which will be placed in the main pause menu below "Main menu" button
 --- 	if PauseMenuButton("Back to Hub", "main_bottom") then
 --- 		StartLevel("hub", "level/hub.xml")
 --- 	end
----
+--- 
 --- 	-- Primary button which will be placed in the main pause menu above "Main menu" button
 --- 	if PauseMenuButton("Back to Hub", "main_top") then
 --- 		StartLevel("hub", "level/hub.xml")
 --- 	end
----
+--- 
 --- 	-- Button will be placed in the bottom bar of the pause menu
 --- 	if PauseMenuButton("MyMod Settings") then
 --- 		visible = true
 --- 	end
 --- end
----
+--- 
 --- function draw()
 --- 	if visible then
 --- 		UiMakeInteractive()
 --- 	end
 --- end
----
+--- 
 --- ```
 ---@param title string Text on button
 ---@param location? string Button location. If "bottom_bar" - bottom bar, if "main_bottom" - below "Main menu" button, if "main_top" - above "Main menu" button. Default "bottom_bar".
@@ -362,7 +362,7 @@ function PauseMenuButton(title, location) return false end
 --- Example:
 --- ```lua
 --- local file = "gfx/circle.png"
----
+--- 
 --- function draw()
 --- 	if HasFile(image) then
 --- 		DebugPrint("file " .. file .. " exists")
@@ -400,7 +400,7 @@ function Command(command, arg0, arg1, arg2, arg3, arg4) end
 --- function init()
 --- 	--Start level with no active layers
 --- 	StartLevel("level1", "MOD/level1.xml")
----
+--- 
 --- 	--Start level with two layers
 --- 	StartLevel("level1", "MOD/level1.xml", "vehicles targets")
 --- end
@@ -486,7 +486,7 @@ function GetClipboardText() return "" end
 --- 	SetClipboardText("text")
 --- end
 --- ```
----@param text string
+---@param text string 
 function SetClipboardText(text) end
 
 --- Remove registry node, including all child nodes.
@@ -499,9 +499,9 @@ function SetClipboardText(text) end
 --- 	--		levels
 --- 	--			level1 = 5
 --- 	--			level2 = 4
----
+--- 
 --- 	ClearKey("score.levels")
----
+--- 
 --- 	--Afterwards, the registry will look like this:
 --- 	--	score
 --- end
@@ -519,14 +519,14 @@ function ClearKey(key) end
 --- --			steroid
 --- --			rifle
 --- --			...
----
+--- 
 --- function init()
 --- 	local list = ListKeys("game.tool")
 --- 	for i=1, #list do
 --- 		DebugPrint(list[i])
 --- 	end
 --- end
----
+--- 
 --- --This will output:
 --- --steroid
 --- --rifle
@@ -908,6 +908,16 @@ function IsRunningOnMac() return false end
 ---@return boolean value True if the game is running on iOS
 function IsRunningOnIOS() return false end
 
+--- Set the used character skin.
+---
+--- Example:
+--- ```lua
+--- function init()
+---     SetPlayerCharacter("space-suit")
+--- end
+--- ```
+---@param name string Requested character skin
+function SetPlayerCharacter(name) end
 --- Create new vector and optionally initializes it to the provided values.
 --- A Vec is equivalent to a regular lua table with three numbers.
 ---
@@ -918,7 +928,7 @@ function IsRunningOnIOS() return false end
 --- 	local a1 = Vec()
 --- 	local a2 = {0, 0, 0}
 --- 	DebugPrint("a1 == a2: " .. tostring(VecStr(a1) == VecStr(a2)))
----
+--- 
 --- 	--These are equivalent
 --- 	local b1 = Vec(0, 1, 0)
 --- 	local b2 = {0, 1, 0}
@@ -941,7 +951,7 @@ function Vec(x, y, z) return Vec() end
 --- 	--Do this to assign a vector
 --- 	local right1 = Vec(1, 2, 3)
 --- 	local right2 = VecCopy(right1)
----
+--- 
 --- 	--Never do this unless you REALLY know what you're doing
 --- 	local wrong1 = Vec(1, 2, 3)
 --- 	local wrong2 = wrong1
@@ -1079,11 +1089,11 @@ function VecCross(a, b) return Vec() end
 --- 	local a = Vec(2,0,0)
 --- 	local b = Vec(0,4,2)
 --- 	local t = 0.5
----
+--- 
 --- 	--These two are equivalent
 --- 	local c1 = VecLerp(a, b, t)
 --- 	local c2 = VecAdd(VecScale(a, 1-t), VecScale(b, t))
----
+--- 
 --- 	--c1 and c2 now equals {1, 2, 1}
 --- 	DebugPrint("c1" .. VecStr(c1) .. " == c2" .. VecStr(c2))
 --- end
@@ -1106,7 +1116,7 @@ function VecLerp(a, b, t) return Vec() end
 --- 	--These are equivalent
 --- 	local a1 = Quat()
 --- 	local a2 = {0, 0, 0, 1}
----
+--- 
 --- 	DebugPrint(QuatStr(a1) == QuatStr(a2))
 --- end
 --- ```
@@ -1127,7 +1137,7 @@ function Quat(x, y, z, w) return Quat() end
 --- 	--Do this to assign a quaternion
 --- 	local right1 = QuatEuler(0, 90, 0)
 --- 	local right2 = QuatCopy(right1)
----
+--- 
 --- 	--Never do this unless you REALLY know what you're doing
 --- 	local wrong1 = QuatEuler(0, 90, 0)
 --- 	local wrong2 = wrong1
@@ -1272,7 +1282,7 @@ function QuatLookAt(eye, target) return Quat() end
 --- function init()
 --- 	local a = QuatEuler(0, 10, 0)
 --- 	local b = QuatEuler(0, 0, 45)
----
+--- 
 --- 	--Create quaternion half way between a and b
 --- 	local q = QuatSlerp(a, b, 0.5)
 --- 	DebugPrint(QuatStr(q))
@@ -1306,13 +1316,13 @@ function QuatStr(quat) return "" end
 --- 	local a = QuatEuler(0, 10, 0)
 --- 	local b = QuatEuler(0, 0, 45)
 --- 	local q = QuatRotateQuat(a, b)
----
+--- 
 --- 	--q now represents a rotation first 10 degrees around
 --- 	--the Y axis and then 45 degrees around the Z axis.
 --- 	local x, y, z = GetQuatEuler(q)
 --- 	DebugPrint(x .. " " .. y .. " " .. z)
 --- end
----
+--- 
 --- ```
 ---@param a TQuat Quaternion
 ---@param b TQuat Quaternion
@@ -1327,7 +1337,7 @@ function QuatRotateQuat(a, b) return Quat() end
 --- 	local q = QuatEuler(0, 10, 0)
 --- 	local v = Vec(1, 0, 0)
 --- 	local r = QuatRotateVec(q, v)
----
+--- 
 --- 	--r is now vector a rotated 10 degrees around the Y axis
 --- 	DebugPrint(VecStr(r))
 --- end
@@ -1345,13 +1355,13 @@ function QuatRotateVec(a, vec) return Vec() end
 --- function init()
 --- 	--Create transform located at {0, 0, 0} with no rotation
 --- 	local t1 = Transform()
----
+--- 
 --- 	--Create transform located at {10, 0, 0} with no rotation
 --- 	local t2 = Transform(Vec(10, 0,0))
----
+--- 
 --- 	--Create transform located at {10, 0, 0}, rotated 45 degrees around Y axis
 --- 	local t3 = Transform(Vec(10, 0,0), QuatEuler(0, 45, 0))
----
+--- 
 --- 	DebugPrint(TransformStr(t1))
 --- 	DebugPrint(TransformStr(t2))
 --- 	DebugPrint(TransformStr(t3))
@@ -1372,7 +1382,7 @@ function Transform(pos, rot) return Transform() end
 --- 	--Do this to assign a quaternion
 --- 	local right1 = Transform(Vec(1,0,0), QuatEuler(0, 90, 0))
 --- 	local right2 = TransformCopy(right1)
----
+--- 
 --- 	--Never do this unless you REALLY know what you're doing
 --- 	local wrong1 = Transform(Vec(1,0,0), QuatEuler(0, 90, 0))
 --- 	local wrong2 = wrong1
@@ -1406,12 +1416,12 @@ function TransformStr(transform) return "" end
 --- function init()
 --- 	local b = GetBodyTransform(body)
 --- 	local s = GetShapeLocalTransform(shape)
----
+--- 
 --- 	--b represents the location of body in world space
 --- 	--s represents the location of shape in body space
----
+--- 
 --- 	local w = TransformToParentTransform(b, s)
----
+--- 
 --- 	--w now represents the location of shape in world space
 --- 	DebugPrint(TransformStr(w))
 --- end
@@ -1429,12 +1439,12 @@ function TransformToParentTransform(parent, child) return Transform() end
 --- function init()
 --- 	local b = GetBodyTransform(body)
 --- 	local w = GetShapeWorldTransform(shape)
----
+--- 
 --- 	--b represents the location of body in world space
 --- 	--w represents the location of shape in world space
----
+--- 
 --- 	local s = TransformToLocalTransform(b, w)
----
+--- 
 --- 	--s now represents the location of shape in body space.
 --- 	DebugPrint(TransformStr(s))
 --- end
@@ -1452,7 +1462,7 @@ function TransformToLocalTransform(parent, child) return Transform() end
 --- 	local t = GetBodyTransform(body)
 --- 	local localUp = Vec(0, 1, 0)
 --- 	local up = TransformToParentVec(t, localUp)
----
+--- 
 --- 	--up now represents the local body up direction in world space
 --- 	DebugPrint(VecStr(up))
 --- end
@@ -1470,7 +1480,7 @@ function TransformToParentVec(t, v) return Vec() end
 --- 	local t = GetBodyTransform(body)
 --- 	local localUp = Vec(0, 1, 0)
 --- 	local up = TransformToParentVec(t, localUp)
----
+--- 
 --- 	--up now represents the local body up direction in world space
 --- 	DebugPrint(VecStr(up))
 --- end
@@ -1488,7 +1498,7 @@ function TransformToLocalVec(t, v) return Vec() end
 --- 	local t = GetBodyTransform(body)
 --- 	local bodyPoint = Vec(0, 0, -1)
 --- 	local p = TransformToParentPoint(t, bodyPoint)
----
+--- 
 --- 	--p now represents the local body point {0, 0, -1 } in world space
 --- 	DebugPrint(VecStr(p))
 --- end
@@ -1506,7 +1516,7 @@ function TransformToParentPoint(t, p) return Vec() end
 --- 	local t = GetBodyTransform(body)
 --- 	local worldOrigo = Vec(0, 0, 0)
 --- 	local p = TransformToLocalPoint(t, worldOrigo)
----
+--- 
 --- 	--p now represents the position of world origo in local body space
 --- 	DebugPrint(VecStr(p))
 --- end
@@ -1515,7 +1525,6 @@ function TransformToParentPoint(t, p) return Vec() end
 ---@param p TVec Vector representing position
 ---@return TVec r Transformed position
 function TransformToLocalPoint(t, p) return Vec() end
-
 --- Returns an entity with the specified tag and type. This is a universal method that is an alternative to FindBody, FindShape, FindVehicle, etc.
 ---
 --- Example:
@@ -1523,10 +1532,10 @@ function TransformToLocalPoint(t, p) return Vec() end
 --- function tick()
 --- 	--You may use this function in a similar way to other "Find functions" like FindBody, FindShape, FindVehicle, etc.
 --- 	local myCar = FindEntity("myCar", false, "vehicle")
----
+--- 
 --- 	--If you do not specify the tag, the first element found will be returned
 --- 	local joint = FindEntity("", true, "joint")
----
+--- 
 --- 	--If the type is not specified, the search will be performed for all types of entity
 --- 	local target = FindEntity("target", true)
 --- end
@@ -1544,10 +1553,10 @@ function FindEntity(tag, global, type) return 0 end
 --- function tick()
 --- 	-- You may use this function in a similar way to other "Find functions" like FindBody, FindShape, FindVehicle, etc.
 --- 	local cars = FindEntities("car", false, "vehicle")
----
+--- 
 --- 	-- You can get all the entities of the specified type by passing an empty string to the tag
 --- 	local allJoints = FindEntities("", true, "joint")
----
+--- 
 --- 	-- If the type is not specified, the search will be performed for all types
 --- 	local allUnbreakables = FindEntities("unbreakable", true)
 --- end
@@ -1565,7 +1574,7 @@ function FindEntities(tag, global, type) return nil end
 --- function tick()
 --- 	local car = FindEntity("car", true, "vehicle")
 --- 	DebugWatch("car", car)
----
+--- 
 --- 	local children = GetEntityChildren(entity, "", true, "wheel")
 --- 	for i = 1, #children do
 --- 		DebugWatch("wheel " .. tostring(i), children[i])
@@ -1591,7 +1600,7 @@ function GetEntityChildren(handle, tag, recursive, type) return nil end
 ---@param handle number Entity handle
 ---@param tag? string Tag name
 ---@param type? string Entity type ("body", "shape", "light", "location" etc.)
----@return number handle
+---@return number handle 
 function GetEntityParent(handle, tag, type) return 0 end
 
 ---
@@ -1602,7 +1611,7 @@ function GetEntityParent(handle, tag, type) return 0 end
 --- 	--Add "special" tag to an entity
 --- 	SetTag(handle, "special")
 --- 	DebugPrint(HasTag(handle, "special"))
----
+--- 
 --- 	--Add "team" tag to an entity and give it value "red"
 --- 	SetTag(handle, "team", "red")
 --- 	DebugPrint(HasTag(handle, "team"))
@@ -1623,7 +1632,7 @@ function SetTag(handle, tag, value) end
 --- 	SetTag(handle, "special")
 --- 	RemoveTag(handle, "special")
 --- 	DebugPrint(HasTag(handle, "special"))
----
+--- 
 --- 	--Add "team" tag to an entity and give it value "red"
 --- 	SetTag(handle, "team", "red")
 --- 	DebugPrint(HasTag(handle, "team"))
@@ -1641,7 +1650,7 @@ function RemoveTag(handle, tag) end
 --- 	--Add "special" tag to an entity
 --- 	SetTag(handle, "special")
 --- 	DebugPrint(HasTag(handle, "special"))
----
+--- 
 --- 	--Add "team" tag to an entity and give it value "red"
 --- 	SetTag(handle, "team", "red")
 --- 	DebugPrint(HasTag(handle, "team"))
@@ -1657,7 +1666,7 @@ function HasTag(handle, tag) return false end
 --- ```lua
 --- function init()
 --- 	local handle = FindBody("body", true)
----
+--- 
 --- 	--Add "team" tag to an entity and give it value "red"
 --- 	SetTag(handle, "team", "red")
 --- 	DebugPrint(GetTagValue(handle, "team"))
@@ -1673,10 +1682,10 @@ function GetTagValue(handle, tag) return "" end
 --- ```lua
 --- function init()
 --- 	local handle = FindBody("body", true)
----
+--- 
 --- 	--Add "team" tag to an entity and give it value "red"
 --- 	SetTag(handle, "team", "red")
----
+--- 
 --- 	--List all tags and their tag values for a particular entity
 --- 	local tags = ListTags(handle)
 --- 	for i=1, #tags do
@@ -1737,11 +1746,11 @@ function Delete(handle) end
 --- ```lua
 --- function init()
 --- 	local body = FindBody("body", true)
----
+--- 
 --- 	--valid is true if body still exists
 --- 	DebugPrint(IsHandleValid(body))
 --- 	Delete(body)
----
+--- 
 --- 	--valid will now be false
 --- 	DebugPrint(IsHandleValid(body))
 --- end
@@ -1821,7 +1830,7 @@ function SetProperty(handle, property, value) end
 --- 	--Search for a body tagged "target" in script scope
 --- 	local target = FindBody("body")
 --- 	DebugPrint(target)
----
+--- 
 --- 	--Search for a body tagged "escape" in entire scene
 --- 	local escape = FindBody("body", true)
 --- 	DebugPrint(escape)
@@ -1867,7 +1876,7 @@ function GetBodyTransform(handle) return Transform() end
 --- ```lua
 --- function init()
 --- 	local handle = FindBody("body", true)
----
+--- 
 --- 	--Move a body 1 meter upwards
 --- 	local t = GetBodyTransform(handle)
 --- 	t.pos = VecAdd(t.pos, Vec(0, 3, 0))
@@ -1883,7 +1892,7 @@ function SetBodyTransform(handle, transform) end
 --- ```lua
 --- function init()
 --- 	local handle = FindBody("body", true)
----
+--- 
 --- 	--Move a body 1 meter upwards
 --- 	local mass = GetBodyMass(handle)
 --- 	DebugPrint(mass)
@@ -1946,7 +1955,7 @@ function SetBodyVelocity(handle, velocity) end
 --- 	local vel = Vec(0,10,0)
 --- 	SetBodyVelocity(handle, vel)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(VecStr(GetBodyVelocity(handle)))
 --- end
@@ -1964,7 +1973,7 @@ function GetBodyVelocity(handle) return Vec() end
 --- 	local vel = Vec(0,10,0)
 --- 	SetBodyVelocity(handle, vel)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(VecStr(GetBodyVelocityAtPos(handle, Vec(0, 0, 0))))
 --- end
@@ -1997,7 +2006,7 @@ function SetBodyAngularVelocity(handle, angVel) end
 --- 	local angVel = Vec(0,100,0)
 --- 	SetBodyAngularVelocity(handle, angVel)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(VecStr(GetBodyAngularVelocity(handle)))
 --- end
@@ -2038,7 +2047,7 @@ function GetBodyHit(...) end
 --- ```lua
 --- function tick()
 --- 	handle = FindBody("body", true)
----
+--- 
 --- 	-- Forces body to "sleep"
 --- 	SetBodyActive(handle, false)
 --- 	if IsBodyActive(handle) then
@@ -2056,7 +2065,7 @@ function SetBodyActive(handle, active) end
 --- ```lua
 --- function tick()
 --- 	handle = FindBody("body", true)
----
+--- 
 --- 	local pos = Vec(0,1,0)
 --- 	local imp = Vec(0,0,10)
 --- 	ApplyBodyImpulse(handle, pos, imp)
@@ -2073,7 +2082,7 @@ function ApplyBodyImpulse(handle, position, impulse) end
 --- ```lua
 --- function init()
 --- 	handle = FindBody("body", true)
----
+--- 
 --- 	local shapes = GetBodyShapes(handle)
 --- 	for i=1,#shapes do
 --- 		local shape = shapes[i]
@@ -2090,7 +2099,7 @@ function GetBodyShapes(handle) return nil end
 --- ```lua
 --- function init()
 --- 	handle = FindBody("body", true)
----
+--- 
 --- 	local vehicle = GetBodyVehicle(handle)
 --- 	DebugPrint(vehicle)
 --- end
@@ -2105,7 +2114,7 @@ function GetBodyVehicle(body) return 0 end
 --- ```lua
 --- function init()
 --- 	handle = FindBody("body", true)
----
+--- 
 --- 	local min, max = GetBodyBounds(handle)
 --- 	local boundsSize = VecSub(max, min)
 --- 	local center = VecLerp(min, max, 0.5)
@@ -2123,7 +2132,7 @@ function GetBodyBounds(handle) return Vec(), Vec() end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	--Visualize center of mass on for body
 --- 	local com = GetBodyCenterOfMass(handle)
@@ -2135,8 +2144,9 @@ function GetBodyBounds(handle) return Vec(), Vec() end
 ---@return TVec point Vector representing local center of mass in body space
 function GetBodyCenterOfMass(handle) return Vec() end
 
---- This will check if a body is currently visible in the camera frustum and
---- not occluded by other objects.
+--- This function does a very rudimetary check and will only return true if the
+--- object is visible within 74 degrees of the camera's forward direction, and
+--- only tests line-of-sight visibility for the corners and center of the bounding box.
 ---
 --- Example:
 --- ```lua
@@ -2144,7 +2154,7 @@ function GetBodyCenterOfMass(handle) return Vec() end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if IsBodyVisible(handle, 25) then
 --- 		--Body is within 25 meters visible to the camera
@@ -2168,7 +2178,7 @@ function IsBodyVisible(handle, maxDist, rejectTransparent) return false end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(IsBodyBroken(handle))
 --- end
@@ -2186,7 +2196,7 @@ function IsBodyBroken(handle) return false end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(IsBodyJointedToStatic(handle))
 --- end
@@ -2204,7 +2214,7 @@ function IsBodyJointedToStatic(handle) return false end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 --- 		--Draw white outline at 50% transparency
@@ -2231,7 +2241,7 @@ function DrawBodyOutline(handle, r, g, b, a) end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 --- 		DrawBodyHighlight(handle, 0.5)
@@ -2252,7 +2262,7 @@ function WatchBodyHit(...) end
 --- function init()
 --- 	handle = FindBody("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(Vec(1, 0, 0))
 --- 	local hit, p, n, s = GetBodyClosestPoint(handle, Vec(1, 0, 0))
@@ -2281,8 +2291,8 @@ function GetBodyClosestPoint(body, origin) return false, Vec(), Vec(), 0 end
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
----
---- function tick()
+--- 
+--- function update()
 --- 	--Constrain the velocity between bodies A and B so that the relative velocity
 --- 	--along the X axis at point (0, 5, 0) is always 3 m/s
 --- 	ConstrainVelocity(handleA, handleB, Vec(0, 5, 0), Vec(1, 0, 0), 3)
@@ -2309,8 +2319,8 @@ function ConstrainVelocity(bodyA, bodyB, point, dir, relVel, min, max) end
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
----
---- function tick()
+--- 
+--- function update()
 --- 	--Constrain the angular velocity between bodies A and B so that the relative angular velocity
 --- 	--along the Y axis is always 3 rad/s
 --- 	ConstrainAngularVelocity(handleA, handleB, Vec(1, 0, 0), 3)
@@ -2338,12 +2348,12 @@ function ConstrainAngularVelocity(bodyA, bodyB, dir, relAngVel, min, max) end
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
----
---- function tick()
+--- 
+--- function update()
 --- 	--Constrain the origo of body a to an animated point in the world
 --- 	local worldPos = Vec(0, 3+math.sin(GetTime()), 0)
 --- 	ConstrainPosition(handleA, 0, GetBodyTransform(handleA).pos, worldPos)
----
+--- 
 --- 	--Constrain the origo of body a to the origo of body b (like a ball joint)
 --- 	ConstrainPosition(handleA, handleA, GetBodyTransform(handleA).pos, GetBodyTransform(handleB).pos)
 --- end
@@ -2371,11 +2381,11 @@ function ConstrainPosition(bodyA, bodyB, pointA, pointB, maxVel, maxImpulse) end
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
----
---- function tick()
+--- 
+--- function update()
 --- 	--Constrain the orietation of body a to an upright orientation in the world
 --- 	ConstrainOrientation(handleA, 0, GetBodyTransform(handleA).rot, Quat())
----
+--- 
 --- 	--Constrain the orientation of body a to the orientation of body b
 --- 	ConstrainOrientation(handleA, handleB, GetBodyTransform(handleA).rot, GetBodyTransform(handleB).rot)
 --- end
@@ -2396,7 +2406,7 @@ function ConstrainOrientation(bodyA, bodyB, quatA, quatB, maxAngVel, maxAngImpul
 --- function init()
 --- 	handle = GetWorldBody()
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(GetBodyTransform(handle).pos)
 --- end
@@ -2412,11 +2422,11 @@ function GetWorldBody() return 0 end
 --- function init()
 --- 	--Search for a shape tagged "mybox" in script scope
 --- 	target = FindShape("mybox")
----
+--- 
 --- 	--Search for a shape tagged "laserturret" in entire scene
 --- 	escape = FindShape("laserturret", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(GetShapeWorldTransform(target).pos)
 --- 	DebugCross(GetShapeWorldTransform(escape).pos)
@@ -2435,7 +2445,7 @@ function FindShape(tag, global) return 0 end
 --- 	--Search for shapes tagged "body"
 --- 	shapes = FindShapes("body", true)
 --- end
----
+--- 
 --- function tick()
 --- 	for i=1, #shapes do
 --- 		local shape = shapes[i]
@@ -2455,17 +2465,17 @@ function FindShapes(tag, global) return nil end
 --- function init()
 --- 	shape = FindShape("shape")
 --- end
----
+--- 
 --- function tick()
 --- 	--Shape transform in body local space
 --- 	local shapeTransform = GetShapeLocalTransform(shape)
----
+--- 
 --- 	--Body transform in world space
 --- 	local bodyTransform = GetBodyTransform(GetShapeBody(shape))
----
+--- 
 --- 	--Shape transform in world space
 --- 	local worldTranform = TransformToParentTransform(bodyTransform, shapeTransform)
----
+--- 
 --- 	DebugCross(worldTranform)
 --- end
 --- ```
@@ -2482,17 +2492,17 @@ function GetShapeLocalTransform(handle) return Transform() end
 --- 	local transform = Transform(Vec(0, 1, 0), QuatEuler(0, 90, 0))
 --- 	SetShapeLocalTransform(shape, transform)
 --- end
----
+--- 
 --- function tick()
 --- 	--Shape transform in body local space
 --- 	local shapeTransform = GetShapeLocalTransform(shape)
----
+--- 
 --- 	--Body transform in world space
 --- 	local bodyTransform = GetBodyTransform(GetShapeBody(shape))
----
+--- 
 --- 	--Shape transform in world space
 --- 	local worldTranform = TransformToParentTransform(bodyTransform, shapeTransform)
----
+--- 
 --- 	DebugCross(worldTranform)
 --- end
 --- ```
@@ -2508,12 +2518,12 @@ function SetShapeLocalTransform(handle, transform) end
 --- --local shapeTransform = GetShapeLocalTransform(shape)
 --- --local bodyTransform = GetBodyTransform(GetShapeBody(shape))
 --- --worldTranform = TransformToParentTransform(bodyTransform, shapeTransform)
----
+--- 
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(GetShapeWorldTransform(shape).pos)
 --- end
@@ -2531,7 +2541,7 @@ function GetShapeWorldTransform(handle) return Transform() end
 --- function init()
 --- 	body = GetShapeBody(FindShape("shape", true), true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(GetBodyCenterOfMass(body))
 --- end
@@ -2546,7 +2556,7 @@ function GetShapeBody(handle) return 0 end
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
----
+--- 
 --- 	local hinges = GetShapeJoints(shape)
 --- 	for i=1, #hinges do
 --- 		local joint = hinges[i]
@@ -2564,7 +2574,7 @@ function GetShapeJoints(shape) return nil end
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
----
+--- 
 --- 	local light = GetShapeLights(shape)
 --- 	for i=1, #light do
 --- 		DebugPrint(light[i])
@@ -2582,11 +2592,11 @@ function GetShapeLights(shape) return nil end
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
----
+--- 
 --- 	local min, max = GetShapeBounds(shape)
 --- 	local boundsSize = VecSub(max, min)
 --- 	local center = VecLerp(min, max, 0.5)
----
+--- 
 --- 	DebugPrint(VecStr(boundsSize) .. " " .. VecStr(center))
 --- end
 --- ```
@@ -2603,7 +2613,7 @@ function GetShapeBounds(handle) return Vec(), Vec() end
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
----
+--- 
 --- 	--Pulsate emissiveness and light intensity for shape
 --- 	local scale = math.sin(GetTime())*0.5 + 0.5
 --- 	SetShapeEmissiveScale(shape, scale)
@@ -2620,7 +2630,7 @@ function SetShapeEmissiveScale(handle, scale) end
 --- local shape = 0
 --- function init()
 --- 	shape = FindShape("shape", true)
----
+--- 
 --- 	local density = 10.0
 --- 	SetShapeDensity(shape, density)
 --- end
@@ -2641,7 +2651,7 @@ function GetShapeStrength(...) end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	local pos = GetCameraTransform().pos
 --- 	local dir = Vec(0, 0, 1)
@@ -2656,13 +2666,14 @@ function GetShapeStrength(...) end
 --- ```
 ---@param handle number Shape handle
 ---@param pos TVec Position in world space
+---@param includeUnphysical? boolean Include unphysical voxels in the search. Default false.
 ---@return string type Material type
 ---@return number r Red
 ---@return number g Green
 ---@return number b Blue
 ---@return number a Alpha
 ---@return number entry Palette entry for voxel (zero if empty)
-function GetShapeMaterialAtPosition(handle, pos) return "", 0, 0, 0, 0, 0 end
+function GetShapeMaterialAtPosition(handle, pos, includeUnphysical) return "", 0, 0, 0, 0, 0 end
 
 --- Return material properties for a particular voxel in the voxel grid indexed by integer values.
 --- The first index is zero (not one, as opposed to a lot of lua related things)
@@ -2721,8 +2732,9 @@ function GetShapeSize(handle) return 0, 0, 0, 0 end
 ---@return number count Number of voxels in shape
 function GetShapeVoxelCount(handle) return 0 end
 
---- This will check if a shape is currently visible in the camera frustum and
---- not occluded by other objects.
+--- This function does a very rudimetary check and will only return true if the
+--- object is visible within 74 degrees of the camera's forward direction, and
+--- only tests line-of-sight visibility for the corners and center of the bounding box.
 ---
 --- Example:
 --- ```lua
@@ -2730,7 +2742,7 @@ function GetShapeVoxelCount(handle) return 0 end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if IsShapeVisible(shape, 25) then
 --- 		DebugPrint("Shape is visible")
@@ -2755,7 +2767,7 @@ function IsShapeVisible(handle, maxDist, rejectTransparent) return false end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint("Is shape broken: " .. tostring(IsShapeBroken(shape)))
 --- end
@@ -2773,7 +2785,7 @@ function IsShapeBroken(handle) return false end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 --- 		--Draw white outline at 50% transparency
@@ -2799,7 +2811,7 @@ function DrawShapeOutline(handle, r, g, b, a) end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 --- 		DrawShapeHighlight(shape, 0.5)
@@ -2830,7 +2842,7 @@ function DrawShapeHighlight(handle, amount) end
 --- 	--object shapes in layers 2, preventing any collisions between the two.
 --- 	SetShapeCollisionFilter(shapeA, 2, 255-2)
 --- 	SetShapeCollisionFilter(shapeB, 2, 255-2)
----
+--- 
 --- 	--This will put shapes c and d in layer 4 and allow collisions with other
 --- 	--shapes in layer 4, but ignore all other collisions with the rest of the world.
 --- 	SetShapeCollisionFilter(shapeC, 4, 4)
@@ -2841,6 +2853,20 @@ function DrawShapeHighlight(handle, amount) end
 ---@param layer number Layer bits (0-255)
 ---@param mask number Mask bits (0-255)
 function SetShapeCollisionFilter(handle, layer, mask) end
+
+--- Returns the current layer/mask settings of the shape
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local shape = FindShape("some_shape")
+--- 	local layer, mask = GetShapeCollisionFilter(shape)
+--- end
+--- ```
+---@param handle number Shape handle
+---@return number layer Layer bits (0-255)
+---@return number mask Mask bits (0-255)
+function GetShapeCollisionFilter(handle) return 0, 0 end
 
 --- Create new, empty shape on existing body using the palette of a reference shape.
 --- The reference shape can be any existing shape in the scene or an external vox file.
@@ -3149,7 +3175,7 @@ function IsStaticShapeDetached(shape) return false end
 --- function init()
 --- 	shape = FindShape("shape", true)
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(Vec(1, 0, 0))
 --- 	local hit, p, n, s = GetShapeClosestPoint(shape, Vec(1, 0, 0))
@@ -3175,7 +3201,7 @@ function GetShapeClosestPoint(shape, origin) return false, Vec(), Vec() end
 --- 	shapeA = FindShape("shape")
 --- 	shapeB = FindShape("shape2")
 --- end
----
+--- 
 --- function tick()
 --- 	DebugPrint(IsShapeTouching(shapeA, shapeB))
 --- end
@@ -3192,7 +3218,7 @@ function IsShapeTouching(a, b) return false end
 --- function init()
 --- 	loc = FindLocation("loc1")
 --- end
----
+--- 
 --- function tick()
 --- 	DebugCross(GetLocationTransform(loc).pos)
 --- end
@@ -3208,7 +3234,7 @@ function FindLocation(tag, global) return 0 end
 --- local locations
 --- function init()
 --- 	locations = FindLocations("loc1")
----
+--- 
 --- 	for i=1, #locations do
 --- 		local loc = locations[i]
 --- 		DebugPrint(DebugPrint(loc))
@@ -3301,10 +3327,10 @@ function SetRopeSlack(...) end
 --- function init()
 --- 	local joint = FindJoint("joint")
 --- 	--joint is connected to A and B
----
+--- 
 --- 	otherShape = GetJointOtherShape(joint, FindShape("shapeA"))
 --- 	--otherShape is now B
----
+--- 
 --- 	otherShape = GetJointOtherShape(joint, FindShape("shapeB"))
 --- 	--otherShape is now A
 --- end
@@ -3314,9 +3340,9 @@ function SetRopeSlack(...) end
 ---@return number other Other shape handle
 function GetJointOtherShape(joint, shape) return 0 end
 
----
+--- 
 --- Get shapes connected to the joint.
----
+--- 
 ---
 --- Example:
 --- ```lua
@@ -3328,22 +3354,22 @@ function GetJointOtherShape(joint, shape) return 0 end
 --- 	mainBody = GetVehicleBody(FindVehicle("vehicle"))
 --- 	shapes = GetJointShapes(joint)
 --- end
----
+--- 
 --- function tick()
 --- 	-- Check to see if joint chain is still connected to vehicle main body
 --- 	-- If not then disable motors
----
+--- 
 --- 	local connected = false
 --- 	for i=1,#shapes do
----
+--- 
 --- 		local body = GetShapeBody(shapes[i])
----
+--- 
 --- 		if body == mainBody then
 --- 			connected = true
 --- 		end
----
+--- 
 --- 	end
----
+--- 
 --- 	if connected then
 --- 		SetJointMotor(joint, 0.5)
 --- 	else
@@ -3428,7 +3454,7 @@ function GetJointMovement(joint) return 0 end
 --- function init()
 --- 	body = FindBody("body")
 --- end
----
+--- 
 --- function tick()
 --- 	--Draw outline for all bodies in jointed structure
 --- 	local all = GetJointedBodies(body)
@@ -3475,7 +3501,7 @@ function GetRopeNumberOfPoints(joint) return 0 end
 --- function init()
 --- 	local joint = FindJoint("joint")
 --- 	numberPoints = GetRopeNumberOfPoints(joint)
----
+--- 
 --- 	for pointIndex = 1, numberPoints do
 --- 		DebugCross(GetRopePointPosition(joint, pointIndex))
 --- 	end
@@ -3494,7 +3520,7 @@ function GetRopePointPosition(joint, index) return Vec() end
 --- function init()
 --- 	local joint = FindJoint("joint")
 --- 	local mi, ma = GetRopeBounds(joint)
----
+--- 
 --- 	DebugCross(mi)
 --- 	DebugCross(ma)
 --- end
@@ -3511,7 +3537,7 @@ function GetRopeBounds(joint) return Vec(), Vec() end
 --- function tick()
 --- 	local playerCameraTransform = GetPlayerCameraTransform()
 --- 	local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
----
+--- 
 --- 	local hit, dist, joint = QueryRaycastRope(playerCameraTransform.pos, dir, 5)
 --- 	if hit then
 --- 		local breakPoint = VecAdd(playerCameraTransform.pos, VecScale(dir, dist))
@@ -3570,10 +3596,10 @@ function GetBoneChainLength(handle, begname, endname) return 0 end
 --- ```lua
 --- --Search for the first animator in script scope
 --- local animator = FindAnimator()
----
+--- 
 --- --Search for an animator tagged "anim" in script scope
 --- local animator = FindAnimator("anim")
----
+--- 
 --- --Search for an animator tagged "anim2" in entire scene
 --- local anim2 = FindAnimator("anim2", true)
 --- ```
@@ -3721,7 +3747,7 @@ function PlayAnimationFrame(handle, name, time, weight, filter) end
 --- 	PlayAnimationLoop(...)
 --- 	PlayAnimationLoop(...)
 --- EndAnimationGroup(animator)
----
+--- 
 --- --You can also create a tree of groups, blending is performed in a depth-first order
 --- BeginAnimationGroup(animator, 0.5)
 --- 	PlayAnimationLoop(animator, "anim_a", 1.0)
@@ -3751,7 +3777,7 @@ function EndAnimationGroup(handle) end
 --- --Then we force the single-animations to be processed, this will force the "jump" to be processed.
 --- --Then we overwrite just the spine-bone with a mouse controlled rotation("rot")
 --- --Result will be a jump animation with the upperbody playing an aiming animation but the pitch of the spine controlled by the mouse("rot")
----
+--- 
 --- if InputPressed("jump") then
 --- 	PlayAnimation(animator, "Jump")
 --- end
@@ -4154,7 +4180,7 @@ function SetTriggerTransform(handle, transform) end
 --- function init()
 --- 	local trigger = FindTrigger("toxic")
 --- 	local mi, ma = GetTriggerBounds(trigger)
----
+--- 
 --- 	local list = QueryAabbShapes(mi, ma)
 --- 	for i = 1, #list do
 --- 		DebugPrint(list[i])
@@ -4176,7 +4202,7 @@ function GetTriggerBounds(handle) return Vec(), Vec() end
 --- 	trigger = FindTrigger("toxic")
 --- 	body = FindBody("body")
 --- end
----
+--- 
 --- function tick()
 --- 	if IsBodyInTrigger(trigger, body) then
 --- 		DebugPrint("In trigger!")
@@ -4198,7 +4224,7 @@ function IsBodyInTrigger(trigger, body) return false end
 --- 	trigger = FindTrigger("toxic")
 --- 	vehicle = FindVehicle("vehicle")
 --- end
----
+--- 
 --- function tick()
 --- 	if IsVehicleInTrigger(trigger, vehicle) then
 --- 		DebugPrint("In trigger!")
@@ -4220,7 +4246,7 @@ function IsVehicleInTrigger(trigger, vehicle) return false end
 --- 	trigger = FindTrigger("toxic")
 --- 	shape = FindShape("shape")
 --- end
----
+--- 
 --- function tick()
 --- 	if IsShapeInTrigger(trigger, shape) then
 --- 		DebugPrint("In trigger!")
@@ -4241,7 +4267,7 @@ function IsShapeInTrigger(trigger, shape) return false end
 --- 	trigger = FindTrigger("toxic", true)
 --- 	point = Vec(0, 0, 0)
 --- end
----
+--- 
 --- function tick()
 --- 	if IsPointInTrigger(trigger, point) then
 --- 		DebugPrint("In trigger!")
@@ -4276,7 +4302,7 @@ function IsPointInBoundaries(point) return false end
 --- function init()
 --- 	trigger = FindTrigger("toxic")
 --- end
----
+--- 
 --- function tick()
 --- 	local empty, highPoint = IsTriggerEmpty(trigger)
 --- 	if not empty then
@@ -4601,7 +4627,7 @@ function DriveVehicle(vehicle, drive, steering, handbrake) end
 --- function init()
 --- 	local p = GetPlayerPos()
 --- 	DebugPrint(p)
----
+--- 
 --- 	--This is equivalent to
 --- 	p = VecAdd(GetPlayerTransform().pos, Vec(0,1,0))
 --- 	DebugPrint(p)
@@ -4609,6 +4635,8 @@ function DriveVehicle(vehicle, drive, steering, handbrake) end
 --- ```
 ---@return TVec position Player center position
 function GetPlayerPos() return Vec() end
+
+function DisableCrouch(...) end
 
 ---
 --- Example:
@@ -4641,6 +4669,29 @@ function GetPlayerToolRecoil(...) end
 --- ```
 ---@return number pitch Current player pitch angle
 function GetPlayerPitch() return 0 end
+
+--- The player yaw angle is applied to the player camera transform. It represents the top-down angle of rotation of the player.
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local compassBearing = GetPlayerYaw()
+--- end
+--- ```
+---@return number yaw Current player yaw angle
+function GetPlayerYaw() return 0 end
+
+--- Sets the player pitch.
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	-- look straight ahead
+--- 	SetPlayerPitch(0.0)
+--- end
+--- ```
+---@param pitch number Pitch.
+function SetPlayerPitch(pitch) end
 
 ---
 --- Example:
@@ -4693,7 +4744,7 @@ function SetPlayerTransform(transform, includePitch) end
 --- ```lua
 ---     --Clear specific rig
 ---     ClearPlayerRig(someId)
----
+--- 
 ---     --Clear all rigs
 ---     ClearPlayerRig(-1)
 --- ```
@@ -4899,6 +4950,28 @@ function IsPlayerGrounded() return false end
 
 function IsPlayerJumping(...) end
 
+--- 
+--- Get information about player ground contact. If the output boolean (contact) is false then
+--- the rest of the output is invalid.
+--- 
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	hasGroundContact, shape, point, normal = GetPlayerGroundContact()
+--- 
+--- 	if hasGroundContact then
+--- 		-- print ground contact data
+--- 		DebugPrint(VecStr(point).." : "..VecStr(normal))
+--- 	end
+--- end
+--- ```
+---@return boolean contact Whether the player is grounded
+---@return number shape Handle to shape
+---@return any point Point of contact
+---@return any normal Normal of contact
+function GetPlayerGroundContact() return false, 0, nil, nil end
+
 ---
 --- Example:
 --- ```lua
@@ -4942,13 +5015,11 @@ function ReleasePlayerGrab() end
 --- ```lua
 --- local body = GetPlayerGrabBody()
 --- if body ~= 0 then
---- 	...
+--- 	local pos = GetPlayerGrabPoint()
 --- end
 --- ```
----@return number handle Handle to grabbed body or zero if not grabbing.
-function GetPlayerGrabBody() return 0 end
-
-function GetPlayerGrabPoint(...) end
+---@return TVec pos The world space grab point.
+function GetPlayerGrabPoint() return Vec() end
 
 ---
 --- Example:
@@ -5019,7 +5090,7 @@ function GetPlayerInteractBody() return 0 end
 --- 		else
 --- 			SetPlayerScreen(screen)
 --- 		end
----
+--- 
 --- 	end
 --- end
 --- ```
@@ -5036,7 +5107,7 @@ function SetPlayerScreen(handle) end
 --- 		else
 --- 			SetPlayerScreen(screen)
 --- 		end
----
+--- 
 --- 	end
 --- end
 --- ```
@@ -5128,14 +5199,14 @@ function GetPlayerWalkingSpeed() return 0 end
 function SetPlayerWalkingSpeed(speed) end
 
 --- BEGINTABLE Param name	-- Type				-- Description
---- Health					-- float			-- Current value of the player's health.
---- HealthRegeneration  	-- boolean &nbsp	-- Is the player's health regeneration enabled.
---- WalkingSpeed			-- float			-- The player's walking speed.
---- JumpSpeed				-- float			-- The player's jump speed.
---- GodMode					-- boolean &nbsp	-- If the value is True, the player does not lose health
---- Friction				-- float			-- Player body friction
---- Restitution				-- float			-- Player body restitution
---- FlyMode					-- boolean &nbsp	-- If the value is True, the player will fly
+--- health					-- float			-- Current value of the player's health.
+--- healthRegeneration  	-- boolean &nbsp	-- Is the player's health regeneration enabled.
+--- walkingSpeed			-- float			-- The player's walking speed.
+--- jumpSpeed				-- float			-- The player's jump speed.
+--- godMode					-- boolean &nbsp	-- If the value is True, the player does not lose health
+--- friction				-- float			-- Player body friction
+--- frictionMode			-- string			-- Player friction combine mode
+--- flyMode					-- boolean &nbsp	-- If the value is True, the player will fly
 --- ENDTABLE
 ---
 --- Example:
@@ -5146,7 +5217,7 @@ function SetPlayerWalkingSpeed(speed) end
 --- 	local paramName = "GodMode"
 --- 	local param = GetPlayerParam(paramName)
 --- 	DebugWatch(paramName, param)
----
+--- 
 --- 	if InputPressed("g") then
 --- 		SetPlayerParam(paramName, not param)
 --- 	end
@@ -5157,14 +5228,14 @@ function SetPlayerWalkingSpeed(speed) end
 function GetPlayerParam(parameter) return nil end
 
 --- BEGINTABLE Param name	-- Type				-- Description
---- Health					-- float			-- Current value of the player's health.
---- HealthRegeneration  	-- boolean &nbsp	-- Is the player's health regeneration enabled.
---- WalkingSpeed			-- float			-- The player's walking speed. <b> This value is applied for 1 frame! </b>
---- JumpSpeed				-- float			-- The player's jump speed. The height of the jump depends non-linearly on the jump speed. <b> This value is applied for 1 frame! </b>
---- GodMode					-- boolean &nbsp	-- If the value is True, the player does not lose health
---- Friction				-- float			-- Player body friction
---- Restitution				-- float			-- Player body restitution
---- FlyMode					-- boolean &nbsp	-- If the value is True, the player will fly
+--- health					-- float			-- Current value of the player's health.
+--- healthRegeneration  	-- boolean &nbsp	-- Is the player's health regeneration enabled.
+--- walkingSpeed			-- float			-- The player's walking speed. <b> This value is applied for 1 frame! </b>
+--- jumpSpeed				-- float			-- The player's jump speed. The height of the jump depends non-linearly on the jump speed. <b> This value is applied for 1 frame! </b>
+--- godMode					-- boolean &nbsp	-- If the value is True, the player does not lose health
+--- friction				-- float			-- Player body friction. Default is 0.8
+--- frictionMode			-- string			-- Player friction combine mode. Can be (average|minimum|multiply|maximum)
+--- flyMode					-- boolean &nbsp	-- If the value is True, the player will fly
 --- ENDTABLE
 ---
 --- Example:
@@ -5175,7 +5246,7 @@ function GetPlayerParam(parameter) return nil end
 --- 	local paramName = "JumpSpeed"
 --- 	local param = GetPlayerParam(paramName)
 --- 	DebugWatch(paramName, param)
----
+--- 
 --- 	if InputDown("shift") then
 --- 		-- JumpSpeed sets for 1 frame
 --- 		SetPlayerParam(paramName, 10)
@@ -5186,13 +5257,13 @@ function GetPlayerParam(parameter) return nil end
 ---@param value any Parameter value
 function SetPlayerParam(parameter, value) end
 
----
+--- 
 --- Use this function to hide the player character.
----
+--- 
 ---
 --- Example:
 --- ```lua
----
+--- 
 --- function tick()
 --- 	...
 --- 	SetCameraTransform(t)
@@ -5211,7 +5282,7 @@ function SetPlayerHidden() end
 --- 	RegisterTool("lasergun", "Laser Gun", "MOD/vox/lasergun.vox")
 --- 	SetBool("game.tool.lasergun.enabled", true)
 --- end
----
+--- 
 --- function tick()
 --- 	if GetString("game.player.tool") == "lasergun" then
 --- 		--Tool is selected. Tool logic goes here.
@@ -5220,7 +5291,7 @@ function SetPlayerHidden() end
 --- ```
 ---@param id string Tool unique identifier
 ---@param name string Tool name to show in hud
----@param file string Path to vox file
+---@param file string Path to vox file or prefab xml
 ---@param group? number Tool group for this tool (1-6) Default is 6.
 function RegisterTool(id, name, file, group) end
 
@@ -5264,7 +5335,7 @@ function GetToolHandPoseWorldTransform() return Transform(), Transform() end
 --- <li>If the tool's transform is not explicitly set or is set using SetToolTransform, not calling this function will trigger a fallback solution where the right hand is automatically positioned.</li>
 --- <li>If the tool is animated using the SetToolTransformOverride function, not calling this function will result in the character's animation taking control of the hand movement</li>
 --- </ul>
----
+--- 
 ---
 --- Example:
 --- ```lua
@@ -5320,24 +5391,38 @@ function GetToolLocationWorldTransform(name) return Transform() end
 ---@param sway? number Tool sway amount. Default is 1.0.
 function SetToolTransform(transform, sway) end
 
+--- Set the allowed zoom for a registered tool. The zoom sensitivity will be factored
+--- with the user options for sensitivity.
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	-- allow our scoped tool to zoom by factor 4.
+--- 	SetToolAllowedZoom(4.0, 0.5)
+--- end
+--- ```
+---@param zoom number Zoom factor
+---@param [zoom any (number) Input sensitivity when zoomed in. Default is 1.0.
+function SetToolAllowedZoom(zoom, _zoom) end
+
 --- This function serves as an alternative to SetToolTransform, providing full control over tool animation by disabling all internal tool animations.
 --- When using this function, you must manually include pitch, sway, and crouch movements in the transform. To maintain this control, call the function every frame from the tick function.
----
+--- 
 ---
 --- Example:
 --- ```lua
 --- function init()
----
+--- 
 --- 	if GetBool("game.thirdperson") then
 --- 		local toolTransform = Transform(Vec(0.3, -0.3, -0.2), Quat(0.0, 0.0, 15.0))
----
+--- 
 --- 		-- Rotate around point
 --- 		local pivotPoint = Vec(-0.01, -0.2, 0.04)
 --- 		toolTransform.pos = VecSub(toolTransform.pos, pivotPoint)
 --- 		local rotation = Transform(Vec(), QuatAxisAngle(Vec(0,0,1), GetPlayerPitch()))
 --- 		toolTransform = TransformToParentTransform(rotation, toolTransform)
 --- 		toolTransform.pos = VecAdd(toolTransform.pos, pivotPoint)
----
+--- 
 --- 		SetToolTransformOverride(toolTransform)
 --- 	else
 --- 		local toolTransform = Transform(Vec(0.3, -0.3, -0.2), Quat(0.0, 0.0, 15.0))
@@ -5353,10 +5438,10 @@ function SetToolTransformOverride(transform) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function tick()
 --- 	--Offset the tool depending on character height
---- 	local offsetY = 1.7 - characterHeight
----
+--- 	local defaultEyeY = 1.7
+--- 	local offsetY = characterHeight - defaultEyeY
 --- 	local offset = Vec(0, offsetY, 0)
 --- 	SetToolOffset(offset)
 --- end
@@ -5394,7 +5479,7 @@ function UnloadSound(handle) end
 --- function init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
@@ -5412,13 +5497,13 @@ function LoadLoop(path, nominalDistance) return 0 end
 --- function init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if loop ~= -1 then
 --- 		local pos = Vec(0, 0, 0)
 --- 		PlayLoop(loop, pos, 1.0)
 --- 	end
----
+--- 
 --- 	if InputPressed("space") then
 --- 		UnloadLoop(loop)
 --- 		loop = -1
@@ -5449,17 +5534,17 @@ function SetSoundLoopUser(handle, nominalDistance) return false end
 --- function init()
 --- 	snd = LoadSound("warning-beep.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 --- 		local pos = Vec(0, 0, 0)
 --- 		PlaySound(snd, pos, 0.5)
 --- 	end
 --- end
----
+--- 
 --- -- If you have a list of sound files and you add a sequence number, starting from zero, at the end of each filename like below,
 --- -- then each time you call PlaySound it will pick a random sound from that list and play that sound.
----
+--- 
 --- -- "example-sound0.ogg"
 --- -- "example-sound1.ogg"
 --- -- "example-sound2.ogg"
@@ -5470,7 +5555,7 @@ function SetSoundLoopUser(handle, nominalDistance) return false end
 --- 	function init()
 --- 		snd = LoadSound("example-sound0.ogg")
 --- 	end
----
+--- 
 --- 	-- Plays a random sound from the loaded sound series
 --- 	function tick()
 --- 		if trigSound then
@@ -5495,28 +5580,28 @@ function PlaySound(handle, pos, volume, registerVolume, pitch) return 0 end
 --- function init()
 --- 	snd = LoadSound("warning-beep.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 --- 		PlaySoundForUser(snd, 0)
 --- 	end
 --- end
----
+--- 
 --- -- If you have a list of sound files and you add a sequence number, starting from zero, at the end of each filename like below,
 --- -- then each time you call PlaySoundForUser it will pick a random sound from that list and play that sound.
----
+--- 
 --- -- "example-sound0.ogg"
 --- -- "example-sound1.ogg"
 --- -- "example-sound2.ogg"
 --- -- "example-sound3.ogg"
 --- -- ...
----
+--- 
 --- --[[
 --- 	local snd
 --- 	function init()
 --- 		snd = LoadSound("example-sound0.ogg")
 --- 	end
----
+--- 
 --- 	-- Plays a random sound from the loaded sound series
 --- 	function tick()
 --- 		if trigSound then
@@ -5542,7 +5627,7 @@ function PlaySoundForUser(handle, user, pos, volume, registerVolume, pitch) retu
 --- function init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
----
+--- 
 --- local sndPlay
 --- function tick()
 --- 	if InputPressed("interact") then
@@ -5565,7 +5650,7 @@ function StopSound(handle) end
 --- function init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
----
+--- 
 --- local sndPlay
 --- function tick()
 --- 	if InputPressed("interact") then
@@ -5589,7 +5674,7 @@ function IsSoundPlaying(handle) return false end
 --- function init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
----
+--- 
 --- local sndPlay
 --- function tick()
 --- 	if InputPressed("interact") then
@@ -5613,7 +5698,7 @@ function GetSoundProgress(handle) return 0 end
 --- function init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
----
+--- 
 --- local sndPlay
 --- function tick()
 --- 	if InputPressed("interact") then
@@ -5638,7 +5723,7 @@ function SetSoundProgress(handle, progress) end
 --- function init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
@@ -5657,7 +5742,7 @@ function PlayLoop(handle, pos, volume, registerVolume, pitch) end
 --- function init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
@@ -5676,7 +5761,7 @@ function GetSoundLoopProgress(handle) return 0 end
 --- function init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
@@ -5705,7 +5790,7 @@ function PlayMusic(path) end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 --- 		StopMusic()
@@ -5720,7 +5805,7 @@ function StopMusic() end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") and IsMusicPlaying() then
 --- 		DebugPrint("music is playing")
@@ -5736,7 +5821,7 @@ function IsMusicPlaying() return false end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 --- 		SetMusicPaused(IsMusicPlaying())
@@ -5752,7 +5837,7 @@ function SetMusicPaused(paused) end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 --- 		DebugPrint(GetMusicProgress())
@@ -5768,7 +5853,7 @@ function GetMusicProgress() return 0 end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 ---  		SetMusicProgress(GetMusicProgress() - 1.0)
@@ -5785,7 +5870,7 @@ function SetMusicProgress(progress) end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 ---  		SetMusicVolume(0.3)
@@ -5802,7 +5887,7 @@ function SetMusicVolume(volume) end
 --- function init()
 --- 	PlayMusic("about.ogg")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputDown("interact") then
 ---  		SetMusicLowPass(0.6)
@@ -5816,7 +5901,7 @@ function SetMusicLowPass(wet) end
 --- Example:
 --- ```lua
 --- function init()
---- 	arrow = LoadSprite("arrow.png")
+--- 	arrow = LoadSprite("gfx/arrowdown.png")
 --- end
 --- ```
 ---@param path string Path to sprite. Must be PNG or JPG format.
@@ -5828,9 +5913,9 @@ function LoadSprite(path) return 0 end
 --- Example:
 --- ```lua
 --- function init()
---- 	arrow = LoadSprite("arrow.png")
+--- 	arrow = LoadSprite("gfx/arrowdown.png")
 --- end
----
+--- 
 --- function tick()
 --- 	--Draw sprite using transform
 --- 	--Size is two meters in width and height
@@ -5928,8 +6013,8 @@ function QueryRejectAnimator(handle) end
 --- 		DebugPrint(dist)
 --- 	end
 --- end
----
----
+--- 
+--- 
 --- ```
 ---@param vehicle number Vehicle handle
 function QueryRejectVehicle(vehicle) end
@@ -5951,6 +6036,25 @@ function QueryRejectVehicle(vehicle) end
 --- ```
 ---@param body number Body handle
 function QueryRejectBody(body) end
+
+--- Exclude bodies from the next query
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	local body = FindBody("body")
+--- 	QueryRequire("physical dynamic large")
+--- 	local bodies = {body}
+--- 	--Do not include body in next raycast
+--- 	QueryRejectBodies(bodies)
+--- 	local hit, dist = QueryRaycast(Vec(0, 0, 0), Vec(1, 0, 0), 10)
+--- 	if hit then
+--- 		DebugPrint(dist)
+--- 	end
+--- end
+--- ```
+---@param bodies any Array with bodies handles
+function QueryRejectBodies(bodies) end
 
 --- Exclude shape from the next query
 ---
@@ -6024,7 +6128,7 @@ function QueryRaycast(origin, direction, maxDist, radius, rejectTransparent) ret
 --- function tick()
 --- 	local playerCameraTransform = GetPlayerCameraTransform()
 --- 	local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
----
+--- 
 --- 	local hit, dist, joint = QueryRaycastRope(playerCameraTransform.pos, dir, 10)
 --- 	if hit then
 --- 		DebugWatch("distance", dist)
@@ -6126,18 +6230,18 @@ function QueryPath(start, _end, maxDist, targetRadius, type) end
 --- Example:
 --- ```lua
 --- local paths = {}
----
+--- 
 --- function init()
 --- 	paths[1] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc1", true), "transform").pos,
 --- 	}
----
+--- 
 --- 	paths[2] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc2", true), "transform").pos,
 --- 	}
----
+--- 
 --- 	for i = 1, #paths do
 --- 		PathPlannerQuery(paths[i].id, GetPlayerTransform().pos, paths[i].location)
 --- 	end
@@ -6152,7 +6256,7 @@ function CreatePathPlanner() return 0 end
 --- Example:
 --- ```lua
 --- local paths = {}
----
+--- 
 --- function init()
 --- 	local id = CreatePathPlanner()
 --- 	DeletePathPlanner(id)
@@ -6168,18 +6272,18 @@ function DeletePathPlanner(id) end
 --- Example:
 --- ```lua
 --- local paths = {}
----
+--- 
 --- function init()
 --- 	paths[1] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc1", true), "transform").pos,
 --- 	}
----
+--- 
 --- 	paths[2] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc2", true), "transform").pos,
 --- 	}
----
+--- 
 --- 	for i = 1, #paths do
 --- 		PathPlannerQuery(paths[i].id, GetPlayerTransform().pos, paths[i].location)
 --- 	end
@@ -6219,7 +6323,7 @@ function AbortPath(id) end
 --- function init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
----
+--- 
 --- function tick()
 --- 	local s = GetPathState()
 --- 	if s == "done" then
@@ -6240,7 +6344,7 @@ function GetPathState(id) return "" end
 --- function init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
----
+--- 
 --- function tick()
 --- 	local s = GetPathState()
 --- 	if s == "done" then
@@ -6261,7 +6365,7 @@ function GetPathLength(id) return 0 end
 --- function init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
----
+--- 
 --- function tick()
 --- 	local d = 0
 --- 	local l = GetPathLength()
@@ -6347,7 +6451,7 @@ function ParticleType(type) end
 --- function init()
 --- 	--Smoke particle
 --- 	ParticleTile(0)
----
+--- 
 --- 	--Fire particle
 --- 	ParticleTile(5)
 --- end
@@ -6362,7 +6466,7 @@ function ParticleTile(type) end
 --- function init()
 --- 	--Constant red
 --- 	ParticleColor(1,0,0)
----
+--- 
 --- 	--Animating from yellow to red
 --- 	ParticleColor(1,1,0, 1,0,0)
 --- end
@@ -6382,7 +6486,7 @@ function ParticleColor(r0, g0, b0, r1, g1, b1) end
 --- function init()
 --- 	--Constant radius 0.4 meters
 --- 	ParticleRadius(0.4)
----
+--- 
 --- 	--Interpolate from small to large
 --- 	ParticleRadius(0.1, 0.7)
 --- end
@@ -6517,10 +6621,10 @@ function ParticleSticky(s0, s1, interpolation, fadein, fadeout) end
 --- function init()
 --- 	--Disable collisions
 --- 	ParticleCollide(0)
----
+--- 
 --- 	--Enable collisions over time
 --- 	ParticleCollide(0, 1)
----
+--- 
 --- 	--Ramp up collisions very quickly, only skipping the first 5% of lifetime
 --- 	ParticleCollide(1, 1, "constant", 0.05)
 --- end
@@ -6553,7 +6657,7 @@ function ParticleFlags(bitmask) end
 --- ```lua
 --- local q = 1.0
 --- local w = 1.0
----
+--- 
 --- function tick()
 --- 	ParticleRadius(0.02+q*0.05, 0.01, "linear", 0.02, 0.1)
 --- 	ParticleStretch(2)
@@ -6686,7 +6790,7 @@ function PaintRGBA(origin, radius, red, green, blue, alpha, probability) end
 ---@param shape number Shape index
 ---@param point TVec Spawn location
 ---@param size number Radius of snow particle
----@return boolean r
+---@return boolean r 
 function AddSnow(shape, point, size) return false end
 
 --- Make a hole in the environment. Radius is given in meters.
@@ -6820,7 +6924,7 @@ function SetCameraTransform(transform, fov) end
 --- 		RequestFirstPerson(true)
 --- 	end
 --- end
----
+--- 
 --- function draw()
 --- 	if useViewFinder and !GetBool("game.thirdperson") then
 --- 		-- Draw view finder overlay
@@ -6856,7 +6960,7 @@ function SaveCameraOverrideTransform() end
 --- function tick()
 --- 	local tPosX = Transform(Vec(math.sin(GetTime()*3.0) * 0.2, 0, 0))
 --- 	local tPosY = Transform(Vec(0, math.cos(GetTime()*3.0) * 0.2, 0), QuatAxisAngle(Vec(0, 0, 0)))
----
+--- 
 --- 	SetCameraOffsetTransform(tPosX, true)
 --- 	SetCameraOffsetTransform(tPosY, true)
 --- end
@@ -6898,7 +7002,7 @@ function AttachCameraTo(handle, ignoreRotation) end
 --- 	body_1 = FindBody("body_1")
 --- 	body_2 = FindBody("body_2")
 --- end
----
+--- 
 --- function tick()
 --- 	SetPivotClipBody(body_1, 0) -- this overload should be called once and
 --- 	-- only once per frame to take effect
@@ -7092,7 +7196,7 @@ function GetPostProcessingProperty(name) return 0, 0, 0 end
 --- function tick()
 --- 	--Draw white debug line
 --- 	DrawLine(Vec(0, 0, 0), Vec(-10, 5, -10))
----
+--- 
 --- 	--Draw red debug line
 --- 	DrawLine(Vec(0, 0, 0), Vec(10, 5, 10), 1, 0, 0)
 --- end
@@ -7112,7 +7216,7 @@ function DrawLine(p0, p1, r, g, b, a) end
 --- function tick()
 --- 	--Draw white debug line
 --- 	DebugLine(Vec(0, 0, 0), Vec(-10, 5, -10))
----
+--- 
 --- 	--Draw red debug line
 --- 	DebugLine(Vec(0, 0, 0), Vec(10, 5, 10), 1, 0, 0)
 --- end
@@ -7155,14 +7259,14 @@ function DebugTransform(transform, scale) end
 --- Show a named valued on screen for debug purposes.
 --- Up to 32 values can be shown simultaneously. Values updated the current
 --- frame are drawn opaque. Old values are drawn transparent in white.
----
+--- 
 --- The function will also recognize tables and convert them to strings automatically.
 ---
 --- Example:
 --- ```lua
 --- function tick()
 --- 	DebugWatch("Player camera transform", GetPlayerCameraTransform())
----
+--- 
 --- 	local anyTable = {
 --- 		"teardown",
 --- 		{
@@ -7189,9 +7293,9 @@ function DebugWatch(name, value, lineWrapping) end
 --- ```lua
 --- function init()
 --- 	DebugPrint("time")
----
+--- 
 --- 	DebugPrint(GetPlayerCameraTransform())
----
+--- 
 --- 	local anyTable = {
 --- 		"teardown",
 --- 		{
@@ -7217,7 +7321,7 @@ function DebugPrint(message, lineWrapping) end
 --- function onLangauageChanged()
 --- 	DebugPrint("langauageChanged")
 --- end
----
+--- 
 --- function init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	TriggerEvent("LanguageChanged")
@@ -7234,7 +7338,7 @@ function RegisterListenerTo(eventName, listenerFunction) end
 --- function onLangauageChanged()
 --- 	DebugPrint("langauageChanged")
 --- end
----
+--- 
 --- function init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	UnregisterListener("LanguageChanged", "onLangauageChanged")
@@ -7252,7 +7356,7 @@ function UnregisterListener(eventName, listenerFunction) end
 --- function onLangauageChanged()
 --- 	DebugPrint("langauageChanged")
 --- end
----
+--- 
 --- function init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	UnregisterListener("LanguageChanged", "onLangauageChanged")
@@ -7270,7 +7374,7 @@ function TriggerEvent(eventName, args) end
 --- function init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
----
+--- 
 --- function tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
@@ -7288,7 +7392,7 @@ function LoadHaptic(filepath) return "" end
 --- function init()
 --- 	haptic_effect = CreateHaptic(1, 1, 0, 0)
 --- end
----
+--- 
 --- function tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
@@ -7310,7 +7414,7 @@ function CreateHaptic(leftMotorRumble, rightMotorRumble, leftTriggerRumble, righ
 --- function init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
----
+--- 
 --- function tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
@@ -7330,7 +7434,7 @@ function PlayHaptic(handle, amplitude) end
 --- function init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
----
+--- 
 --- function tick()
 --- 	if InputPressed("interact") then
 --- 		PlayHapticDirectional(haptic_effect, Vec(-1, 0, 0), 1)
@@ -7350,7 +7454,7 @@ function PlayHapticDirectional(handle, direction, amplitude) end
 --- function init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
----
+--- 
 --- function tick()
 --- 	if not HapticIsPlaying(haptic_effect) then
 --- 		PlayHaptic(haptic_effect, 1)
@@ -7386,7 +7490,7 @@ function SetToolHaptic(id, handle, amplitude) end
 --- function init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
----
+--- 
 --- function tick()
 ---     if InputDown("interact") then
 ---         StopHaptic(haptic_effect)
@@ -7513,15 +7617,15 @@ function FxEmitSmokeCPP(...) end
 --- 	if InputDown("usetool") then
 --- 		local playerCameraTransform = GetPlayerCameraTransform()
 --- 		local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
----
+--- 
 --- 		-- Cast ray out of player camera and add heat to shape if we can find one
 --- 		local hit, dist, normal, shape = QueryRaycast(playerCameraTransform.pos, dir, 50)
----
+--- 
 --- 		if hit then
 --- 			local hitPos = VecAdd(playerCameraTransform.pos, VecScale(dir, dist))
 --- 			AddHeat(shape, hitPos, 2 * dt)
 --- 		end
----
+--- 
 --- 		DrawLine(VecAdd(playerCameraTransform.pos, Vec(0.5, 0, 0)), VecAdd(playerCameraTransform.pos, VecScale(dir, dist)), 1, 0, 0, 1)
 --- 	end
 --- end
@@ -7548,7 +7652,7 @@ function GetGravity() return Vec() end
 --- Example:
 --- ```lua
 --- local isMoonGravityEnabled = false
----
+--- 
 --- function tick()
 --- 	if InputPressed("g") then
 --- 		isMoonGravityEnabled = not isMoonGravityEnabled
@@ -7563,6 +7667,52 @@ function GetGravity() return Vec() end
 ---@param vec TVec Gravity vector
 function SetGravity(vec) end
 
+--- Sets the base orientation when gravity is disabled with SetGravity.
+--- This will determine what direction is "up", "right" and "forward" as
+--- gravity is completely turned off.
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	SetGravity(Vec(0, 0, 0))
+--- 
+--- 	-- Turn player upside-down.
+--- 	local base = QuatAxisAngle(Vec(1,0,0), 180)
+--- 	SetPlayerOrientation(base)
+--- end
+--- ```
+---@param orientation any Base orientation
+function SetPlayerOrientation(orientation) end
+
+--- Gets the base orientation of the player.
+--- This can be used to retrieve the base orientation of the player when using a custom gravity vector.
+---
+--- Example:
+--- ```lua
+--- function tick(dt)
+--- 	SetGravity(Vec(0, 0, 0))
+--- 	-- Spin the player if using zero gravity
+--- 	local base = QuatRotateQuat(GetPlayerOrientation(), QuatAxisAngle(Vec(1,0,0), dt))
+--- 	SetPlayerOrientation(base)
+--- end
+--- ```
+---@return TQuat orientation Player base orientation
+function GetPlayerOrientation() return Quat() end
+
+function SetMapOrientation(...) end
+
+--- Returns the current "up" vector derived from the player's base orientation.
+--- This can be used to retrieve the player's up vector when using a custom gravity vector.
+---
+--- Example:
+--- ```lua
+--- function tick(dt)
+--- 	local up = GetPlayerUp()
+--- end
+--- ```
+---@return TVec up Player up vector
+function GetPlayerUp() return Vec() end
+
 --- Returns the fps value based on general game timestep.
 --- It doesn't depend on whether it is called from tick or update.
 ---
@@ -7574,7 +7724,6 @@ function SetGravity(vec) end
 --- ```
 ---@return number fps Frames per second
 function GetFps() return 0 end
-
 --- Calling this function will disable game input, bring up the mouse pointer
 --- and allow Ui interaction with the calling script without pausing the game.
 --- This can be useful to make interactive user interfaces from scripts while
@@ -7772,7 +7921,7 @@ function UiGetScale() return 0, 0 end
 ---         UiText("Text")
 ---     UiPop()
 --- end
----
+--- 
 --- ```
 ---@param width number Rect width
 ---@param height number Rect height
@@ -7868,7 +8017,7 @@ function UiIsRectFullyClipped(w, h) return false end
 ---         UiColor(1.0, 1.0, 1.0, 0.15)
 ---         UiRect(150, 150)
 ---         UiRect(w, h)
----
+--- 
 ---         DebugPrint("point 1: " .. tostring(UiIsInClipRegion(250, 250)))
 ---         DebugPrint("point 2: " .. tostring(UiIsInClipRegion(350, 250)))
 ---     UiPop()
@@ -7890,7 +8039,7 @@ function UiIsInClipRegion(x, y) return false end
 ---         UiColor(1.0, 1.0, 1.0, 0.15)
 ---         UiRect(150, 150)
 ---         UiRect(w, h)
----
+--- 
 ---         DebugPrint("rect 1: " .. tostring(UiIsFullyClipped(200, 200)))
 ---         UiTranslate(200, 0)
 ---         DebugPrint("rect 2: " .. tostring(UiIsFullyClipped(200, 200)))
@@ -7936,7 +8085,7 @@ function UiSafeMargins() return 0, 0, 0, 0 end
 --- 	UiPop()
 --- end
 --- ```
----@return any value Canvas width & height
+---@return any value Canvas width and height
 function UiCanvasSize() return nil end
 
 --- The alignment determines how content is aligned with respect to the
@@ -7953,13 +8102,13 @@ function UiCanvasSize() return nil end
 --- "center middle", "left top", "center top", etc. If horizontal
 --- or vertical alginment is omitted it will depend on the element drawn.
 --- Text, for instance has default vertical alignment at baseline.
----
+--- 
 ---
 --- Example:
 --- ```lua
 --- UiAlign("left")
 --- UiText("Aligned left at baseline")
----
+--- 
 --- UiAlign("center middle")
 --- UiText("Fully centered")
 --- ```
@@ -7973,21 +8122,18 @@ function UiAlign(alignment) end
 --- right	-- Horizontally align to the right
 --- center	-- Horizontally align to the center
 --- ENDTABLE
---- Alignment can contain combinations of these, for instance:
---- "center middle", "left top", "center top", etc. If horizontal
---- or vertical alginment is omitted it will depend on the element drawn.
---- Text, for instance has default vertical alignment at baseline.
----
+--- Alignment can contain either "center", "left", or "right"
+--- 
 ---
 --- Example:
 --- ```lua
---- UiAlign("left")
+--- UiTextAlignment("left")
 --- UiText("Aligned left at baseline")
----
---- UiAlign("center")
+--- 
+--- UiTextAlignment("center")
 --- UiText("Centered")
 --- ```
----@param alignment string Alignment keywords
+---@param alignment string Alignment keyword
 function UiTextAlignment(alignment) end
 
 --- Disable input for everything, except what's between UiModalBegin and UiModalEnd
@@ -8000,7 +8146,7 @@ function UiTextAlignment(alignment) end
 --- 	--All other interactive ui elements except this one are disabled
 --- end
 --- UiModalEnd()
----
+--- 
 --- --This is also okay
 --- UiPush()
 --- 	UiModalBegin()
@@ -8048,7 +8194,7 @@ function UiDisableInput() end
 --- if UiTextButton("Okay") then
 --- 	--Will never happen
 --- end
----
+--- 
 --- UiEnableInput()
 --- if UiTextButton("Okay") then
 --- 	--This can happen
@@ -8193,22 +8339,22 @@ function UiFontHeight() return 0 end
 --- ```lua
 --- UiFont("bold.ttf", 24)
 --- UiText("Hello")
----
+--- 
 --- ...
----
+--- 
 --- --Automatically advance cursor
 --- UiText("First line", true)
 --- UiText("Second line", true)
----
----
----
+--- 
+--- 
+--- 
 --- --Using links
 --- UiFont("bold.ttf", 26)
 --- UiTranslate(100,100)
 --- --Using virtual links
 --- link = "[[link;label=loc@UI_TEXT_FREE_ROAM_OPTIONS_LINK_NAME;id=options/game;color=#DDDD7FDD;underline=true]]"
 --- someText = "Some text with a link: " .. link .. " and some more text"
----
+--- 
 --- w, h, x, y, linkId = UiText(someText)
 --- if linkId:len() ~= 0 then
 --- 	if linkId == "options/game" then
@@ -8218,7 +8364,7 @@ function UiFontHeight() return 0 end
 --- 	end
 --- end
 --- UiTranslate(0,50)
----
+--- 
 --- --Using game links, id attribute is required, color is optional, same as virtual links
 --- link = "[[game://options;label=loc@UI_TEXT_FREE_ROAM_OPTIONS_LINK_NAME;id=game;color=#DDDD7FDD;underline=false]]"
 --- someText = "Some text with a link: " .. link .. " and some more text"
@@ -8227,12 +8373,12 @@ function UiFontHeight() return 0 end
 --- 	DebugPrint(linkId.." link clicked")
 --- end
 --- UiTranslate(0,50)
----
+--- 
 --- --Using http/s links is also possible, link will be opened in the default browser
 --- link = "[[http://www.example.com;label=loc@SOME_KEY;]]"
 --- someText = "Goto: " .. link
 --- UiText(someText)
----
+--- 
 --- ```
 ---@param text string Print text at cursor location
 ---@param move? boolean Automatically move cursor vertically. Default false.
@@ -8244,18 +8390,18 @@ function UiFontHeight() return 0 end
 ---@return string linkId Link id of clicked link
 function UiText(text, move, maxChars) return 0, 0, 0, 0, "" end
 
----
+--- 
 ---
 --- Example:
 --- ```lua
----
+--- 
 --- UiFont("regular.ttf", 30)
 --- UiPush()
 --- 	UiTextDisableWildcards(true)
 --- 	-- icon won't be embedded here, text will be left as is
 --- 	UiText("Text with embedded icon image [[menu:menu_accept;iconsize=42,42]]")
 --- UiPop()
----
+--- 
 --- -- embedding works as expected
 --- UiText("Text with embedded icon image [[menu:menu_accept;iconsize=42,42]]")
 --- ```
@@ -8269,7 +8415,7 @@ function UiTextDisableWildcards(disable) end
 --- text elements, regardless of the specific characters displayed.
 --- When disabled (false), the line height adjusts dynamically to accommodate
 --- the tallest character in each line of text.
----
+--- 
 ---
 --- Example:
 --- ```lua
@@ -8296,11 +8442,11 @@ function UiTextDisableWildcards(disable) end
 ---         UiText(text[1], true)
 ---     end
 --- end
----
+--- 
 --- function draw()
 ---     UiFont("regular.ttf", 22)
 ---     UiTranslate(100, 100)
----
+--- 
 ---     UiPush()
 ---         local r,g,b
 ---         if enabled then
@@ -8325,7 +8471,7 @@ function UiTextDisableWildcards(disable) end
 ---     UiTranslate(0,80)
 ---     drawDescriptions()
 --- end
----
+--- 
 --- ```
 ---@param uniform boolean Enable or disable fixed line height for text rendering
 function UiTextUniformHeight(uniform) end
@@ -8333,18 +8479,20 @@ function UiTextUniformHeight(uniform) end
 ---
 --- Example:
 --- ```lua
----
+--- 
 --- local w, h = UiGetTextSize("Some text")
 --- ```
 ---@param text string A text string
 ---@return number w Width of text
 ---@return number h Height of text
-function UiGetTextSize(text) return 0, 0 end
+---@return number x Offset x-component of text AABB
+---@return number y Offset y-component of text AABB
+function UiGetTextSize(text) return 0, 0, 0, 0 end
 
 ---
 --- Example:
 --- ```lua
----
+--- 
 --- local w, h = UiMeasureText(0, "Some text", "loc@key")
 --- ```
 ---@param space number Space between lines
@@ -8384,8 +8532,8 @@ function UiTextToLower(...) end
 
 function UiTextToUpper(...) end
 
----@param text string
----@return any words
+---@param text string 
+---@return any words 
 function UiRichTextSplitByWords(text) return nil end
 
 ---
@@ -8446,7 +8594,7 @@ function UiTextShadow(r, g, b, a, distance, blur) end
 --- --Draw full-screen black rectangle
 --- UiColor(0, 0, 0)
 --- UiRect(UiWidth(), UiHeight())
----
+--- 
 --- --Draw smaller, red, rotating rectangle in center of screen
 --- UiPush()
 --- 	UiColor(1, 0, 0)
@@ -8558,6 +8706,8 @@ function UiCircleOutline(radius, thickness) end
 ---@param path string Path to image (PNG or JPG format)
 function UiFillImage(path) end
 
+function UiRectBgBlur(...) end
+
 --- Draw image at cursor position. If x0, y0, x1, y1 is provided a cropped version
 --- will be drawn in that coordinate range.
 ---
@@ -8588,7 +8738,7 @@ function UiImageOverlayAlpha(...) end
 --- Example:
 --- ```lua
 --- local image = "gfx/cursor.png"
----
+--- 
 --- function draw()
 ---     UiTranslate(300, 300)
 --- 	if UiHasImage(image) then
@@ -8607,7 +8757,7 @@ function UiUnloadImage(path) end
 --- Example:
 --- ```lua
 --- local image = "gfx/circle.png"
----
+--- 
 --- function draw()
 --- 	if UiHasImage(image) then
 --- 		DebugPrint("image " .. image .. " exists")
@@ -8833,7 +8983,7 @@ function UiSlider(path, axis, current, min, max) return 0, false end
 --- Example:
 --- ```lua
 --- local slider = 0
----
+--- 
 --- function draw()
 ---     local thumbPath = "common/thumb_I218_249_2430_49029.png"
 ---     UiTranslate(200, 200)
@@ -8869,7 +9019,7 @@ function UiSliderHoverColorFilter(r, g, b, a) end
 --- Example:
 --- ```lua
 --- local slider = 0
----
+--- 
 --- function draw()
 ---     local thumbPath = "common/thumb_I218_249_2430_49029.png"
 ---     UiTranslate(200, 200)
@@ -9031,7 +9181,7 @@ function UiNavComponent(w, h) return "" end
 ---     end
 ---     UiTranslate(960, 540)
 ---     UiNavComponent(100, 20)
----
+--- 
 --- 	UiTranslate(150, 40)
 --- 	UiPush()
 --- 		UiIgnoreNavigation(true)
@@ -9059,11 +9209,11 @@ function UiIgnoreNavigation(ignore) end
 ---     end
 ---     UiTranslate(960, 540)
 ---     local id = UiNavComponent(100, 20)
----
+--- 
 --- 	UiResetNavigation()
 --- 	UiTranslate(150, 40)
 --- 	UiNavComponent(100, 20)
----
+--- 
 --- 	local isInFocus = UiIsComponentInFocus(id)
 --- 	-- will be always "false"
 --- 	DebugPrint(isInFocus)
@@ -9086,11 +9236,11 @@ function UiResetNavigation() end
 ---     end
 ---     UiTranslate(960, 540)
 --- 	UiNavComponent(100, 20)
----
+--- 
 --- 	UiTranslate(0, 50)
 ---     local id = UiNavComponent(100, 20)
 --- 	local isInFocus = UiIsComponentInFocus(id)
----
+--- 
 --- 	if isInFocus and InputPressed("menu_up") then
 --- 		-- don't let navigation to update and if component in focus
 --- 		-- and do different action
@@ -9113,21 +9263,21 @@ function UiNavSkipUpdate() end
 --- 		-- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 --- 	local gId = UiNavGroupBegin()
----
+--- 
 --- 	UiNavComponent(100, 20)
 --- 	UiTranslate(0, 50)
 ---     local id = UiNavComponent(100, 20)
 --- 	local isInFocus = UiIsComponentInFocus(id)
----
+--- 
 --- 	UiNavGroupEnd()
----
+--- 
 --- 	local groupInFocus = UiIsComponentInFocus(gId)
----
----
+--- 
+--- 
 --- 	if isInFocus then
 --- 		DebugPrint(groupInFocus)
 --- 	end
@@ -9157,21 +9307,21 @@ function UiIsComponentInFocus(id) return false end
 --- 		-- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 --- 	local gId = UiNavGroupBegin()
----
+--- 
 --- 	UiNavComponent(100, 20)
 --- 	UiTranslate(0, 50)
 ---     local id = UiNavComponent(100, 20)
 --- 	local isInFocus = UiIsComponentInFocus(id)
----
+--- 
 --- 	UiNavGroupEnd()
----
+--- 
 --- 	local groupInFocus = UiIsComponentInFocus(gId)
----
----
+--- 
+--- 
 --- 	if isInFocus then
 --- 		DebugPrint(groupInFocus)
 --- 	end
@@ -9194,21 +9344,21 @@ function UiNavGroupBegin(id) return "" end
 --- 		-- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 --- 	local gId = UiNavGroupBegin()
----
+--- 
 --- 	UiNavComponent(100, 20)
 --- 	UiTranslate(0, 50)
 ---     local id = UiNavComponent(100, 20)
 --- 	local isInFocus = UiIsComponentInFocus(id)
----
+--- 
 --- 	UiNavGroupEnd()
----
+--- 
 --- 	local groupInFocus = UiIsComponentInFocus(gId)
----
----
+--- 
+--- 
 --- 	if isInFocus then
 --- 		DebugPrint(groupInFocus)
 --- 	end
@@ -9230,21 +9380,21 @@ function UiNavGroupEnd() end
 --- 		-- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 --- 	UiTranslate(960, 540)
----
+--- 
 --- 	local gId = UiNavGroupBegin()
 --- 	UiNavGroupSize(500, 300)
----
+--- 
 --- 	UiNavComponent(100, 20)
 --- 	UiTranslate(0, 50)
 ---     local id = UiNavComponent(100, 20)
 --- 	local isInFocus = UiIsComponentInFocus(id)
----
+--- 
 --- 	UiNavGroupEnd()
----
+--- 
 --- 	local groupInFocus = UiIsComponentInFocus(gId)
----
+--- 
 ---     if groupInFocus then
 --- 		-- get a rect of the focused component parent
 ---         local rect = UiFocusedComponentRect(1)
@@ -9268,27 +9418,27 @@ function UiNavGroupSize(w, h) end
 ---         -- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 --- 	UiPush()
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 ---     local id1 = UiNavComponent(100, 20)
 ---     UiTranslate(0, 50)
 ---     local id2 = UiNavComponent(100, 20)
----
+--- 
 --- 	UiPop()
----
+--- 
 ---     local f1 = UiIsComponentInFocus(id1)
 ---     local f2 = UiIsComponentInFocus(id2)
----
+--- 
 ---     local rect = UiFocusedComponentRect()
 ---     UiPush()
 ---         UiColor(1, 0, 0)
 ---         UiTranslate(rect.x, rect.y)
 ---         UiRect(rect.w, rect.h)
 ---     UiPop()
----
+--- 
 ---     if InputPressed("menu_accept") then
 ---         UiForceFocus(id2)
 ---     end
@@ -9309,27 +9459,27 @@ function UiForceFocus(id) end
 ---         -- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 --- 	UiPush()
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 ---     local id1 = UiNavComponent(100, 20)
 ---     UiTranslate(0, 50)
 ---     local id2 = UiNavComponent(100, 20)
----
+--- 
 --- 	UiPop()
----
+--- 
 ---     local f1 = UiIsComponentInFocus(id1)
 ---     local f2 = UiIsComponentInFocus(id2)
----
+--- 
 ---     local rect = UiFocusedComponentRect()
 ---     UiPush()
 ---         UiColor(1, 0, 0)
 ---         UiTranslate(rect.x, rect.y)
 ---         UiRect(rect.w, rect.h)
 ---     UiPop()
----
+--- 
 ---     DebugPrint(UiFocusedComponentId())
 --- end
 --- ```
@@ -9354,20 +9504,20 @@ function UiFocusedComponentId() return "" end
 ---         -- so it will reset focused components if the mouse moves
 ---         UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 ---     end
----
+--- 
 ---     UiPush()
----
+--- 
 ---     UiTranslate(960, 540)
----
+--- 
 ---     local id1 = UiNavComponent(100, 20)
 ---     UiTranslate(0, 50)
 ---     local id2 = UiNavComponent(100, 20)
----
+--- 
 ---     UiPop()
----
+--- 
 ---     local f1 = UiIsComponentInFocus(id1)
 ---     local f2 = UiIsComponentInFocus(id2)
----
+--- 
 ---     local rect = UiFocusedComponentRect()
 ---     UiPush()
 ---         UiColor(1, 0, 0)
@@ -9424,7 +9574,7 @@ function UiGetItemSize() return 0, 0 end
 ---             else
 ---                 UiAutoTranslate(true)
 ---             end
----
+--- 
 ---             UiRect(50, 50)
 ---             local w, h = UiGetItemSize()
 ---             DebugPrint(math.ceil(w) .. "x" .. math.ceil(h))
@@ -9432,7 +9582,7 @@ function UiGetItemSize() return 0, 0 end
 ---     UiPop()
 --- end
 --- ```
----@param value boolean
+---@param value boolean 
 function UiAutoTranslate(value) end
 
 --- Call to start measuring the content size. After drawing part of the
@@ -9586,21 +9736,21 @@ function UiDislikeProsMod(...) end
 --- Example:
 --- ```lua
 --- #include "ui/ui_helpers.lua"
----
+--- 
 --- function draw()
 --- 	UiPush()
 --- 		-- If the last input device was a gamepad, hide the cursor and proceed to control through D-pad navigation
 --- 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
 --- 			UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 --- 		end
----
+--- 
 ---         UiMakeInteractive()
 ---         UiAlign("center")
 ---         UiColor(1.0, 1.0, 1.0)
 --- 		UiButtonHoverColor(1.0, 0.5, 0.5)
 ---         UiFont("regular.ttf", 50)
 ---         UiTranslate(UiCenter(), 200)
----
+--- 
 ---         UiTranslate(0, 100)
 ---         if UiTextButton("1") then
 ---             DebugPrint(1)
@@ -9612,7 +9762,7 @@ function UiDislikeProsMod(...) end
 --- 	UiPop()
 --- end
 --- ```
----@param state number
+---@param state number 
 function UiSetCursorState(state) end
 
 --- Possible values are: <br>
@@ -9626,21 +9776,21 @@ function UiSetCursorState(state) end
 --- Example:
 --- ```lua
 --- #include "ui/ui_helpers.lua"
----
+--- 
 --- function draw()
 --- 	UiPush()
 --- 		-- If the last input device was a gamepad, hide the cursor and proceed to control through D-pad navigation
 --- 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
 --- 			UiForceMouse(UI_MOUSE_HIDE_AND_LOCK)
 --- 		end
----
+--- 
 --- 		UiMakeInteractive()
 --- 		UiAlign("center")
 --- 		UiColor(1.0, 1.0, 1.0)
 --- 		UiButtonHoverColor(1.0, 0.5, 0.5)
 --- 		UiFont("regular.ttf", 50)
 --- 		UiTranslate(UiCenter(), 200)
----
+--- 
 --- 		UiTranslate(0, 100)
 --- 		if UiTextButton("1") then
 --- 			DebugPrint(1)
@@ -9652,7 +9802,7 @@ function UiSetCursorState(state) end
 --- 	UiPop()
 --- end
 --- ```
----@param state number
+---@param state number 
 function UiForceMouse(state) end
 
 --- Send input action with given value and actionId produced from given touchId.
