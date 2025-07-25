@@ -82,6 +82,7 @@ function ShellSecTick(self, delta, variant)
         ["PF"] = ShellSecTickFlare,
         ["CL"] = ShellSecTickCluster,
         ["IN"] = ShellSecTickIncendiary,
+        ["M31A1"] = ShellSecTickM31A1,
     }
 
     local success, result = pcall(disp_tick_secondary[variant.id], self, delta, variant)

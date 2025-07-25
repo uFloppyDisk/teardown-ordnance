@@ -14,6 +14,7 @@
 #include "src/shell/type/60mm/smoke.lua"
 #include "src/shell/type/155mm/cluster.lua"
 #include "src/shell/type/155mm/incendiary.lua"
+#include "src/shell/type/mlrs/m31a1.lua"
 
 #include "src/shell/secondary.lua"
 
