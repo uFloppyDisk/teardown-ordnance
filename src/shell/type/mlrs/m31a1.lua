@@ -109,14 +109,6 @@ local function subTick(self, delta, variant)
     local weak, median, strong = unpack(variant.size_makehole)
     MakeHole(position_hit, weak, median, strong, false)
 
-    ParticleReset()
-    ParticleRadius(1, 2.5, "smooth", 0, 0.2)
-    ParticleAlpha(0.5, 0.0, "smooth", 0.05, 0.5)
-    ParticleStretch(0)
-    ParticleCollide(0)
-
-    SpawnParticle(position_hit, G_VEC_WIND, math.random() * 7 + 3)
-
     return false, nil
 end
 
