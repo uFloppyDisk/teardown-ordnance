@@ -677,3 +677,23 @@ function HudKeybindHintPrefix(key, options)
 
     return string.format("%s%s%s | ", s, CfgGetKeyFriendlyName(key), e)
 end
+
+---Build wildcard for use in UI
+---@param attrs string|table
+---@return string wildcard
+function FdWildcard(attrs)
+    if type(attrs) ~= "table" then
+        attrs = { attrs }
+    end
+
+    local normalized_attrs = {}
+    for _, attr in ipairs(attrs) do
+        if type(attr) == "string" then
+            table.insert(normalized_attrs, attr)
+        elseif type(attr) == "table" then
+            table.insert(normalized_attrs, attr[1] .. "=" .. attr[2])
+        end
+    end
+
+    return "[[" .. table.concat(normalized_attrs, ";") .. ";]]"
+end
