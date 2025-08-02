@@ -1,11 +1,18 @@
 ---@class (exact) SubM31A1 : Submunition
 ---@field active boolean
+---@field age number
 ---@field delay number
 ---@field index integer
 
 local MISSILE_DELAY_BETWEEN = 0.7
 local MISSILE_AMOUNT_PER = 6
 local MISSILE_MAX_OFFSET_DISTANCE = 50
+
+local ENGINE_EMISSION_COLOUR = BLACKBODY[2500]
+local ENGINE_EMISSION_INTENSITY = 25
+local ENGINE_EMISSION_FADEIN = 0.2
+local ENGINE_EMISSION_FADEOUT_START_AGE = 2.2
+local ENGINE_EMISSION_FADEOUT = 0.7
 
 ---Initialize submunitions
 ---@param self Shell
@@ -28,6 +35,7 @@ local function subInit(self)
         local sub = FdObjectNew({
             index = index,
             active = false,
+            age = 0,
             delay = (index - 1) * MISSILE_DELAY_BETWEEN,
             transform = TransformCopy(transform),
             velocity = Vec(0, 0, 0),
@@ -50,6 +58,8 @@ end
 ---@return boolean continue
 ---@return TTransform? new_transform
 local function subTick(self, delta, variant)
+    self.age = self.age + delta
+
     local gravity = math.abs(G_VEC_GRAVITY[2])
     local world_down = TransformToLocalVec(self.transform, Vec(0, -1, 0))
 
@@ -62,6 +72,20 @@ local function subTick(self, delta, variant)
         VecLength(VecSub(position_new, self.transform.pos)))
     if not hit then
         FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
+
+        local emission_fadein = FdClamp(self.age / ENGINE_EMISSION_FADEIN, 0, 1)
+        local emission_fadeout = 1 -
+            FdClamp((self.age - ENGINE_EMISSION_FADEOUT_START_AGE) / ENGINE_EMISSION_FADEOUT, 0, 1)
+
+        local emission_intensity = math.min(emission_fadein, emission_fadeout) * ENGINE_EMISSION_INTENSITY
+
+        PointLight(
+            self.transform.pos,
+            ENGINE_EMISSION_COLOUR[1],
+            ENGINE_EMISSION_COLOUR[2],
+            ENGINE_EMISSION_COLOUR[3],
+            emission_intensity
+        )
 
         return true, transform_new
     end
