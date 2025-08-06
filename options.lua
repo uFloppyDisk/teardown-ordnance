@@ -18,9 +18,6 @@ MENU = {
     offset_option_slider = {-5, -7},
 }
 
-URL_MOD_SOURCE = "https://github.com/uFloppyDisk/teardown-ordnance"
-LINK_SOURCE = FdWildcard({ URL_MOD_SOURCE, { "label", "GITHUB" } })
-
 local function getTextSizeMax(fonts, text, size)
     size = size or UiFontHeight()
 
@@ -396,17 +393,8 @@ local function renderMenu()
         UiAlign("center middle")
 
         -- Title
-        FdUiContainer(function ()
-            FdUiContainer(function ()
-                UiFont("bold.ttf", 48)
-                UiText("Ordnance Configuration", true)
-            end)
-            FdUiContainer(function ()
-                UiFont("regular.ttf", 24)
-                UiText("View source on "..LINK_SOURCE, true)
-            end)
-        end, {false, true})
-
+        UiFont("bold.ttf", 48)
+        UiText("Ordnance Configuration", true)
         UiTranslate(0, 15)
 
         -- Menu masthead
