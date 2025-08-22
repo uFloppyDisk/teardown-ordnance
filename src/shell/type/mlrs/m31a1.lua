@@ -130,6 +130,14 @@ function ShellSecTickM31A1(self, delta, variant)
         local _ = (function()
             if not sub.active and sub.delay <= 0 then
                 sub.active = true
+
+                local handle = LoadSound("MOD/assets/snd/" .. variant.secondary.sounds.fire .. ".ogg")
+                local heading = (function()
+                    if self.pitch >= 90 then return nil end
+
+                    return self.heading
+                end)()
+                FdPlayDistantSound(handle, { heading = heading, use_random_pitch = true })
             end
 
             if not sub.active then

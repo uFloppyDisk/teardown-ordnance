@@ -973,7 +973,10 @@ SHELL_VALUES = {
                 size_makehole = { 50, 20, 5 },
                 secondary = {
                     timer = 30,
-                    trigger_height = 10000
+                    trigger_height = 10000,
+                    sounds = {
+                        fire = "mlrs_m31a1_fire"
+                    },
                 }
             },
         },
