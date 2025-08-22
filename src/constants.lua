@@ -991,7 +991,7 @@ SHELL_VALUES = {
                 "155mm_whistle_2",
                 "155mm_whistle_3"
             },
-            fire = "155mm_fire"
+            fire = ""
         }
     },
 }
