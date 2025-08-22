@@ -971,6 +971,11 @@ SHELL_VALUES = {
                 silent = false,
                 size_explosion = 4,
                 size_makehole = { 50, 20, 5 },
+                sprite = {
+                    img = LoadSprite("MOD/assets/img/m31a1.png"),
+                    scaling_factor = 4.2,
+                    width = 1
+                },
                 secondary = {
                     timer = 30,
                     trigger_height = 10000,

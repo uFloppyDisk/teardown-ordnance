@@ -14,6 +14,22 @@ local ENGINE_EMISSION_FADEIN = 0.2
 local ENGINE_EMISSION_FADEOUT_START_AGE = 2.2
 local ENGINE_EMISSION_FADEOUT = 0.7
 
+---Draw sprite
+---@param sprite table
+---@param transform TTransform
+---@param heading number
+---@param pitch number
+local function drawSprite(sprite, transform, heading, pitch)
+    local fake_shell = {
+        sprite = sprite,
+        position = transform.pos,
+        heading = heading,
+        pitch = pitch,
+    }
+
+    ShellDrawSprite(fake_shell)
+end
+
 ---Initialize submunitions
 ---@param self Shell
 local function subInit(self)
@@ -68,7 +84,9 @@ local function subTick(self, delta, variant)
     local position_new = TransformToParentPoint(self.transform, VecScale(self.velocity, delta))
     local transform_new = Transform(position_new, self.transform.rot)
 
-    local hit, hit_distance = QueryRaycast(self.transform.pos, VecNormalize(VecSub(position_new, self.transform.pos)),
+    local travel_direction = VecNormalize(VecSub(position_new, self.transform.pos))
+
+    local hit, hit_distance = QueryRaycast(self.transform.pos, travel_direction,
         VecLength(VecSub(position_new, self.transform.pos)))
     if not hit then
         FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
@@ -79,8 +97,10 @@ local function subTick(self, delta, variant)
 
         local emission_intensity = math.min(emission_fadein, emission_fadeout) * ENGINE_EMISSION_INTENSITY
 
+        local engine_offset = VecAdd(self.transform.pos,
+            VecScale(travel_direction, -variant.sprite.width * variant.sprite.scaling_factor / 2))
         PointLight(
-            self.transform.pos,
+            engine_offset,
             ENGINE_EMISSION_COLOUR[1],
             ENGINE_EMISSION_COLOUR[2],
             ENGINE_EMISSION_COLOUR[3],
@@ -144,6 +164,8 @@ function ShellSecTickM31A1(self, delta, variant)
                 sub.delay = sub.delay - delta
                 return
             end
+
+            drawSprite(variant.sprite, sub.transform, self.heading, self.pitch)
 
             local continue, transform_new = subTick(sub, delta, variant)
             if not continue then
