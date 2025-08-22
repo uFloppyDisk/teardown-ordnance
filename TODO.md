@@ -6,7 +6,8 @@
 
 #### MLRS
 - [ ] M31A1 sprite
-- [ ] M31A1 launch/doppler sfx
+- [x] M31A1 launch sfx
+- [ ] M31A1 doppler sfx
 
 ### Improvements
 - [ ] Options menu overhaul/redesign
