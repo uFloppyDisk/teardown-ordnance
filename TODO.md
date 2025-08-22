@@ -5,7 +5,7 @@
 - [ ] Custom voxel model (tactical iPad)
 
 #### MLRS
-- [ ] M31A1 sprite
+- [x] M31A1 sprite
 - [x] M31A1 launch sfx
 - [ ] M31A1 doppler sfx
 
