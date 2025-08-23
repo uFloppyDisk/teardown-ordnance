@@ -4,6 +4,11 @@
 - [ ] General explosion sfx for all shells
 - [ ] Custom voxel model (tactical iPad)
 
+#### MLRS
+- [x] M31A1 sprite
+- [x] M31A1 launch sfx
+- [ ] M31A1 doppler sfx
+
 ### Improvements
 - [ ] Options menu overhaul/redesign
 

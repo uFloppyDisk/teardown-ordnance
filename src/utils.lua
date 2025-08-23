@@ -677,3 +677,35 @@ function HudKeybindHintPrefix(key, options)
 
     return string.format("%s%s%s | ", s, CfgGetKeyFriendlyName(key), e)
 end
+
+local SOUND_DEFAULT_POSITION = Vec(100, 0, 100)
+local SOUND_VOLUME = 20
+local SOUND_PITCH_VARIATION = 0.5
+---Play a sound in the distance
+---Optionally, using heading
+---Optionally, play with random pitch
+---@param sound_handle any
+---@param options? { heading?: number, use_random_pitch?: boolean }
+function FdPlayDistantSound(sound_handle, options)
+    local position = SOUND_DEFAULT_POSITION
+    local pitch = 1.0
+
+    local _ = (function()
+        if options == nil then return end
+
+        if options.heading ~= nil then
+            local length = VecLength(position)
+
+            local transform = Transform(Vec(0, 0, 0), QuatEuler(0, options.heading, 0))
+            position = TransformToParentVec(transform, VecScale(Vec(1, 0, 0), length))
+        end
+
+        if options.use_random_pitch then
+            pitch = pitch + (SOUND_PITCH_VARIATION * math.random() * math.random(-1, 1))
+        end
+    end)()
+
+    local position_relative_to_player = VecAdd(GetCameraTransform().pos, position)
+    local register_volume = true
+    PlaySound(sound_handle, position_relative_to_player, SOUND_VOLUME, register_volume, pitch)
+end
