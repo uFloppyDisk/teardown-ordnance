@@ -1,0 +1,5 @@
+<scene version="1.7.0">
+    <body dynamic="true">
+        <vox pos="0 0 0" scale=".015625" file="MOD/assets/vox/radio.vox" />
+    </body>
+</scene>

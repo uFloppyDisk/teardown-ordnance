@@ -50,7 +50,7 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function init()
-    RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/lasergun.vox")
+    RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/radio.xml")
     SetBool("game.tool.ordnance.enabled", true)
 
     if CfgInit() then
@@ -112,6 +112,9 @@ function tick(delta)
     FdWatch("Shells", #SHELLS)
     FdWatch("Salvo", #QUICK_SALVO)
     FdWatch("BODIES", #BODIES)
+
+    SetToolTransform(Transform(Vec(0.2, -0.3, -0.4), QuatEuler(-20, -35, -5)))
+    SetToolHandPoseLocalTransform(Transform(Vec(0, 0.08, 0), QuatEuler(0, 180, 0)), nil)
 
     for i, body in ipairs(BODIES) do
         if body.valid == true and PhysBodyTick(body) then
