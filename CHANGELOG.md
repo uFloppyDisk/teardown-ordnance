@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/uFloppyDisk/teardown-ordnance/compare/v0.6.0...v0.6.1) (2025-08-28)
+
+
+### Bug Fixes
+
+* tool transform affecting other tools; ([#37](https://github.com/uFloppyDisk/teardown-ordnance/issues/37)) ([a6c9122](https://github.com/uFloppyDisk/teardown-ordnance/commit/a6c9122839a2965d73887dec729551038911dd50))
+
 ## [0.6.0](https://github.com/uFloppyDisk/teardown-ordnance/compare/0.5.1...v0.6.0) (2025-08-28)
 
 
