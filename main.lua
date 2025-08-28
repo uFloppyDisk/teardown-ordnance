@@ -113,9 +113,6 @@ function tick(delta)
     FdWatch("Salvo", #QUICK_SALVO)
     FdWatch("BODIES", #BODIES)
 
-    SetToolTransform(Transform(Vec(0.2, -0.3, -0.4), QuatEuler(-20, -35, -5)))
-    SetToolHandPoseLocalTransform(Transform(Vec(0, 0.08, 0), QuatEuler(0, 180, 0)), nil)
-
     for i, body in ipairs(BODIES) do
         if body.valid == true and PhysBodyTick(body) then
             body.valid = false
@@ -183,6 +180,9 @@ function tick(delta)
 
     STATES.enabled = true
     local sound_pos = GetCameraTransform().pos
+
+    SetToolTransform(Transform(Vec(0.2, -0.3, -0.4), QuatEuler(-20, -35, -5)))
+    SetToolHandPoseLocalTransform(Transform(Vec(0, 0.08, 0), QuatEuler(0, 180, 0)), nil)
 
     if G_DEV then
         if #DEBUG_POSITIONS > 0 then
