@@ -999,6 +999,46 @@ SHELL_VALUES = {
             fire = ""
         }
     },
+    [4] = {
+        name = "test_projectile",
+        caliber = "",
+        weight = 90.71,
+        muzzle_velocity = 413,
+        variants = {
+            {
+                id = "test_projectile",
+                name = "test_projectile",
+                silent = false,
+                size_explosion = 4,
+                size_makehole = { 50, 20, 5 },
+                sprite = {
+                    img = LoadSprite("MOD/assets/img/m31a1.png"),
+                    scaling_factor = 4.2,
+                    width = 1
+                },
+                secondary = {
+                    timer = 30,
+                    trigger_height = 10000,
+                    sounds = {
+                        fire = "mlrs_m31a1_fire"
+                    },
+                }
+            },
+        },
+        sprite = {
+            img = LoadSprite("MOD/assets/img/155mm_HE.png"),
+            scaling_factor = 4.08,
+            width = 0.06 * 2
+        },
+        sounds = {
+            whistle = {
+                "155mm_whistle_1",
+                "155mm_whistle_2",
+                "155mm_whistle_3"
+            },
+            fire = ""
+        }
+    },
 }
 
 ---@class (exact) Shell

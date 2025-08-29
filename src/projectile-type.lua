@@ -1,8 +1,8 @@
-Projectiles.defineProjectile("test_projectile", function(name)
-    DebugPrint("Defining this mf")
+Projectiles.defineProjectile("test_projectile", function(typeName)
+    DebugPrint("Defining " .. typeName)
     return {
-        init = function()
-            DebugPrint("Overwritten init function for " .. name)
+        afterTick = function(projectile, _)
+            DebugPrint(string.format("afterTick: %s %d", projectile.type, projectile.age))
         end
     }
 end)

@@ -107,7 +107,7 @@ end
 function tick(delta)
     ELAPSED_TIME = ELAPSED_TIME + delta
 
-    Projectiles.tick()
+    Projectiles.tick(delta)
 
     FdWatch("state(ENABLED)", STATES.enabled)
     FdWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
@@ -381,6 +381,11 @@ function tick(delta)
 
     local values = SHELL_VALUES[STATES.selected_shell]
     local variant = values.variants[STATES.selected_variant]
+
+    if variant.id == "test_projectile" then
+        Projectiles.init(variant.id)
+        return
+    end
 
     local shell_whistle = values.sounds.whistle;
     if type(values.sounds.whistle) == "table" then
