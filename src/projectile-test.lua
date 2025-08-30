@@ -1,29 +1,43 @@
 #import "utils.lua"
 
+---@class ProjectileInitialValues
+---@field destination TVec Resolved projectile destination
+---@field state? SHELL_STATE Initial shell state
+---
 ---@class (exact) Projectile
+---@field _initial ProjectileInitialValues
 ---@field type string
 ---@field age number
+---@field state SHELL_STATE
+---
+---@class (exact) ActiveProjectile : Projectile
+---@field transform TTransform
+---@field velocity TVec
+---
+---@class ProjectileProps
+---@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
 
 ---@alias ProjectileInitFn fun(projectile: Projectile): Projectile
 ---@alias ProjectileAfterInitFn ProjectileInitFn
 ---
----@alias ProjectileTickFn fun(projectile: Projectile, dt: number): nil
+---@alias ProjectileTickFn fun(projectile: ActiveProjectile, dt: number): nil
 ---@alias ProjectileBeforeTickFn ProjectileTickFn
 ---@alias ProjectileAfterTickFn ProjectileTickFn
 
----@class (exact) ProjectileGeneratorSchema
+---@class (exact) ProjectileDefinition
+---@field props ProjectileProps
 ---@field init? ProjectileInitFn
 ---@field tick? ProjectileTickFn
 ---@field afterInit? ProjectileAfterInitFn
 ---@field afterTick? ProjectileAfterTickFn
 ---@field beforeTick? ProjectileBeforeTickFn
 ---
----@alias ProjectileGenerator fun(typeName: string): ProjectileGeneratorSchema
+---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition
 
 
 ---@type Projectile[]
 __PROJECTILES = {}
----@type string[]
+---@type { [string]: ProjectileProps }
 __PROJECTILES_TYPES = {}
 ---@type { [string]: function }
 __PROJECTILES_HANDLERS = {}
@@ -58,6 +72,27 @@ local function setHandler(typeName, keys, handler, default)
     __PROJECTILES_HANDLERS[generateHandlerId(typeName, keys)] = handler
 end
 
+---@type ProjectileInitFn
+local function defaultInitFn(projectile)
+    projectile.age = 0
+    projectile.state = projectile._initial.state or SHELL_STATE.ACTIVE
+
+    return projectile
+end
+
+---@type ProjectileTickFn
+local function defaultTickFn(projectile, dt)
+    projectile.age = projectile.age + dt
+
+    local gravity = math.abs(G_VEC_GRAVITY[2])
+    local world_down = TransformToLocalVec(projectile.transform, Vec(0, -1, 0))
+
+    projectile.velocity = VecAdd(projectile.velocity, VecScale(world_down, gravity * dt))
+
+    local position_new = TransformToParentPoint(projectile.transform, VecScale(projectile.velocity, dt))
+    projectile.transform = Transform(position_new, projectile.transform.rot)
+end
+
 
 Projectiles = {}
 
@@ -67,38 +102,40 @@ end
 
 ---comment
 ---@param typeName string
----@param projectileGenerator ProjectileGenerator
-function Projectiles.defineProjectile(typeName, projectileGenerator)
+---@param definitionGenerator ProjectileDefinitionGenerator
+function Projectiles.defineProjectile(typeName, definitionGenerator)
     if __PROJECTILES_TYPES[typeName] ~= nil then
         error(string.format("Cannot define new projectile with type '%s'; Already exists", typeName))
         return
     end
 
-    local def = projectileGenerator(typeName)
-    __PROJECTILES_TYPES[typeName] = typeName
+    local def = definitionGenerator(typeName)
+    __PROJECTILES_TYPES[typeName] = def.props
+
+    setHandler(typeName, { "init" }, def.init, defaultInitFn)
+    setHandler(typeName, { "tick" }, def.tick, defaultTickFn)
 
     setHandler(typeName, { "afterInit" }, def.afterInit)
     setHandler(typeName, { "beforeTick" }, def.beforeTick)
     setHandler(typeName, { "afterTick" }, def.afterTick)
-
-    setHandler(typeName, { "init" }, def.init, function(projectile)
-        projectile.type = typeName
-        projectile.age = 0
-        return projectile
-    end)
-    setHandler(typeName, { "tick" }, def.tick, function(projectile, dt)
-        projectile.age = projectile.age + dt
-    end)
 end
 
-function Projectiles.init(typeName)
+---comment
+---@param typeName string
+---@param initialValues ProjectileInitialValues
+function Projectiles.init(typeName, initialValues)
     if __PROJECTILES_TYPES[typeName] == nil then
         error(string.format("Cannot instantiate a projectile of type '%s'; Does not exist", typeName))
         return
     end
 
-    local projectile = getHandler(typeName, "init")({})
-    getHandler(projectile.type, "afterInit")(projectile)
+    local projectile = {
+        _initial = initialValues,
+        type = typeName
+    }
+
+    getHandler(typeName, "init")(projectile)
+    getHandler(typeName, "afterInit")(projectile)
 
     table.insert(__PROJECTILES, projectile)
 end

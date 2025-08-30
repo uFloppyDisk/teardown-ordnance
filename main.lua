@@ -382,8 +382,8 @@ function tick(delta)
     local values = SHELL_VALUES[STATES.selected_shell]
     local variant = values.variants[STATES.selected_variant]
 
-    if variant.id == "test_projectile" then
-        Projectiles.init(variant.id)
+    if FdAssertTableKeys(Projectiles.getTypes(), variant.id) then
+        Projectiles.init(variant.id, { destination = VecCopy(aim_pos) })
         return
     end
 
