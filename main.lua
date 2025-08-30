@@ -382,8 +382,15 @@ function tick(delta)
     local values = SHELL_VALUES[STATES.selected_shell]
     local variant = values.variants[STATES.selected_variant]
 
-    if FdAssertTableKeys(Projectiles.getTypes(), variant.id) then
-        Projectiles.init(variant.id, { destination = VecCopy(aim_pos) })
+    if Projectiles.getTypes()[variant.id] ~= nil then
+        Projectiles.init(variant.id, {
+            destination = VecCopy(aim_pos),
+            timeToDestination = DEFAULT_SHELL.eta,
+            attack = {
+                heading = STATES.selected_attack_heading,
+                pitch = STATES.selected_attack_angle,
+            },
+        })
         return
     end
 
@@ -428,6 +435,8 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function update(delta)
+    Projectiles.update(delta)
+
     -- Run shell tick for each shell not detonated, remove shell if detonated
     for i, shell in ipairs(SHELLS) do
         ShellTick(shell, delta)
