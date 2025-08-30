@@ -169,6 +169,22 @@ local function defaultUpdateFn(projectile, _, dt)
         projectile.transform.pos = VecAdd(projectile.transform.pos, VecScale(projectile.velocity, iter_delta))
     end
 
+    local current_distance = VecLength(VecSub(projectile.transform.pos, projectile._initial.destination))
+    if projectile._cache.distance_to_destination ~= nil
+        and current_distance > projectile._cache.distance_to_destination
+        and current_distance > PROJECTILE_MAX_OVERSHOOT
+    then
+        DebugPrint("Projectile expired due to overshoot")
+        projectile.state = SHELL_STATE.NONE
+    else
+        projectile._cache.distance_to_destination = current_distance
+    end
+
+    if projectile.age > PROJECTILE_MAX_AGE then
+        DebugPrint("Projectile expired due to age")
+        projectile.state = SHELL_STATE.NONE
+    end
+
     FdAddToDebugTable(DEBUG_LINES, {
         projectile._cache.previous_transform.pos,
         projectile.transform.pos,
@@ -266,6 +282,7 @@ function Projectiles.update(dt)
         getHandler(projectile.type, "afterUpdate")(projectile, props, dt)
 
         if projectile.state == SHELL_STATE.NONE then
+            DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
             table.remove(__PROJECTILES, index)
         end
     end
