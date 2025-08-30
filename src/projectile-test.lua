@@ -1,9 +1,15 @@
 #include "utils.lua"
+#include "shell/main.lua"
 #include "projectile-defaults.lua"
 
 ---@class ProjectileAttack
 ---@field heading number Heading degrees [0, 360]
 ---@field pitch number Pitch degrees wrt XZ-plane (<=90)
+---
+---@class ProjectileSprite
+---@field handle number LoadSprite handle
+---@field width number 
+---@field aspect_ratio number Aspect ratio wrt sprite width
 
 ---@class ProjectileInitialValues
 ---@field destination TVec Resolved projectile destination
@@ -22,6 +28,7 @@
 ---
 ---@class ProjectileProps
 ---@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
+---@field sprite ProjectileSprite
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): Projectile
 ---@alias ProjectileAfterInitFn ProjectileInitFn
@@ -126,10 +133,21 @@ local function defaultInitFn(projectile, props)
 end
 
 ---@type ProjectileTickFn
-local function defaultTickFn(projectile, _, dt)
+local function defaultTickFn(projectile, props, dt)
     local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
     local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
-    FdDrawCircle(pos, 0.1, 6, FdGetRGBA(COLOUR["red"]))
+
+    local fake_shell = {
+        heading = projectile._initial.attack.heading,
+        pitch = projectile._initial.attack.pitch,
+        position = pos,
+        sprite = {
+            img = props.sprite.handle,
+            width = props.sprite.width,
+            scaling_factor = props.sprite.aspect_ratio,
+        }
+    }
+    ShellDrawSprite(fake_shell)
 end
 
 ---@type ProjectileUpdateFn
