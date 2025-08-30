@@ -10,6 +10,12 @@
 ---@field handle number LoadSprite handle
 ---@field width number 
 ---@field aspect_ratio number Aspect ratio wrt sprite width
+---
+---@see MakeHole
+---@class ProjectileMakeHoleSizes
+---@field soft number
+---@field medium? number
+---@field hard? number
 
 ---@class ProjectileInitialValues
 ---@field destination TVec Resolved projectile destination
@@ -29,6 +35,8 @@
 ---@class ProjectileProps
 ---@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
 ---@field sprite ProjectileSprite
+---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
+---@field makeHoleSizes? ProjectileMakeHoleSizes
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): Projectile
 ---@alias ProjectileAfterInitFn ProjectileInitFn
@@ -40,6 +48,8 @@
 ---@alias ProjectileUpdateFn fun(projectile: Projectile, props: ProjectileProps, dt: number): nil
 ---@alias ProjectileBeforeUpdateFn ProjectileUpdateFn
 ---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
+---
+---@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): nil
 
 ---@class (exact) ProjectileDefinition
 ---@field props ProjectileProps
@@ -51,6 +61,7 @@
 ---@field update? ProjectileUpdateFn
 ---@field beforeUpdate? ProjectileBeforeUpdateFn
 ---@field afterUpdate? ProjectileAfterUpdateFn
+---@field onDetonate? ProjectileDetonateFn
 ---
 ---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition
 
@@ -64,15 +75,6 @@ __PROJECTILES_HANDLERS = {}
 
 local function generateHandlerId(typeName, ...)
     return typeName .. ":" .. table.concat(..., ".")
-end
-
-local function getHandler(typeName, ...)
-    local keys = ...
-    if type(keys) ~= "table" then
-        keys = { keys }
-    end
-
-    return __PROJECTILES_HANDLERS[generateHandlerId(typeName, keys)] or function() end
 end
 
 ---comment
@@ -134,6 +136,8 @@ end
 
 ---@type ProjectileTickFn
 local function defaultTickFn(projectile, props, dt)
+    if projectile.state ~= SHELL_STATE.ACTIVE then return end
+
     local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
     local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
 
@@ -151,10 +155,11 @@ local function defaultTickFn(projectile, props, dt)
 end
 
 ---@type ProjectileUpdateFn
-local function defaultUpdateFn(projectile, _, dt)
+local function defaultUpdateFn(projectile, props, dt)
     if projectile.transform == nil or projectile.velocity == nil then
         return
     end
+    if projectile.state ~= SHELL_STATE.ACTIVE then return end
 
     projectile._cache.update_delta = dt
     projectile._cache.update_time = projectile.age
@@ -167,6 +172,26 @@ local function defaultUpdateFn(projectile, _, dt)
     for _ = 0, physics_iterations, 1 do
         projectile.velocity = VecAdd(projectile.velocity, VecScale(G_VEC_GRAVITY, iter_delta))
         projectile.transform.pos = VecAdd(projectile.transform.pos, VecScale(projectile.velocity, iter_delta))
+    end
+
+    local previous_transform = projectile._cache.previous_transform
+    local position_difference = VecSub(projectile.transform.pos, previous_transform.pos)
+
+    -- Hit detection and ballistics system
+    QueryRequire('large')
+    QueryRequire("physical")
+    local hit, hit_distance, _, _ = QueryRaycast(
+        projectile.transform.pos,
+        VecNormalize(position_difference),
+        VecLength(position_difference)
+    )
+    if hit then
+        local detonate_position = VecAdd(projectile.transform.pos,
+            VecScale(VecNormalize(position_difference), hit_distance))
+
+        projectile._cache.detonate_position = detonate_position
+        Projectiles.getHandler(projectile.type, "onDetonate")(projectile, props)
+        return
     end
 
     local current_distance = VecLength(VecSub(projectile.transform.pos, projectile._initial.destination))
@@ -192,6 +217,29 @@ local function defaultUpdateFn(projectile, _, dt)
     })
 end
 
+---@type ProjectileDetonateFn
+local function defaultDetonateFn(projectile, props)
+    local detonate_at = projectile._cache.detonate_position or projectile.transform.pos
+    projectile.state = SHELL_STATE.DETONATED
+
+    DebugPrint("Detonating projectile")
+    DebugPrint(detonate_at)
+
+    FdAddToDebugTable(DEBUG_POSITIONS, { detonate_at, COLOUR["red"] })
+
+    local hole = props.makeHoleSizes or {}
+    MakeHole(
+        detonate_at,
+        hole.soft or 0,
+        hole.medium or 0,
+        hole.hard or 0,
+        false
+    )
+
+    if not props.explosiveYield or props.explosiveYield <= 0 then return end
+    Explosion(detonate_at, props.explosiveYield)
+end
+
 
 Projectiles = {}
 
@@ -209,6 +257,16 @@ function Projectiles.getPropsByType(typeName)
     return props
 end
 
+function Projectiles.getHandler(typeName, ...)
+    local keys = ...
+    if type(keys) ~= "table" then
+        keys = { keys }
+    end
+
+    return __PROJECTILES_HANDLERS[generateHandlerId(typeName, keys)] or function() end
+end
+
+
 ---comment
 ---@param typeName string
 ---@param definitionGenerator ProjectileDefinitionGenerator
@@ -224,6 +282,7 @@ function Projectiles.defineProjectile(typeName, definitionGenerator)
     setHandler(typeName, { "init" }, def.init, defaultInitFn)
     setHandler(typeName, { "tick" }, def.tick, defaultTickFn)
     setHandler(typeName, { "update" }, def.update, defaultUpdateFn)
+    setHandler(typeName, { "onDetonate" }, def.onDetonate, defaultDetonateFn)
 
     setHandler(typeName, { "afterInit" }, def.afterInit)
 
@@ -253,8 +312,8 @@ function Projectiles.init(typeName, initialValues)
 
     local props = Projectiles.getPropsByType(typeName)
 
-    getHandler(typeName, "init")(projectile, props)
-    getHandler(typeName, "afterInit")(projectile, props)
+    Projectiles.getHandler(typeName, "init")(projectile, props)
+    Projectiles.getHandler(typeName, "afterInit")(projectile, props)
 
     table.insert(__PROJECTILES, projectile)
 end
@@ -264,12 +323,12 @@ function Projectiles.tick(dt)
     for _, projectile in ipairs(__PROJECTILES) do
         local props = Projectiles.getPropsByType(projectile.type)
 
-        getHandler(projectile.type, "beforeTick")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "beforeTick")(projectile, props, dt)
 
         projectile.age = projectile.age + dt
 
-        getHandler(projectile.type, "tick")(projectile, props, dt)
-        getHandler(projectile.type, "afterTick")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "tick")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "afterTick")(projectile, props, dt)
     end
 end
 
@@ -277,9 +336,9 @@ function Projectiles.update(dt)
     for index, projectile in ipairs(__PROJECTILES) do
         local props = Projectiles.getPropsByType(projectile.type)
 
-        getHandler(projectile.type, "beforeUpdate")(projectile, props, dt)
-        getHandler(projectile.type, "update")(projectile, props, dt)
-        getHandler(projectile.type, "afterUpdate")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "beforeUpdate")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "update")(projectile, props, dt)
+        Projectiles.getHandler(projectile.type, "afterUpdate")(projectile, props, dt)
 
         if projectile.state == SHELL_STATE.NONE then
             DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))

@@ -7,11 +7,12 @@ Projectiles.defineProjectile("test_projectile", function(typeName)
                 width = 1,
                 aspect_ratio = 4.2,
             },
+            explosiveYield = 4,
+            makeHoleSizes = {
+                soft = 50,
+                medium = 50,
+                hard = 50,
+            },
         },
-        afterTick = function(projectile, _)
-            DebugPrint(string.format("afterTick: %s %f", projectile.type, projectile.age))
-            DebugPrint(projectile.transform)
-            DebugPrint(projectile.velocity)
-        end
     }
 end)
