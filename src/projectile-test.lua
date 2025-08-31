@@ -138,20 +138,28 @@ end
 local function defaultTickFn(projectile, props, dt)
     if projectile.state ~= SHELL_STATE.ACTIVE then return end
 
-    local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
-    local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
+    local _ = (function ()
+        if projectile._cache.update_time == nil
+            or projectile._cache.update_delta == nil
+        then
+            return
+        end
 
-    local fake_shell = {
-        heading = projectile._initial.attack.heading,
-        pitch = projectile._initial.attack.pitch,
-        position = pos,
-        sprite = {
-            img = props.sprite.handle,
-            width = props.sprite.width,
-            scaling_factor = props.sprite.aspect_ratio,
+        local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
+        local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
+
+        local fake_shell = {
+            heading = projectile._initial.attack.heading,
+            pitch = projectile._initial.attack.pitch,
+            position = pos,
+            sprite = {
+                img = props.sprite.handle,
+                width = props.sprite.width,
+                scaling_factor = props.sprite.aspect_ratio,
+            }
         }
-    }
-    ShellDrawSprite(fake_shell)
+        ShellDrawSprite(fake_shell)
+    end)()
 end
 
 ---@type ProjectileUpdateFn
