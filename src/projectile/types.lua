@@ -1,0 +1,62 @@
+---@class ProjectileAttack
+---@field heading number Heading degrees [0, 360]
+---@field pitch number Pitch degrees wrt XZ-plane (<=90)
+---
+---@class ProjectileSprite
+---@field handle number LoadSprite handle
+---@field width number
+---@field aspect_ratio number Aspect ratio wrt sprite width
+---
+---@see MakeHole
+---@class ProjectileMakeHoleSizes
+---@field soft number
+---@field medium? number
+---@field hard? number
+
+---@class ProjectileInitialValues
+---@field destination TVec Resolved projectile destination
+---@field attack ProjectileAttack
+---@field timeToDestination number Time in seconds to reach destination
+---@field state? SHELL_STATE Initial shell state
+---
+---@class (exact) Projectile
+---@field _initial ProjectileInitialValues
+---@field _cache { [string]: any }
+---@field type string
+---@field age number
+---@field state SHELL_STATE
+---@field transform TTransform
+---@field velocity TVec
+---
+---@class ProjectileProps
+---@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
+---@field sprite ProjectileSprite
+---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
+---@field makeHoleSizes? ProjectileMakeHoleSizes
+
+---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): Projectile
+---@alias ProjectileAfterInitFn ProjectileInitFn
+---
+---@alias ProjectileTickFn fun(projectile: Projectile, props: ProjectileProps, dt: number): nil
+---@alias ProjectileBeforeTickFn ProjectileTickFn
+---@alias ProjectileAfterTickFn ProjectileTickFn
+---
+---@alias ProjectileUpdateFn fun(projectile: Projectile, props: ProjectileProps, dt: number): nil
+---@alias ProjectileBeforeUpdateFn ProjectileUpdateFn
+---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
+---
+---@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): nil
+
+---@class (exact) ProjectileDefinition
+---@field props ProjectileProps
+---@field init? ProjectileInitFn
+---@field afterInit? ProjectileAfterInitFn
+---@field tick? ProjectileTickFn
+---@field beforeTick? ProjectileBeforeTickFn
+---@field afterTick? ProjectileAfterTickFn
+---@field update? ProjectileUpdateFn
+---@field beforeUpdate? ProjectileBeforeUpdateFn
+---@field afterUpdate? ProjectileAfterUpdateFn
+---@field onDetonate? ProjectileDetonateFn
+---
+---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition

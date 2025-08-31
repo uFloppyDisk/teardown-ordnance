@@ -20,3 +20,5 @@
 
 #include "src/shell/main.lua"
 #include "src/context/tactical.lua"
+
+#include "src/projectile/load.lua"

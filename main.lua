@@ -1,6 +1,4 @@
 #include "src/load.lua"
-#include "src/projectile-test.lua"
-#include "src/projectile-type.lua"
 
 ELAPSED_TIME = 0
 
