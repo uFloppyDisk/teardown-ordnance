@@ -17,12 +17,16 @@ end
 
 ---@type ProjectileBeforeTickFn
 function ProjectileBehaviour.defaultBeforeTick(projectile)
-    if projectile.state ~= SHELL_STATE.ACTIVE then return true end
+    if projectile.state ~= SHELL_STATE.ACTIVE then
+        return true
+    end
 end
 
 ---@type ProjectileBeforeUpdateFn
 function ProjectileBehaviour.defaultBeforeUpdate(projectile)
-    if projectile.state ~= SHELL_STATE.ACTIVE then return true end
+    if projectile.state ~= SHELL_STATE.ACTIVE then
+        return true
+    end
 end
 
 ---@type ProjectileTickFn
@@ -50,14 +54,15 @@ function ProjectileBehaviour.defaultUpdate(projectile, props, dt)
     FdAddToDebugTable(DEBUG_LINES, {
         projectile._cache.previous_transform.pos,
         projectile.transform.pos,
-        { 0, 1, 0, 0.5 }
+        { 0, 1, 0, 0.5 },
     })
 end
 
 ---@type ProjectileAfterUpdateFn
 function ProjectileBehaviour.defaultAfterUpdate(projectile)
     local current_distance = VecLength(VecSub(projectile.transform.pos, projectile._initial.destination))
-    if projectile._cache.distance_to_destination ~= nil
+    if
+        projectile._cache.distance_to_destination ~= nil
         and current_distance > projectile._cache.distance_to_destination
         and current_distance > PROJECTILE_MAX_OVERSHOOT
     then
@@ -85,15 +90,11 @@ function ProjectileBehaviour.defaultDetonate(projectile, props)
     projectile.state = SHELL_STATE.DETONATED
 
     local hole = props.makeHoleSizes or {}
-    MakeHole(
-        detonate_at,
-        hole.soft or 0,
-        hole.medium or 0,
-        hole.hard or 0,
-        false
-    )
+    MakeHole(detonate_at, hole.soft or 0, hole.medium or 0, hole.hard or 0, false)
 
-    if not props.explosiveYield or props.explosiveYield <= 0 then return end
+    if not props.explosiveYield or props.explosiveYield <= 0 then
+        return
+    end
     Explosion(detonate_at, props.explosiveYield)
 end
 
@@ -111,9 +112,13 @@ function ProjectileBehaviour.stageProjectile(projectile, props)
     -- projectile.velocity = Vec(0, 0, 0)
     -- return projectile
 
-    local solved_transform, solved_velocity, actual_flight_time =
-        ProjectileUtil.solveKinematicsAtApex(destination, velocity,
-            heading, pitch, projectile._initial.timeToDestination)
+    local solved_transform, solved_velocity, actual_flight_time = ProjectileUtil.solveKinematicsAtApex(
+        destination,
+        velocity,
+        heading,
+        pitch,
+        projectile._initial.timeToDestination
+    )
 
     projectile.transform = solved_transform
     projectile.velocity = solved_velocity

@@ -10,7 +10,7 @@ Projectiles.defineProjectile("test_projectile", function(typeName)
                 aspect_ratio = 4.2,
             },
             sounds = {
-                fire = LoadSound("MOD/assets/snd/155mm_fire.ogg", 100)
+                fire = LoadSound("MOD/assets/snd/155mm_fire.ogg", 100),
             },
             explosiveYield = 4,
             makeHoleSizes = {

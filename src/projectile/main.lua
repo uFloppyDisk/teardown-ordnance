@@ -11,7 +11,6 @@ local function generateHandlerId(typeName, ...)
     return typeName .. ":" .. table.concat(..., ".")
 end
 
-
 Projectiles = {}
 
 function Projectiles.getTypes()
@@ -113,17 +112,21 @@ function Projectiles.init(typeName, initialValues)
         _cache = {},
         type = typeName,
         age = 0,
-        state = initialValues.state or SHELL_STATE.ACTIVE
+        state = initialValues.state or SHELL_STATE.ACTIVE,
     }
 
     local props = Projectiles.getPropsByType(typeName)
 
     local skipInit = false
     skipInit = Projectiles.getHandler(typeName, "onInit")(projectile, props)
-    if skipInit then return end
+    if skipInit then
+        return
+    end
 
     skipInit = Projectiles.getHandler(typeName, "afterInit")(projectile, props)
-    if skipInit then return end
+    if skipInit then
+        return
+    end
 
     table.insert(__PROJECTILES, projectile)
 end
@@ -137,12 +140,16 @@ function Projectiles.tick(dt)
         local _ = (function()
             local skipTick = false
             skipTick = handler("beforeTick")(projectile, props, dt)
-            if skipTick then return end
+            if skipTick then
+                return
+            end
 
             projectile.age = projectile.age + dt
 
             skipTick = handler("onTick")(projectile, props, dt)
-            if skipTick then return end
+            if skipTick then
+                return
+            end
 
             handler("afterTick")(projectile, props, dt)
         end)()
@@ -159,10 +166,14 @@ function Projectiles.update(dt)
 
             local skipUpdate = false
             skipUpdate = handler("beforeUpdate")(projectile, props, dt)
-            if skipUpdate then return end
+            if skipUpdate then
+                return
+            end
 
             skipUpdate = handler("onUpdate")(projectile, props, dt)
-            if skipUpdate then return end
+            if skipUpdate then
+                return
+            end
 
             projectile._cache.update_delta = dt
             projectile._cache.update_time = projectile.age
@@ -170,9 +181,7 @@ function Projectiles.update(dt)
             handler("afterUpdate")(projectile, props, dt)
         end)()
 
-        if projectile.state == SHELL_STATE.NONE
-            or projectile.state == SHELL_STATE.DETONATED
-        then
+        if projectile.state == SHELL_STATE.NONE or projectile.state == SHELL_STATE.DETONATED then
             DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
             table.remove(__PROJECTILES, index)
         end
