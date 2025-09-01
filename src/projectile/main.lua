@@ -31,11 +31,10 @@ end
 local function defaultTickFn(projectile, props)
     if projectile.state ~= SHELL_STATE.ACTIVE then return end
 
-    local pos = ProjectileBehaviour.calculatePerTickPosition(projectile)
-
+    local per_tick_position = ProjectileUtil.calculatePerTickPosition(projectile)
     local heading = projectile._initial.attack.heading
     local pitch = projectile._initial.attack.pitch
-    ProjectileUtil.drawSprite(props.sprite, pos, heading, pitch)
+    ProjectileUtil.drawSprite(props.sprite, per_tick_position, heading, pitch)
 end
 
 ---@type ProjectileUpdateFn

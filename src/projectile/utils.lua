@@ -37,6 +37,19 @@ function ProjectileUtil.solveKinematicsAtApex(destination, targetVelocity, headi
     return solvedTransform, solvedVelocity, time
 end
 
+function ProjectileUtil.calculatePerTickPosition(projectile)
+    if projectile._cache.update_time == nil
+        or projectile._cache.update_delta == nil
+    then
+        return projectile.transform.pos
+    end
+
+    local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
+    local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
+
+    return pos
+end
+
 ---comment
 ---@param sprite ProjectileSprite
 ---@param position TVec

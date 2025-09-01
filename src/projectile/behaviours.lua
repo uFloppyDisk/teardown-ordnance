@@ -26,14 +26,6 @@ function ProjectileBehaviour.stageProjectile(projectile, props)
     end
 end
 
-function ProjectileBehaviour.calculatePerTickPosition(projectile)
-    local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
-    local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
-
-    projectile._cache.per_tick_position = pos
-    return pos
-end
-
 function ProjectileBehaviour.stepPhysics(projectile, dt)
     local physics_iterations = G_PHYSICS_ITERATIONS
     local iter_delta = dt / physics_iterations
