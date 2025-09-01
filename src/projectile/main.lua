@@ -12,8 +12,6 @@ end
 ---@type ProjectileInitFn
 local function defaultInitFn(projectile, props)
     ProjectileBehaviour.stageProjectile(projectile, props)
-
-    return projectile
 end
 
 ---@type ProjectileAfterInitFn
@@ -24,13 +22,20 @@ local function defaultAfterInitFn(projectile, props)
             use_random_pitch = true,
         })
     end
-    return projectile
+end
+
+---@type ProjectileBeforeTickFn
+local function defaultBeforeTickFn(projectile)
+    if projectile.state ~= SHELL_STATE.ACTIVE then return true end
+end
+
+---@type ProjectileBeforeUpdateFn
+local function defaultBeforeUpdateFn(projectile)
+    if projectile.state ~= SHELL_STATE.ACTIVE then return true end
 end
 
 ---@type ProjectileTickFn
 local function defaultTickFn(projectile, props)
-    if projectile.state ~= SHELL_STATE.ACTIVE then return end
-
     local per_tick_position = ProjectileUtil.calculatePerTickPosition(projectile)
     local heading = projectile._initial.attack.heading
     local pitch = projectile._initial.attack.pitch
@@ -40,9 +45,8 @@ end
 ---@type ProjectileUpdateFn
 local function defaultUpdateFn(projectile, props, dt)
     if projectile.transform == nil or projectile.velocity == nil then
-        return
+        return true
     end
-    if projectile.state ~= SHELL_STATE.ACTIVE then return end
 
     ProjectileBehaviour.stepPhysics(projectile, dt)
 
@@ -177,10 +181,10 @@ function Projectiles.defineProjectile(typeName, definitionGenerator)
 
     setHandler({ "afterInit" }, def.afterInit, defaultAfterInitFn)
 
-    setHandler({ "beforeTick" }, def.beforeTick)
+    setHandler({ "beforeTick" }, def.beforeTick, defaultBeforeTickFn)
     setHandler({ "afterTick" }, def.afterTick)
 
-    setHandler({ "beforeUpdate" }, def.beforeUpdate)
+    setHandler({ "beforeUpdate" }, def.beforeUpdate, defaultBeforeUpdateFn)
     setHandler({ "afterUpdate" }, def.afterUpdate, defaultAfterUpdateFn)
 end
 
@@ -203,8 +207,12 @@ function Projectiles.init(typeName, initialValues)
 
     local props = Projectiles.getPropsByType(typeName)
 
-    Projectiles.getHandler(typeName, "init")(projectile, props)
-    Projectiles.getHandler(typeName, "afterInit")(projectile, props)
+    local skipInit = false
+    skipInit = Projectiles.getHandler(typeName, "init")(projectile, props)
+    if skipInit then return end
+
+    skipInit = Projectiles.getHandler(typeName, "afterInit")(projectile, props)
+    if skipInit then return end
 
     table.insert(__PROJECTILES, projectile)
 end
@@ -215,12 +223,18 @@ function Projectiles.tick(dt)
         local handler = Projectiles.createHandlerGetter(projectile.type)
         local props = Projectiles.getPropsByType(projectile.type)
 
-        handler("beforeTick")(projectile, props, dt)
+        local _ = (function()
+            local skipTick = false
+            skipTick = handler("beforeTick")(projectile, props, dt)
+            if skipTick then return end
 
-        projectile.age = projectile.age + dt
+            projectile.age = projectile.age + dt
 
-        handler("tick")(projectile, props, dt)
-        handler("afterTick")(projectile, props, dt)
+            skipTick = handler("tick")(projectile, props, dt)
+            if skipTick then return end
+
+            handler("afterTick")(projectile, props, dt)
+        end)()
     end
 end
 
@@ -229,15 +243,21 @@ function Projectiles.update(dt)
         local handler = Projectiles.createHandlerGetter(projectile.type)
         local props = Projectiles.getPropsByType(projectile.type)
 
-        projectile._cache.previous_transform = TransformCopy(projectile.transform)
+        local _ = (function()
+            projectile._cache.previous_transform = TransformCopy(projectile.transform)
 
-        handler("beforeUpdate")(projectile, props, dt)
-        handler("update")(projectile, props, dt)
+            local skipUpdate = false
+            skipUpdate = handler("beforeUpdate")(projectile, props, dt)
+            if skipUpdate then return end
 
-        projectile._cache.update_delta = dt
-        projectile._cache.update_time = projectile.age
+            skipUpdate = handler("update")(projectile, props, dt)
+            if skipUpdate then return end
 
-        handler("afterUpdate")(projectile, props, dt)
+            projectile._cache.update_delta = dt
+            projectile._cache.update_time = projectile.age
+
+            handler("afterUpdate")(projectile, props, dt)
+        end)()
 
         if projectile.state == SHELL_STATE.NONE
             or projectile.state == SHELL_STATE.DETONATED

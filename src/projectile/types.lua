@@ -39,18 +39,18 @@
 ---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
 ---@field makeHoleSizes? ProjectileMakeHoleSizes
 
----@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): Projectile
+---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
 ---@alias ProjectileAfterInitFn ProjectileInitFn
 ---
----@alias ProjectileTickFn fun(projectile: Projectile, props: ProjectileProps, dt: number): nil
+---@alias ProjectileTickFn fun(projectile: Projectile, props: ProjectileProps, dt: number): boolean? Skip next?
 ---@alias ProjectileBeforeTickFn ProjectileTickFn
 ---@alias ProjectileAfterTickFn ProjectileTickFn
 ---
----@alias ProjectileUpdateFn fun(projectile: Projectile, props: ProjectileProps, dt: number): nil
+---@alias ProjectileUpdateFn fun(projectile: Projectile, props: ProjectileProps, dt: number): boolean? Skip next?
 ---@alias ProjectileBeforeUpdateFn ProjectileUpdateFn
 ---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
 ---
----@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): nil
+---@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
 
 ---@class (exact) ProjectileDefinition
 ---@field props ProjectileProps
