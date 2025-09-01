@@ -1,8 +1,8 @@
----@class ProjectileAttack
+---@class (exact) ProjectileAttack
 ---@field heading number Heading degrees [0, 360]
 ---@field pitch number Pitch degrees wrt XZ-plane (<=90)
 ---
----@class ProjectileSprite
+---@class (exact) ProjectileSprite
 ---@field handle number LoadSprite handle
 ---@field width number
 ---@field aspect_ratio number Aspect ratio wrt sprite width
@@ -16,7 +16,7 @@
 ---@field soft number
 ---@field medium? number
 ---@field hard? number
-
+---
 ---@class ProjectileInitialValues
 ---@field destination TVec Resolved projectile destination
 ---@field attack ProjectileAttack
@@ -33,8 +33,8 @@
 ---@field velocity TVec
 ---
 ---@class ProjectileProps
----@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
----@field sprite ProjectileSprite
+---@field muzzleVelocity? number Muzzle velocity or top speed during ascent in m/s
+---@field sprite? ProjectileSprite
 ---@field sounds? ProjectileSoundManifest
 ---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
 ---@field makeHoleSizes? ProjectileMakeHoleSizes
