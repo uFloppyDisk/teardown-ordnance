@@ -7,6 +7,10 @@
 ---@field width number
 ---@field aspect_ratio number Aspect ratio wrt sprite width
 ---
+---@class ProjectileSoundManifest
+---@field fire? number
+---@field whistle? number
+---
 ---@see MakeHole
 ---@class ProjectileMakeHoleSizes
 ---@field soft number
@@ -31,6 +35,7 @@
 ---@class ProjectileProps
 ---@field muzzleVelocity number Muzzle velocity or top speed during ascent in m/s
 ---@field sprite ProjectileSprite
+---@field sounds? ProjectileSoundManifest
 ---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
 ---@field makeHoleSizes? ProjectileMakeHoleSizes
 

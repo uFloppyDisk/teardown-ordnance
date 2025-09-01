@@ -16,6 +16,17 @@ local function defaultInitFn(projectile, props)
     return projectile
 end
 
+---@type ProjectileAfterInitFn
+local function defaultAfterInitFn(projectile, props)
+    if FdAssertTableKeys(props, "sounds", "fire") then
+        FdPlayDistantSound(props.sounds.fire, {
+            heading = projectile._initial.attack.heading,
+            use_random_pitch = true,
+        })
+    end
+    return projectile
+end
+
 ---@type ProjectileTickFn
 local function defaultTickFn(projectile, props)
     if projectile.state ~= SHELL_STATE.ACTIVE then return end
@@ -164,7 +175,7 @@ function Projectiles.defineProjectile(typeName, definitionGenerator)
     setHandler({ "update" }, def.update, defaultUpdateFn)
     setHandler({ "onDetonate" }, def.onDetonate, defaultDetonateFn)
 
-    setHandler({ "afterInit" }, def.afterInit)
+    setHandler({ "afterInit" }, def.afterInit, defaultAfterInitFn)
 
     setHandler({ "beforeTick" }, def.beforeTick)
     setHandler({ "afterTick" }, def.afterTick)
