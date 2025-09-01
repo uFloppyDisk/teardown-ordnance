@@ -81,12 +81,13 @@ end
 ---@type ProjectileDetonateFn
 local function defaultDetonateFn(projectile, props)
     local detonate_at = projectile._cache.detonate_position or projectile.transform.pos
-    projectile.state = SHELL_STATE.DETONATED
 
     DebugPrint("Detonating projectile")
     DebugPrint(detonate_at)
 
     FdAddToDebugTable(DEBUG_POSITIONS, { detonate_at, COLOUR["red"] })
+
+    projectile.state = SHELL_STATE.DETONATED
 
     local hole = props.makeHoleSizes or {}
     MakeHole(
@@ -238,7 +239,9 @@ function Projectiles.update(dt)
 
         handler("afterUpdate")(projectile, props, dt)
 
-        if projectile.state == SHELL_STATE.NONE then
+        if projectile.state == SHELL_STATE.NONE
+            or projectile.state == SHELL_STATE.DETONATED
+        then
             DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
             table.remove(__PROJECTILES, index)
         end
