@@ -51,6 +51,17 @@
 ---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
 ---
 ---@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
+---
+---@alias ProjectileHandlerKey
+---| '"afterInit"'
+---| '"afterTick"'
+---| '"afterUpdate"'
+---| '"beforeTick"'
+---| '"beforeUpdate"'
+---| '"init"'
+---| '"onDetonate"'
+---| '"tick"'
+---| '"update"'
 
 ---@class (exact) ProjectileDefinition
 ---@field props ProjectileProps

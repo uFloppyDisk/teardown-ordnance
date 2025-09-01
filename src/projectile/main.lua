@@ -1,3 +1,5 @@
+---@alias ProjectileHandlerKeyOrKeys ProjectileHandlerKey|ProjectileHandlerKey[]
+---
 ---@type Projectile[]
 __PROJECTILES = {}
 ---@type { [string]: ProjectileProps }
@@ -26,6 +28,10 @@ function Projectiles.getPropsByType(typeName)
     return props
 end
 
+---comment
+---@param typeName string
+---@param ... ProjectileHandlerKeyOrKeys
+---@return function
 function Projectiles.getHandler(typeName, ...)
     local keys = ...
     if type(keys) ~= "table" then
@@ -37,7 +43,7 @@ end
 
 ---comment
 ---@param typeName string
----@param keys string[]
+---@param keys ProjectileHandlerKey[]
 ---@param handler? function
 ---@param default? function
 function Projectiles.setHandler(typeName, keys, handler, default)
@@ -53,12 +59,14 @@ function Projectiles.setHandler(typeName, keys, handler, default)
 end
 
 function Projectiles.createHandlerGetter(typeName)
+    ---@type fun(...: ProjectileHandlerKeyOrKeys): function
     return function(...)
         return Projectiles.getHandler(typeName, ...)
     end
 end
 
 function Projectiles.createHandlerSetter(typeName)
+    ---@type fun(...: ProjectileHandlerKeyOrKeys): nil
     return function(...)
         return Projectiles.setHandler(typeName, ...)
     end
