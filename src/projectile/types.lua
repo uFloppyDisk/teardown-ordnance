@@ -58,21 +58,21 @@
 ---| '"afterUpdate"'
 ---| '"beforeTick"'
 ---| '"beforeUpdate"'
----| '"init"'
 ---| '"onDetonate"'
----| '"tick"'
----| '"update"'
+---| '"onInit"'
+---| '"onTick"'
+---| '"onUpdate"'
 
 ---@class (exact) ProjectileDefinition
 ---@field props ProjectileProps
----@field init? ProjectileInitFn
 ---@field afterInit? ProjectileAfterInitFn
----@field tick? ProjectileTickFn
----@field beforeTick? ProjectileBeforeTickFn
 ---@field afterTick? ProjectileAfterTickFn
----@field update? ProjectileUpdateFn
----@field beforeUpdate? ProjectileBeforeUpdateFn
 ---@field afterUpdate? ProjectileAfterUpdateFn
+---@field beforeTick? ProjectileBeforeTickFn
+---@field beforeUpdate? ProjectileBeforeUpdateFn
 ---@field onDetonate? ProjectileDetonateFn
+---@field onInit? ProjectileInitFn
+---@field onTick? ProjectileTickFn
+---@field onUpdate? ProjectileUpdateFn
 ---
 ---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition

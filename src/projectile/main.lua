@@ -85,9 +85,9 @@ function Projectiles.defineProjectile(typeName, definitionGenerator)
     __PROJECTILES_TYPES[typeName] = def.props or {}
 
     local setHandler = Projectiles.createHandlerSetter(typeName)
-    setHandler({ "init" }, def.init, ProjectileBehaviour.defaultInit)
-    setHandler({ "tick" }, def.tick, ProjectileBehaviour.defaultTick)
-    setHandler({ "update" }, def.update, ProjectileBehaviour.defaultUpdate)
+    setHandler({ "onInit" }, def.onInit, ProjectileBehaviour.defaultInit)
+    setHandler({ "onTick" }, def.onTick, ProjectileBehaviour.defaultTick)
+    setHandler({ "onUpdate" }, def.onUpdate, ProjectileBehaviour.defaultUpdate)
     setHandler({ "onDetonate" }, def.onDetonate, ProjectileBehaviour.defaultDetonate)
 
     setHandler({ "afterInit" }, def.afterInit, ProjectileBehaviour.defaultAfterInit)
@@ -119,7 +119,7 @@ function Projectiles.init(typeName, initialValues)
     local props = Projectiles.getPropsByType(typeName)
 
     local skipInit = false
-    skipInit = Projectiles.getHandler(typeName, "init")(projectile, props)
+    skipInit = Projectiles.getHandler(typeName, "onInit")(projectile, props)
     if skipInit then return end
 
     skipInit = Projectiles.getHandler(typeName, "afterInit")(projectile, props)
@@ -141,7 +141,7 @@ function Projectiles.tick(dt)
 
             projectile.age = projectile.age + dt
 
-            skipTick = handler("tick")(projectile, props, dt)
+            skipTick = handler("onTick")(projectile, props, dt)
             if skipTick then return end
 
             handler("afterTick")(projectile, props, dt)
@@ -161,7 +161,7 @@ function Projectiles.update(dt)
             skipUpdate = handler("beforeUpdate")(projectile, props, dt)
             if skipUpdate then return end
 
-            skipUpdate = handler("update")(projectile, props, dt)
+            skipUpdate = handler("onUpdate")(projectile, props, dt)
             if skipUpdate then return end
 
             projectile._cache.update_delta = dt
