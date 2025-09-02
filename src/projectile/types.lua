@@ -18,18 +18,20 @@
 ---@field hard? number
 ---
 ---@class ProjectileInitialValues
----@field destination TVec Resolved projectile destination
 ---@field attack ProjectileAttack
----@field timeToDestination number Time in seconds to reach destination
+---@field deviation? number Deviate destination up to <number> metres (radius)
+---@field requested_destination TVec Projectile destination before offsets are applied
 ---@field state? SHELL_STATE Initial shell state
+---@field timeToDestination number Time in seconds to reach destination
 ---
 ---@class (exact) Projectile
 ---@field _initial ProjectileInitialValues
 ---@field _cache { [string]: any }
----@field type string
 ---@field age number
+---@field destination TVec
 ---@field state SHELL_STATE
 ---@field transform TTransform
+---@field type string
 ---@field velocity TVec
 ---
 ---@class ProjectileProps

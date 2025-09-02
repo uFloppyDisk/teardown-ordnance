@@ -113,6 +113,7 @@ function Projectiles.init(typeName, initialValues)
         type = typeName,
         age = 0,
         state = initialValues.state or SHELL_STATE.ACTIVE,
+        destination = ProjectileUtil.calcDeviation(initialValues.requested_destination, initialValues.deviation),
     }
 
     local props = Projectiles.getPropsByType(typeName)

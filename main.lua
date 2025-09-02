@@ -382,7 +382,8 @@ function tick(delta)
 
     if Projectiles.getTypes()[variant.id] ~= nil then
         Projectiles.init(variant.id, {
-            destination = VecCopy(aim_pos),
+            requested_destination = VecCopy(aim_pos),
+            deviation = STATES.shell_inaccuracy,
             timeToDestination = DEFAULT_SHELL.eta,
             attack = {
                 heading = STATES.selected_attack_heading,

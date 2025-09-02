@@ -60,7 +60,7 @@ end
 
 ---@type ProjectileAfterUpdateFn
 function ProjectileBehaviour.defaultAfterUpdate(projectile)
-    local current_distance = VecLength(VecSub(projectile.transform.pos, projectile._initial.destination))
+    local current_distance = VecLength(VecSub(projectile.transform.pos, projectile.destination))
     if
         projectile._cache.distance_to_destination ~= nil
         and current_distance > projectile._cache.distance_to_destination
@@ -102,7 +102,7 @@ end
 ---@param projectile Projectile
 ---@param props ProjectileProps
 function ProjectileBehaviour.stageProjectile(projectile, props)
-    local destination = projectile._initial.destination
+    local destination = projectile.destination
     local velocity = props.muzzleVelocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
     local heading = projectile._initial.attack.heading
     local pitch = projectile._initial.attack.pitch

@@ -84,3 +84,19 @@ function ProjectileUtil.hitscan(projectile)
 
     return false, nil
 end
+
+---comment
+---@param origin TVec
+---@param deviationMetres? number
+---@return TVec
+function ProjectileUtil.calcDeviation(origin, deviationMetres)
+    if deviationMetres == nil or deviationMetres <= 0 then
+        return origin
+    end
+
+    local rotation = QuatEuler(0, 360 * math.random(), 0)
+    local offset_vec = Vec(deviationMetres * math.random(), 0, 0)
+
+    local transform = Transform(VecCopy(origin), rotation)
+    return TransformToParentPoint(transform, offset_vec)
+end
