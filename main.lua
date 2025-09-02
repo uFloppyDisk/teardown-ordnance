@@ -105,7 +105,9 @@ end
 function tick(delta)
     ELAPSED_TIME = ELAPSED_TIME + delta
 
-    Projectiles.tick(delta)
+    for _, projectile in ipairs(Projectiles.getProjectiles()) do
+        Projectiles.tick(projectile, delta)
+    end
 
     FdWatch("state(ENABLED)", STATES.enabled)
     FdWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
@@ -434,7 +436,14 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function update(delta)
-    Projectiles.update(delta)
+    for index, projectile in ipairs(__PROJECTILES) do
+        Projectiles.update(projectile, delta)
+
+        if projectile.state == SHELL_STATE.NONE or projectile.state == SHELL_STATE.DETONATED then
+            DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
+            table.remove(__PROJECTILES, index)
+        end
+    end
 
     -- Run shell tick for each shell not detonated, remove shell if detonated
     for i, shell in ipairs(SHELLS) do

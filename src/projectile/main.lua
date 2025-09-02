@@ -17,10 +17,17 @@ function Projectiles.getTypes()
     return __PROJECTILES_TYPES
 end
 
-function Projectiles.getPropsByType(typeName)
-    local props = __PROJECTILES_TYPES[typeName]
+function Projectiles.getProjectiles()
+    return __PROJECTILES
+end
+
+---comment
+---@param projectile Projectile
+---@return table
+function Projectiles.getProjectileProps(projectile)
+    local props = __PROJECTILES_TYPES[projectile.type]
     if props == nil then
-        error(string.format("Cannot get props for type '%s'; Does not exist", typeName))
+        error(string.format("Cannot get props for type '%s'; Does not exist", projectile.type))
         return {}
     end
 
@@ -116,7 +123,7 @@ function Projectiles.init(typeName, initialValues)
         destination = ProjectileUtil.calcDeviation(initialValues.requested_destination, initialValues.deviation),
     }
 
-    local props = Projectiles.getPropsByType(typeName)
+    local props = Projectiles.getProjectileProps(projectile)
 
     local skipInit = false
     skipInit = Projectiles.getHandler(typeName, "onInit")(projectile, props)
@@ -132,59 +139,45 @@ function Projectiles.init(typeName, initialValues)
     table.insert(__PROJECTILES, projectile)
 end
 
-function Projectiles.tick(dt)
-    DebugWatch("Projectiles", tostring(#__PROJECTILES))
-    for _, projectile in ipairs(__PROJECTILES) do
-        local handler = Projectiles.createHandlerGetter(projectile.type)
-        local props = Projectiles.getPropsByType(projectile.type)
+function Projectiles.tick(projectile, dt)
+    local props = Projectiles.getProjectileProps(projectile)
+    local handler = Projectiles.createHandlerGetter(projectile.type)
 
-        local _ = (function()
-            local skipTick = false
-            skipTick = handler("beforeTick")(projectile, props, dt)
-            if skipTick then
-                return
-            end
-
-            projectile.age = projectile.age + dt
-
-            skipTick = handler("onTick")(projectile, props, dt)
-            if skipTick then
-                return
-            end
-
-            handler("afterTick")(projectile, props, dt)
-        end)()
+    local skipTick = false
+    skipTick = handler("beforeTick")(projectile, props, dt)
+    if skipTick then
+        return
     end
+
+    projectile.age = projectile.age + dt
+
+    skipTick = handler("onTick")(projectile, props, dt)
+    if skipTick then
+        return
+    end
+
+    handler("afterTick")(projectile, props, dt)
 end
 
-function Projectiles.update(dt)
-    for index, projectile in ipairs(__PROJECTILES) do
-        local handler = Projectiles.createHandlerGetter(projectile.type)
-        local props = Projectiles.getPropsByType(projectile.type)
+function Projectiles.update(projectile, dt)
+    local props = Projectiles.getProjectileProps(projectile)
+    local handler = Projectiles.createHandlerGetter(projectile.type)
 
-        local _ = (function()
-            projectile._cache.previous_transform = TransformCopy(projectile.transform)
+    projectile._cache.previous_transform = TransformCopy(projectile.transform)
 
-            local skipUpdate = false
-            skipUpdate = handler("beforeUpdate")(projectile, props, dt)
-            if skipUpdate then
-                return
-            end
-
-            skipUpdate = handler("onUpdate")(projectile, props, dt)
-            if skipUpdate then
-                return
-            end
-
-            projectile._cache.update_delta = dt
-            projectile._cache.update_time = projectile.age
-
-            handler("afterUpdate")(projectile, props, dt)
-        end)()
-
-        if projectile.state == SHELL_STATE.NONE or projectile.state == SHELL_STATE.DETONATED then
-            DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
-            table.remove(__PROJECTILES, index)
-        end
+    local skipUpdate = false
+    skipUpdate = handler("beforeUpdate")(projectile, props, dt)
+    if skipUpdate then
+        return
     end
+
+    skipUpdate = handler("onUpdate")(projectile, props, dt)
+    if skipUpdate then
+        return
+    end
+
+    projectile._cache.update_delta = dt
+    projectile._cache.update_time = projectile.age
+
+    handler("afterUpdate")(projectile, props, dt)
 end
