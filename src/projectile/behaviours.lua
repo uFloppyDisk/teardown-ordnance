@@ -1,139 +1,138 @@
+---@type { [string]: ProjectileBehaviour }
 ProjectileBehaviour = {}
 
----@type ProjectileInitFn
-function ProjectileBehaviour.defaultInit(projectile, props)
-    ProjectileBehaviour.stageProjectile(projectile, props)
-end
+ProjectileBehaviour.Physics = {
+    afterInit = function(projectile)
+        if not projectile.transform then
+            projectile.transform = Transform(projectile.destination, Quat())
+        end
 
----@type ProjectileAfterInitFn
-function ProjectileBehaviour.defaultAfterInit(projectile, props)
-    if FdAssertTableKeys(props, "sounds", "fire") then
-        FdPlayDistantSound(props.sounds.fire, {
-            heading = projectile._initial.attack.heading,
-            use_random_pitch = true,
+        if not projectile.velocity then
+            projectile.velocity = Vec()
+        end
+    end,
+    onUpdate = function(projectile, _, dt)
+        if projectile.state ~= SHELL_STATE.ACTIVE then
+            return
+        end
+
+        local physics_iterations = G_PHYSICS_ITERATIONS
+        local iter_delta = dt / physics_iterations
+
+        for _ = 0, physics_iterations, 1 do
+            projectile.velocity = VecAdd(projectile.velocity, VecScale(G_VEC_GRAVITY, iter_delta))
+            projectile.transform.pos = VecAdd(projectile.transform.pos, VecScale(projectile.velocity, iter_delta))
+        end
+
+        FdAddToDebugTable(DEBUG_LINES, {
+            projectile._cache.previous_transform.pos,
+            projectile.transform.pos,
+            { 0, 1, 0, 0.5 },
         })
-    end
-end
+    end,
+    afterUpdate = function(projectile)
+        if projectile.age > PROJECTILE_MAX_AGE then
+            DebugPrint("Projectile expired due to age")
+            projectile.state = SHELL_STATE.NONE
+        end
+    end,
+}
 
----@type ProjectileBeforeTickFn
-function ProjectileBehaviour.defaultBeforeTick(projectile)
-    if projectile.state ~= SHELL_STATE.ACTIVE then
-        return true
-    end
-end
+ProjectileBehaviour.Ballistics = {
+    onInit = function(projectile, props)
+        local destination = projectile.destination
+        local velocity = props.muzzleVelocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
+        local heading = projectile._initial.attack.heading
+        local pitch = projectile._initial.attack.pitch
 
----@type ProjectileBeforeUpdateFn
-function ProjectileBehaviour.defaultBeforeUpdate(projectile)
-    if projectile.state ~= SHELL_STATE.ACTIVE then
-        return true
-    end
-end
+        -- -- Uncomment following lines to hold projectile for testing
+        -- projectile.transform.pos = VecAdd(VecCopy(destination), Vec(0, 2, 0))
+        -- projectile.velocity = Vec(0, 0, 0)
+        -- return projectile
 
----@type ProjectileTickFn
-function ProjectileBehaviour.defaultTick(projectile, props)
-    local per_tick_position = ProjectileUtil.calculatePerTickPosition(projectile)
-    local heading = projectile._initial.attack.heading
-    local pitch = projectile._initial.attack.pitch
-    ProjectileUtil.drawSprite(props.sprite, per_tick_position, heading, pitch)
-end
+        local solved_transform, solved_velocity, actual_flight_time = ProjectileUtil.solveKinematicsAtApex(
+            destination,
+            velocity,
+            heading,
+            pitch,
+            projectile._initial.timeToDestination
+        )
 
----@type ProjectileUpdateFn
-function ProjectileBehaviour.defaultUpdate(projectile, props, dt)
-    if projectile.transform == nil or projectile.velocity == nil then
-        return true
-    end
+        projectile.transform = solved_transform
+        projectile.velocity = solved_velocity
+    end,
+    afterUpdate = function(projectile)
+        if projectile.state ~= SHELL_STATE.ACTIVE then
+            return
+        end
 
-    ProjectileBehaviour.stepPhysics(projectile, dt)
+        local current_distance = VecLength(VecSub(projectile.transform.pos, projectile.destination))
+        if
+            projectile._cache.distance_to_destination ~= nil
+            and current_distance > projectile._cache.distance_to_destination
+            and current_distance > PROJECTILE_MAX_OVERSHOOT
+        then
+            DebugPrint("Projectile expired due to overshoot")
+            projectile.state = SHELL_STATE.NONE
+            return
+        end
 
-    local hit, detonate_position = ProjectileUtil.hitscan(projectile)
-    if hit then
-        projectile._cache.detonate_position = detonate_position
-        Projectiles.getHandler(projectile.type, "onDetonate")(projectile, props)
-    end
-
-    FdAddToDebugTable(DEBUG_LINES, {
-        projectile._cache.previous_transform.pos,
-        projectile.transform.pos,
-        { 0, 1, 0, 0.5 },
-    })
-end
-
----@type ProjectileAfterUpdateFn
-function ProjectileBehaviour.defaultAfterUpdate(projectile)
-    local current_distance = VecLength(VecSub(projectile.transform.pos, projectile.destination))
-    if
-        projectile._cache.distance_to_destination ~= nil
-        and current_distance > projectile._cache.distance_to_destination
-        and current_distance > PROJECTILE_MAX_OVERSHOOT
-    then
-        DebugPrint("Projectile expired due to overshoot")
-        projectile.state = SHELL_STATE.NONE
-    else
         projectile._cache.distance_to_destination = current_distance
-    end
+    end,
+}
 
-    if projectile.age > PROJECTILE_MAX_AGE then
-        DebugPrint("Projectile expired due to age")
-        projectile.state = SHELL_STATE.NONE
-    end
-end
+ProjectileBehaviour.ImpactFuze = {
+    onUpdate = function(projectile, props)
+        if projectile.state ~= SHELL_STATE.ACTIVE then
+            return
+        end
+        if not projectile.transform or not projectile._cache.previous_transform then
+            return
+        end
 
----@type ProjectileDetonateFn
-function ProjectileBehaviour.defaultDetonate(projectile, props)
-    local detonate_at = projectile._cache.detonate_position or projectile.transform.pos
+        local hit, detonate_position =
+            ProjectileUtil.hitscan(projectile.transform, projectile._cache.previous_transform)
+        if hit then
+            local pos = detonate_position --[[@as TVec]]
+            DebugPrint("DETONATED")
+            ---@diagnostic disable-next-line
+            DebugPrint(pos)
+            ProjectileUtil.detonate(pos, props.explosiveYield, props.makeHoleSizes)
+            projectile.state = SHELL_STATE.DETONATED
+        end
+    end,
+}
 
-    DebugPrint("Detonating projectile")
-    DebugPrint(detonate_at)
+ProjectileBehaviour.DrawSprite = {
+    onTick = function(projectile, props)
+        local per_tick_position = ProjectileUtil.calculatePerTickPosition(
+            projectile.transform.pos,
+            projectile._cache.previous_transform.pos,
+            projectile.age,
+            projectile._cache.update_time
+        )
+        local heading = projectile._initial.attack.heading
+        local pitch = projectile._initial.attack.pitch
+        ProjectileUtil.drawSprite(props.sprite, per_tick_position, heading, pitch)
+    end,
+}
 
-    FdAddToDebugTable(DEBUG_POSITIONS, { detonate_at, COLOUR["red"] })
+ProjectileBehaviour.Sounds = {
+    afterInit = function(projectile, props)
+        if FdAssertTableKeys(props, "sounds", "fire") then
+            FdPlayDistantSound(props.sounds.fire, {
+                heading = projectile._initial.attack.heading,
+                use_random_pitch = true,
+            })
+        end
+    end,
+}
 
-    projectile.state = SHELL_STATE.DETONATED
-
-    local hole = props.makeHoleSizes or {}
-    MakeHole(detonate_at, hole.soft or 0, hole.medium or 0, hole.hard or 0, false)
-
-    if not props.explosiveYield or props.explosiveYield <= 0 then
-        return
-    end
-    Explosion(detonate_at, props.explosiveYield)
-end
-
----comment
----@param projectile Projectile
----@param props ProjectileProps
-function ProjectileBehaviour.stageProjectile(projectile, props)
-    local destination = projectile.destination
-    local velocity = props.muzzleVelocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
-    local heading = projectile._initial.attack.heading
-    local pitch = projectile._initial.attack.pitch
-
-    -- -- Uncomment following lines to hold projectile for testing
-    -- projectile.transform.pos = VecAdd(VecCopy(destination), Vec(0, 2, 0))
-    -- projectile.velocity = Vec(0, 0, 0)
-    -- return projectile
-
-    local solved_transform, solved_velocity, actual_flight_time = ProjectileUtil.solveKinematicsAtApex(
-        destination,
-        velocity,
-        heading,
-        pitch,
-        projectile._initial.timeToDestination
-    )
-
-    projectile.transform = solved_transform
-    projectile.velocity = solved_velocity
-
-    if projectile._initial.timeToDestination > actual_flight_time then
-        projectile._cache.flightTimeDelay = projectile._initial.timeToDestination - actual_flight_time
-    end
-end
-
-function ProjectileBehaviour.stepPhysics(projectile, dt)
-    local physics_iterations = G_PHYSICS_ITERATIONS
-    local iter_delta = dt / physics_iterations
-
-    for _ = 0, physics_iterations, 1 do
-        projectile.velocity = VecAdd(projectile.velocity, VecScale(G_VEC_GRAVITY, iter_delta))
-        projectile.transform.pos = VecAdd(projectile.transform.pos, VecScale(projectile.velocity, iter_delta))
-    end
-end
+---@type ProjectileBehaviour[]
+PROJECTILE_DEFAULT_BEHAVIOURS = {
+    ProjectileBehaviour.Physics,
+    ProjectileBehaviour.Ballistics,
+    ProjectileBehaviour.ImpactFuze,
+    ProjectileBehaviour.DrawSprite,
+    ProjectileBehaviour.Sounds,
+}

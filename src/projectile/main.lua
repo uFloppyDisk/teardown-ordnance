@@ -1,5 +1,3 @@
----@alias ProjectileHandlerKeyOrKeys ProjectileHandlerKey|ProjectileHandlerKey[]
----
 ---@type Projectile[]
 __PROJECTILES = {}
 ---@type { [string]: ProjectileProps }
@@ -7,8 +5,24 @@ __PROJECTILES_TYPES = {}
 ---@type { [string]: function }
 __PROJECTILES_HANDLERS = {}
 
-local function generateHandlerId(typeName, ...)
-    return typeName .. ":" .. table.concat(..., ".")
+---@type ProjectileHandlerKey[]
+local HOOK_TYPES = {
+    "afterInit",
+    "afterInit",
+    "afterUpdate",
+    "beforeTick",
+    "beforeUpdate",
+    "onInit",
+    "onTick",
+    "onUpdate",
+}
+
+---comment
+---@param type_name string
+---@param hook_name string
+---@return string
+local function generateHandlerId(type_name, hook_name)
+    return type_name .. ":" .. hook_name
 end
 
 Projectiles = {}
@@ -35,104 +49,110 @@ function Projectiles.getProjectileProps(projectile)
 end
 
 ---comment
----@param typeName string
----@param ... ProjectileHandlerKeyOrKeys
+---@param type_name string
+---@param hook_name ProjectileHandlerKey
 ---@return function
-function Projectiles.getHandler(typeName, ...)
-    local keys = ...
-    if type(keys) ~= "table" then
-        keys = { keys }
+function Projectiles.getHandler(type_name, hook_name)
+    local id = generateHandlerId(type_name, hook_name)
+    local handlers = __PROJECTILES_HANDLERS[id]
+    if not handlers then
+        return function() end
     end
 
-    return __PROJECTILES_HANDLERS[generateHandlerId(typeName, keys)] or function() end
+    return handlers
 end
 
 ---comment
----@param typeName string
----@param keys ProjectileHandlerKey[]
+---@param type_name string
+---@param hook_name ProjectileHandlerKey
 ---@param handler? function
----@param default? function
-function Projectiles.setHandler(typeName, keys, handler, default)
-    if type(handler) ~= "function" then
-        handler = default
-    end
-
+function Projectiles.setHandler(type_name, hook_name, handler)
     if type(handler) ~= "function" then
         return
     end
 
-    __PROJECTILES_HANDLERS[generateHandlerId(typeName, keys)] = handler
+    local id = generateHandlerId(type_name, hook_name)
+    __PROJECTILES_HANDLERS[id] = handler
 end
 
-function Projectiles.createHandlerGetter(typeName)
-    ---@type fun(...: ProjectileHandlerKeyOrKeys): function
-    return function(...)
-        return Projectiles.getHandler(typeName, ...)
-    end
-end
-
-function Projectiles.createHandlerSetter(typeName)
-    ---@type fun(...: ProjectileHandlerKeyOrKeys): nil
-    return function(...)
-        return Projectiles.setHandler(typeName, ...)
+function Projectiles.createHandlerGetter(type_name)
+    ---@type fun(hook_name: ProjectileHandlerKey): function
+    return function(hook_name)
+        return Projectiles.getHandler(type_name, hook_name)
     end
 end
 
 ---comment
----@param typeName string
+---@param type_name string
+---@param behaviours ProjectileBehaviour[]
 ---@param definitionGenerator ProjectileDefinitionGenerator
-function Projectiles.defineProjectile(typeName, definitionGenerator)
-    if __PROJECTILES_TYPES[typeName] ~= nil then
-        error(string.format("Cannot define new projectile with type '%s'; Already exists", typeName))
+function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator)
+    if __PROJECTILES_TYPES[type_name] ~= nil then
+        error(string.format("Cannot define new projectile with type '%s'; Already exists", type_name))
         return
     end
 
-    local def = definitionGenerator(typeName)
-    __PROJECTILES_TYPES[typeName] = def.props or {}
+    local def = definitionGenerator(type_name)
+    __PROJECTILES_TYPES[type_name] = def.props or {}
 
-    local setHandler = Projectiles.createHandlerSetter(typeName)
-    setHandler({ "onInit" }, def.onInit, ProjectileBehaviour.defaultInit)
-    setHandler({ "onTick" }, def.onTick, ProjectileBehaviour.defaultTick)
-    setHandler({ "onUpdate" }, def.onUpdate, ProjectileBehaviour.defaultUpdate)
-    setHandler({ "onDetonate" }, def.onDetonate, ProjectileBehaviour.defaultDetonate)
+    ---@type { [string]: function[] }
+    local hooks_by_type = {}
 
-    setHandler({ "afterInit" }, def.afterInit, ProjectileBehaviour.defaultAfterInit)
+    ---@type ProjectileBehaviour[]
+    local resolved_behaviours = behaviours
+    for _, behaviour in ipairs(resolved_behaviours) do
+        for name, handler in pairs(behaviour) do
+            if type(hooks_by_type[name]) ~= "table" then
+                hooks_by_type[name] = {}
+            end
 
-    setHandler({ "beforeTick" }, def.beforeTick, ProjectileBehaviour.defaultBeforeTick)
-    setHandler({ "afterTick" }, def.afterTick)
+            table.insert(hooks_by_type[name], handler)
+        end
+    end
 
-    setHandler({ "beforeUpdate" }, def.beforeUpdate, ProjectileBehaviour.defaultBeforeUpdate)
-    setHandler({ "afterUpdate" }, def.afterUpdate, ProjectileBehaviour.defaultAfterUpdate)
+    for _, name in ipairs(HOOK_TYPES) do
+        if def[name] then
+            table.insert(hooks_by_type[name], def[name])
+        end
+    end
+
+    for name, hooks in pairs(hooks_by_type) do
+        Projectiles.setHandler(type_name, name, function(...)
+            for _, hook in ipairs(hooks) do
+                hook(...)
+            end
+        end)
+    end
 end
 
 ---comment
----@param typeName string
----@param initialValues ProjectileInitialValues
-function Projectiles.init(typeName, initialValues)
-    if __PROJECTILES_TYPES[typeName] == nil then
-        error(string.format("Cannot instantiate a projectile of type '%s'; Does not exist", typeName))
+---@param type_name string
+---@param initial_values ProjectileInitialValues
+function Projectiles.init(type_name, initial_values)
+    if __PROJECTILES_TYPES[type_name] == nil then
+        error(string.format("Cannot instantiate a projectile of type '%s'; Does not exist", type_name))
         return
     end
 
     local projectile = {
-        _initial = initialValues,
+        _initial = initial_values,
         _cache = {},
-        type = typeName,
+        type = type_name,
         age = 0,
-        state = initialValues.state or SHELL_STATE.ACTIVE,
-        destination = ProjectileUtil.calcDeviation(initialValues.requested_destination, initialValues.deviation),
+        state = initial_values.state or SHELL_STATE.ACTIVE,
+        destination = ProjectileUtil.calcDeviation(initial_values.requested_destination, initial_values.deviation),
     }
 
     local props = Projectiles.getProjectileProps(projectile)
 
-    local skipInit = false
-    skipInit = Projectiles.getHandler(typeName, "onInit")(projectile, props)
-    if skipInit then
+    local skip = false
+    skip = Projectiles.getHandler(type_name, "onInit")(projectile, props)
+    if skip then
         return
     end
 
-    skipInit = Projectiles.getHandler(typeName, "afterInit")(projectile, props)
-    if skipInit then
+    skip = Projectiles.getHandler(type_name, "afterInit")(projectile, props)
+    if skip then
         return
     end
 
@@ -143,16 +163,16 @@ function Projectiles.tick(projectile, dt)
     local props = Projectiles.getProjectileProps(projectile)
     local handler = Projectiles.createHandlerGetter(projectile.type)
 
-    local skipTick = false
-    skipTick = handler("beforeTick")(projectile, props, dt)
-    if skipTick then
+    local skip = false
+    skip = handler("beforeTick")(projectile, props, dt)
+    if skip then
         return
     end
 
     projectile.age = projectile.age + dt
 
-    skipTick = handler("onTick")(projectile, props, dt)
-    if skipTick then
+    skip = handler("onTick")(projectile, props, dt)
+    if skip then
         return
     end
 
@@ -165,14 +185,14 @@ function Projectiles.update(projectile, dt)
 
     projectile._cache.previous_transform = TransformCopy(projectile.transform)
 
-    local skipUpdate = false
-    skipUpdate = handler("beforeUpdate")(projectile, props, dt)
-    if skipUpdate then
+    local skip = false
+    skip = handler("beforeUpdate")(projectile, props, dt)
+    if skip then
         return
     end
 
-    skipUpdate = handler("onUpdate")(projectile, props, dt)
-    if skipUpdate then
+    skip = handler("onUpdate")(projectile, props, dt)
+    if skip then
         return
     end
 

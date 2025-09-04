@@ -40,6 +40,19 @@
 ---@field sounds? ProjectileSoundManifest
 ---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
 ---@field makeHoleSizes? ProjectileMakeHoleSizes
+---
+---@class (exact) ProjectileBehaviour
+---@field afterInit? ProjectileAfterInitFn
+---@field afterTick? ProjectileAfterTickFn
+---@field afterUpdate? ProjectileAfterUpdateFn
+---@field beforeTick? ProjectileBeforeTickFn
+---@field beforeUpdate? ProjectileBeforeUpdateFn
+---@field onInit? ProjectileInitFn
+---@field onTick? ProjectileTickFn
+---@field onUpdate? ProjectileUpdateFn
+---
+---@class (exact) ProjectileDefinition : ProjectileBehaviour
+---@field props ProjectileProps
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
 ---@alias ProjectileAfterInitFn ProjectileInitFn
@@ -52,29 +65,14 @@
 ---@alias ProjectileBeforeUpdateFn ProjectileUpdateFn
 ---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
 ---
----@alias ProjectileDetonateFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
----
 ---@alias ProjectileHandlerKey
 ---| '"afterInit"'
 ---| '"afterTick"'
 ---| '"afterUpdate"'
 ---| '"beforeTick"'
 ---| '"beforeUpdate"'
----| '"onDetonate"'
 ---| '"onInit"'
 ---| '"onTick"'
 ---| '"onUpdate"'
-
----@class (exact) ProjectileDefinition
----@field props ProjectileProps
----@field afterInit? ProjectileAfterInitFn
----@field afterTick? ProjectileAfterTickFn
----@field afterUpdate? ProjectileAfterUpdateFn
----@field beforeTick? ProjectileBeforeTickFn
----@field beforeUpdate? ProjectileBeforeUpdateFn
----@field onDetonate? ProjectileDetonateFn
----@field onInit? ProjectileInitFn
----@field onTick? ProjectileTickFn
----@field onUpdate? ProjectileUpdateFn
 ---
 ---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition

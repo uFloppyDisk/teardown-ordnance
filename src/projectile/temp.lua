@@ -1,4 +1,4 @@
-Projectiles.defineProjectile("test_projectile", function(typeName)
+Projectiles.defineProjectile("test_projectile", PROJECTILE_DEFAULT_BEHAVIOURS, function(typeName)
     DebugPrint("Defining " .. typeName)
 
     ---@type ProjectileDefinition

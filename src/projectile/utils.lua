@@ -37,13 +37,19 @@ function ProjectileUtil.solveKinematicsAtApex(destination, targetVelocity, headi
     return solvedTransform, solvedVelocity, time
 end
 
-function ProjectileUtil.calculatePerTickPosition(projectile)
-    if projectile._cache.update_time == nil or projectile._cache.update_delta == nil then
-        return projectile.transform.pos
+---comment
+---@param current_pos TVec
+---@param previous_pos TVec
+---@param current_time number
+---@param previous_time? number
+---@return TVec
+function ProjectileUtil.calculatePerTickPosition(current_pos, previous_pos, current_time, previous_time)
+    if previous_time == nil then
+        return current_pos
     end
 
-    local lerp = (projectile.age - projectile._cache.update_time) / projectile._cache.update_delta
-    local pos = VecLerp(projectile._cache.previous_transform.pos, projectile.transform.pos, lerp)
+    local lerp = (current_time - previous_time) / PROJECTILE_UPDATE_DELTA
+    local pos = VecLerp(previous_pos, current_pos, lerp)
 
     return pos
 end
@@ -67,17 +73,21 @@ function ProjectileUtil.drawSprite(sprite, position, heading, pitch)
     ShellDrawSprite(fake_shell)
 end
 
-function ProjectileUtil.hitscan(projectile)
-    local previous_transform = projectile._cache.previous_transform
-    local position_difference = VecSub(projectile.transform.pos, previous_transform.pos)
+---comment
+---@param current_transform TTransform
+---@param previous_transform TTransform
+---@return boolean
+---@return TVec|nil
+function ProjectileUtil.hitscan(current_transform, previous_transform)
+    local position_difference = VecSub(current_transform.pos, previous_transform.pos)
 
     QueryRequire("large")
     QueryRequire("physical")
     local hit, hit_distance, _, _ =
-        QueryRaycast(projectile.transform.pos, VecNormalize(position_difference), VecLength(position_difference))
+        QueryRaycast(current_transform.pos, VecNormalize(position_difference), VecLength(position_difference))
     if hit then
         local detonate_position =
-            VecAdd(projectile.transform.pos, VecScale(VecNormalize(position_difference), hit_distance))
+            VecAdd(current_transform.pos, VecScale(VecNormalize(position_difference), hit_distance))
 
         return hit, detonate_position
     end
@@ -99,4 +109,21 @@ function ProjectileUtil.calcDeviation(origin, deviationMetres)
 
     local transform = Transform(VecCopy(origin), rotation)
     return TransformToParentPoint(transform, offset_vec)
+end
+
+---comment
+---@param pos TVec Explosion origin
+---@param yield? number Explosion size
+---@param hole_sizes? ProjectileMakeHoleSizes
+function ProjectileUtil.detonate(pos, yield, hole_sizes)
+    FdAddToDebugTable(DEBUG_POSITIONS, { pos, COLOUR["red"] })
+
+    local hole = hole_sizes or {}
+    MakeHole(pos, hole.soft or 0, hole.medium or 0, hole.hard or 0, false)
+
+    if not yield or yield <= 0 then
+        return
+    end
+
+    Explosion(pos, yield)
 end
