@@ -31,6 +31,10 @@ ProjectileBehaviour.Physics = {
         })
     end,
     afterUpdate = function(projectile)
+        if projectile.state ~= SHELL_STATE.ACTIVE then
+            return
+        end
+
         if projectile.age > PROJECTILE_MAX_AGE then
             DebugPrint("Projectile expired due to age")
             projectile.state = SHELL_STATE.NONE
@@ -105,6 +109,10 @@ ProjectileBehaviour.ImpactFuze = {
 
 ProjectileBehaviour.DrawSprite = {
     onTick = function(projectile, props)
+        if projectile.state ~= SHELL_STATE.ACTIVE then
+            return
+        end
+
         local per_tick_position = ProjectileUtil.calculatePerTickPosition(
             projectile.transform.pos,
             projectile._cache.previous_transform.pos,
@@ -117,21 +125,97 @@ ProjectileBehaviour.DrawSprite = {
     end,
 }
 
-ProjectileBehaviour.Sounds = {
-    afterInit = function(projectile, props)
-        if FdAssertTableKeys(props, "sounds", "fire") then
-            FdPlayDistantSound(props.sounds.fire, {
-                heading = projectile._initial.attack.heading,
-                use_random_pitch = true,
+ProjectileBehaviour.Sounds = function()
+    local function getValue(projectile, event_name)
+        return projectile._cache.sounds[event_name]
+    end
+
+    local function setValue(projectile, event_name, value)
+        projectile._cache.sounds[event_name] = value
+    end
+
+    ---@type ProjectileBehaviourFuncs
+    return {
+        onInit = function(projectile)
+            projectile._cache.sounds = {}
+        end,
+        onTick = function(projectile, props)
+            if
+                projectile.state == SHELL_STATE.ACTIVE
+                and not getValue(projectile, "fire")
+                and FdAssertTableKeys(props, "sounds", "fire")
+            then
+                FdPlayDistantSound(props.sounds.fire, {
+                    heading = projectile._initial.attack.heading,
+                    use_random_pitch = true,
+                })
+
+                setValue(projectile, "fire", true)
+            end
+        end,
+    }
+end
+
+ProjectileBehaviour.Queueable = function()
+    local function getValue(projectile, event_name)
+        return projectile._cache.queue[event_name]
+    end
+
+    local function setValue(projectile, event_name, value)
+        projectile._cache.queue[event_name] = value
+    end
+
+    ---@type ProjectileBehaviourFuncs
+    return {
+        onInit = function(projectile)
+            projectile._cache.queue = {}
+            setValue(projectile, "wait", true)
+            setValue(projectile, "delay", projectile._initial.delay)
+        end,
+        beforeTick = function(projectile, _, dt)
+            if projectile.state ~= SHELL_STATE.QUEUED then
+                return
+            end
+
+            local wait = getValue(projectile, "wait")
+            if STATES.quicksalvo.enabled and wait then
+                return
+            end
+
+            setValue(projectile, "wait", false)
+            setValue(projectile, "delay", getValue(projectile, "delay") - dt)
+            if getValue(projectile, "delay") <= 0 then
+                projectile.state = SHELL_STATE.ACTIVE
+                return
+            end
+
+            return true
+        end,
+        onTick = function(projectile)
+            if projectile.state ~= SHELL_STATE.QUEUED then
+                return
+            end
+
+            local destination = projectile._initial.requested_destination
+            local heading = projectile._initial.attack.heading
+            local pitch = projectile._initial.attack.pitch
+            local deviation = projectile._initial.deviation
+
+            ProjectileUtil.drawSalvoMarker(destination, {
+                display = STATES.quicksalvo.markers,
+                deviation = deviation,
+                heading = heading,
+                pitch = pitch,
             })
-        end
-    end,
-}
+        end,
+    }
+end
 
 ---@type ProjectileBehaviour[]
 PROJECTILE_DEFAULT_BEHAVIOURS = {
     ProjectileBehaviour.Physics,
     ProjectileBehaviour.Ballistics,
+    ProjectileBehaviour.Queueable,
     ProjectileBehaviour.ImpactFuze,
     ProjectileBehaviour.DrawSprite,
     ProjectileBehaviour.Sounds,

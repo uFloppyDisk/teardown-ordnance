@@ -117,6 +117,10 @@ function tick(delta)
     FdWatch("Salvo", #QUICK_SALVO)
     FdWatch("BODIES", #BODIES)
 
+    if not STATES.quicksalvo.enabled then
+        STATES.quicksalvo.delay = 0
+    end
+
     for i, body in ipairs(BODIES) do
         if body.valid == true and PhysBodyTick(body) then
             body.valid = false
@@ -383,14 +387,24 @@ function tick(delta)
     local variant = values.variants[STATES.selected_variant]
 
     if Projectiles.getTypes()[variant.id] ~= nil then
+        local state = STATES.quicksalvo.enabled and SHELL_STATE.QUEUED or SHELL_STATE.ACTIVE
+
+        local delay = 0
+        if STATES.quicksalvo.enabled then
+            delay = STATES.quicksalvo.delay + G_QUICK_SALVO_DELAY
+            STATES.quicksalvo.delay = delay
+        end
+
         Projectiles.init(variant.id, {
             requested_destination = VecCopy(aim_pos),
             deviation = STATES.shell_inaccuracy,
             timeToDestination = DEFAULT_SHELL.eta,
+            delay = delay,
             attack = {
                 heading = STATES.selected_attack_heading,
                 pitch = STATES.selected_attack_angle,
             },
+            state = state
         })
         return
     end

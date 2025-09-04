@@ -24,6 +24,7 @@ STATES = {
 STATES.quicksalvo = {
     enabled = false,
     markers = DISPLAY_STATE.VISIBLE,
+    delay = 0,
 }
 
 STATES.tactical = {

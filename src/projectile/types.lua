@@ -22,11 +22,16 @@
 ---@field deviation? number Deviate destination up to <number> metres (radius)
 ---@field requested_destination TVec Projectile destination before offsets are applied
 ---@field state? SHELL_STATE Initial shell state
+---@field delay? number Accumulated delay before projectile is active
 ---@field timeToDestination number Time in seconds to reach destination
+---
+---@class ProjectileCache
+---@field delay number
+---@field [string] any
 ---
 ---@class (exact) Projectile
 ---@field _initial ProjectileInitialValues
----@field _cache { [string]: any }
+---@field _cache ProjectileCache
 ---@field age number
 ---@field destination TVec
 ---@field state SHELL_STATE
@@ -41,7 +46,7 @@
 ---@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
 ---@field makeHoleSizes? ProjectileMakeHoleSizes
 ---
----@class (exact) ProjectileBehaviour
+---@class (exact) ProjectileBehaviourFuncs
 ---@field afterInit? ProjectileAfterInitFn
 ---@field afterTick? ProjectileAfterTickFn
 ---@field afterUpdate? ProjectileAfterUpdateFn
@@ -51,7 +56,7 @@
 ---@field onTick? ProjectileTickFn
 ---@field onUpdate? ProjectileUpdateFn
 ---
----@class (exact) ProjectileDefinition : ProjectileBehaviour
+---@class (exact) ProjectileDefinition : ProjectileBehaviourFuncs
 ---@field props ProjectileProps
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
@@ -76,3 +81,6 @@
 ---| '"onUpdate"'
 ---
 ---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition
+---
+---@alias ProjectileBehaviourGenerator fun(props: ProjectileProps): ProjectileBehaviourFuncs
+---@alias ProjectileBehaviour ProjectileBehaviourFuncs|ProjectileBehaviourGenerator

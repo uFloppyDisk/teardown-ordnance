@@ -127,3 +127,38 @@ function ProjectileUtil.detonate(pos, yield, hole_sizes)
 
     Explosion(pos, yield)
 end
+
+---@class DrawSalvoMarkerOptions
+---@field deviation? number
+---@field heading? number
+---@field pitch? number
+---@field display? DISPLAY_STATE
+
+---comment
+---@param destination TVec
+---@param options DrawSalvoMarkerOptions
+function ProjectileUtil.drawSalvoMarker(destination, options)
+    local display = options.display or DISPLAY_STATE.HIDDEN
+    local deviation = options.deviation or 0
+    local heading = options.heading or 0
+    local pitch = options.pitch or 90
+
+    local colour = COLOUR["red"]
+
+    if display == DISPLAY_STATE.HIDDEN then
+        return
+    end
+
+    if display == DISPLAY_STATE.MINIMAL then
+        local offset = Vec(0, 0.03, 0) -- Offset shapes to prevent Z-fighting
+        local pos = VecAdd(destination, offset)
+        local width = 0.2
+        local vertices = 8
+        FdDrawCircle(pos, width, vertices, colour)
+    else
+        local vertices = 32
+        local lines = 2
+        local is_quick_salvo = true
+        FdDrawShellImpactGizmo({ destination, heading, pitch }, deviation, vertices, colour, lines, is_quick_salvo)
+    end
+end

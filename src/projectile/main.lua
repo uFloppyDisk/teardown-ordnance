@@ -84,7 +84,7 @@ end
 
 ---comment
 ---@param type_name string
----@param behaviours ProjectileBehaviour[]
+---@param behaviours ProjectileBehaviourFuncs[]
 ---@param definitionGenerator ProjectileDefinitionGenerator
 function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator)
     if __PROJECTILES_TYPES[type_name] ~= nil then
@@ -98,10 +98,14 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
     ---@type { [string]: function[] }
     local hooks_by_type = {}
 
-    ---@type ProjectileBehaviour[]
-    local resolved_behaviours = behaviours
-    for _, behaviour in ipairs(resolved_behaviours) do
-        for name, handler in pairs(behaviour) do
+    for _, behaviour in ipairs(behaviours) do
+        ---@type ProjectileBehaviour
+        local resolved = behaviour
+        if type(resolved) == "function" then
+            resolved = resolved(def.props)
+        end
+
+        for name, handler in pairs(resolved) do
             if type(hooks_by_type[name]) ~= "table" then
                 hooks_by_type[name] = {}
             end
