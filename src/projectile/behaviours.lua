@@ -11,6 +11,9 @@ ProjectileBehaviour.Physics = {
             projectile.velocity = Vec()
         end
     end,
+    beforeUpdate = function(projectile)
+        projectile._cache.previous_transform = TransformCopy(projectile.transform)
+    end,
     onUpdate = function(projectile, _, dt)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return

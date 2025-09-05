@@ -187,8 +187,6 @@ function Projectiles.update(projectile, dt)
     local props = Projectiles.getProjectileProps(projectile)
     local handler = Projectiles.createHandlerGetter(projectile.type)
 
-    projectile._cache.previous_transform = TransformCopy(projectile.transform)
-
     local skip = false
     skip = handler("beforeUpdate")(projectile, props, dt)
     if skip then
