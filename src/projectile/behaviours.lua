@@ -52,12 +52,7 @@ ProjectileBehaviour.Ballistics = {
         local heading = projectile._initial.attack.heading
         local pitch = projectile._initial.attack.pitch
 
-        -- -- Uncomment following lines to hold projectile for testing
-        -- projectile.transform.pos = VecAdd(VecCopy(destination), Vec(0, 2, 0))
-        -- projectile.velocity = Vec(0, 0, 0)
-        -- return projectile
-
-        local solved_transform, solved_velocity, actual_flight_time = ProjectileUtil.solveKinematicsAtApex(
+        local solved_transform, solved_velocity = ProjectileUtil.solveKinematicsAtApex(
             destination,
             velocity,
             heading,
@@ -101,9 +96,6 @@ ProjectileBehaviour.ImpactFuze = {
             ProjectileUtil.hitscan(projectile.transform, projectile._cache.previous_transform)
         if hit then
             local pos = detonate_position --[[@as TVec]]
-            DebugPrint("DETONATED")
-            ---@diagnostic disable-next-line
-            DebugPrint(pos)
             ProjectileUtil.detonate(pos, props.explosiveYield, props.makeHoleSizes)
             projectile.state = SHELL_STATE.DETONATED
         end
