@@ -211,14 +211,6 @@ ProjectileBehaviour.Queueable = function()
                 pitch = pitch,
             })
         end,
-        onDraw = function(projectile, props)
-            if STATES.tactical.enabled then
-                ProjectileUtil.drawSalvoInfo(props, projectile.transform.pos, getValue(projectile, "delay"), {
-                    display = STATES.quicksalvo.markers,
-                    wait = getValue(projectile, "wait"),
-                })
-            end
-        end
     }
 end
 

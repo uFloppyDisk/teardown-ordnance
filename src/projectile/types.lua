@@ -40,8 +40,6 @@
 ---@field velocity TVec
 ---
 ---@class ProjectileProps
----@field munition_class string Ordnance class, calibre, or weapon system
----@field munition_type string Munition variant. Ex. "High Explosive"
 ---@field muzzleVelocity? number Muzzle velocity or top speed during ascent in m/s
 ---@field sprite? ProjectileSprite
 ---@field sounds? ProjectileSoundManifest
