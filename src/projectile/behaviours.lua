@@ -180,6 +180,11 @@ ProjectileBehaviour.Queueable = function()
                 return
             end
 
+            if InputPressed(CfgGetValue("KEYBIND_GENERAL_CANCEL")) and STATES.quicksalvo.enabled then
+                projectile.state = SHELL_STATE.NONE
+                return true
+            end
+
             local wait = getValue(projectile, "wait")
             if STATES.quicksalvo.enabled and wait then
                 return
