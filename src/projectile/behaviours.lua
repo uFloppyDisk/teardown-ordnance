@@ -211,6 +211,19 @@ ProjectileBehaviour.Queueable = function()
                 pitch = pitch,
             })
         end,
+        onDraw = function(projectile, props)
+            if STATES.tactical.enabled and projectile.state == SHELL_STATE.QUEUED then
+                ProjectileUtil.drawSalvoInfo(
+                    props,
+                    projectile._initial.requested_destination,
+                    getValue(projectile, "delay"),
+                    {
+                        display = STATES.quicksalvo.markers,
+                        wait = getValue(projectile, "wait"),
+                    }
+                )
+            end
+        end,
     }
 end
 

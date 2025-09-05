@@ -4,6 +4,8 @@ Projectiles.defineProjectile("test_projectile", PROJECTILE_DEFAULT_BEHAVIOURS, f
     ---@type ProjectileDefinition
     return {
         props = {
+            munition_class = "T.E.S.T",
+            munition_type = "Test Projectile",
             sprite = {
                 handle = LoadSprite("MOD/assets/img/m31a1.png"),
                 width = 1,

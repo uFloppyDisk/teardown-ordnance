@@ -162,3 +162,67 @@ function ProjectileUtil.drawSalvoMarker(destination, options)
         FdDrawShellImpactGizmo({ destination, heading, pitch }, deviation, vertices, colour, lines, is_quick_salvo)
     end
 end
+
+---@class (exact) DrawSalvoInfoOptions
+---@field display? DISPLAY_STATE
+---@field wait? boolean
+---@field rect_size? number
+
+---comment
+---@param props ProjectileProps
+---@param world_pos TVec
+---@param delay_seconds number
+---@param options? DrawSalvoInfoOptions
+function ProjectileUtil.drawSalvoInfo(props, world_pos, delay_seconds, options)
+    options = options or {}
+    local wait = options.wait
+    local display = options.display or DISPLAY_STATE.HIDDEN
+    local rect_size = options.rect_size or PROJECTILE_UI_MARK_SIZE
+
+    if display ~= DISPLAY_STATE.VISIBLE then
+        return
+    end
+    if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then
+        return
+    end
+
+    local x, y, dist = UiWorldToPixel(world_pos)
+    rect_size =
+        FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
+
+    UiPush()
+    UiTranslate(x - (rect_size / 2), y - (rect_size / 2))
+
+    UiPush()
+    UiTranslate(rect_size * 1.33, 0)
+    UiColor(1, 1, 1)
+    UiAlign("left")
+    UiFont("regular.ttf", 18)
+    UiTextShadow(0, 0, 0, 1, 1, 1)
+
+    UiText(props.munition_class, true)
+    UiText(props.munition_type, true)
+    FdUiContainer(function()
+        local delay = FdFixedDecimal(delay_seconds, 3)
+
+        if wait == false then
+            local width = UiText("Firing in ")
+            UiTranslate(width, 0)
+        end
+
+        UiPush()
+        UiFont("RobotoMono-Regular.ttf", 18)
+        local width = UiText(delay .. " ")
+        UiPop()
+
+        if wait == true then
+            UiTranslate(width, 0)
+            UiText("second(s)")
+        end
+    end, { false, true })
+    UiPop()
+
+    UiColor(FdGetUnpackedRGBA(COLOUR["red"], 0.75))
+    UiRect(rect_size, rect_size)
+    UiPop()
+end
