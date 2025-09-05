@@ -12,6 +12,7 @@ local HOOK_TYPES = {
     "afterUpdate",
     "beforeTick",
     "beforeUpdate",
+    "onDraw",
     "onInit",
     "onTick",
     "onUpdate",
@@ -202,4 +203,11 @@ function Projectiles.update(projectile, dt)
     projectile._cache.update_time = projectile.age
 
     handler("afterUpdate")(projectile, props, dt)
+end
+
+function Projectiles.draw(projectile)
+    local props = Projectiles.getProjectileProps(projectile)
+    local handler = Projectiles.createHandlerGetter(projectile.type)
+
+    handler("onDraw")(projectile, props)
 end

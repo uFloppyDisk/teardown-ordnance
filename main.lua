@@ -496,6 +496,10 @@ function draw()
         end
     end
 
+    for _, projectile in ipairs(Projectiles.getProjectiles()) do
+        Projectiles.draw(projectile)
+    end
+
     FdUiContainer(function()
         UiTranslate(80, UiHeight() - 375)
         UiColor(1, 1, 1)

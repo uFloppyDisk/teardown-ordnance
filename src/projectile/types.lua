@@ -52,6 +52,7 @@
 ---@field afterUpdate? ProjectileAfterUpdateFn
 ---@field beforeTick? ProjectileBeforeTickFn
 ---@field beforeUpdate? ProjectileBeforeUpdateFn
+---@field onDraw? ProjectileDrawFn
 ---@field onInit? ProjectileInitFn
 ---@field onTick? ProjectileTickFn
 ---@field onUpdate? ProjectileUpdateFn
@@ -70,12 +71,15 @@
 ---@alias ProjectileBeforeUpdateFn ProjectileUpdateFn
 ---@alias ProjectileAfterUpdateFn ProjectileUpdateFn
 ---
+---@alias ProjectileDrawFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
+---
 ---@alias ProjectileHandlerKey
 ---| '"afterInit"'
 ---| '"afterTick"'
 ---| '"afterUpdate"'
 ---| '"beforeTick"'
 ---| '"beforeUpdate"'
+---| '"onDraw"'
 ---| '"onInit"'
 ---| '"onTick"'
 ---| '"onUpdate"'
