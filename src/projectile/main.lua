@@ -123,9 +123,21 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
 
     for name, hooks in pairs(hooks_by_type) do
         Projectiles.setHandler(type_name, name, function(...)
+            local success = nil
+            local skip = false
+
             for _, hook in ipairs(hooks) do
-                hook(...)
+                local skip_or_error = nil
+                success, skip_or_error = pcall(hook, ...)
+                if not success then
+                    FdLog(string.format('[ERROR]: Caught error while executing "%s" %s handler: %s', type_name, name,
+                        skip_or_error --[[@as string]]))
+                end
+
+                skip = skip or skip_or_error == true
             end
+
+            return skip
         end)
     end
 end
