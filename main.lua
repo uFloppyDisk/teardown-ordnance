@@ -406,44 +406,43 @@ function tick(delta)
             },
             state = state
         })
-        return
+    else
+        local shell_whistle = values.sounds.whistle;
+        if type(values.sounds.whistle) == "table" then
+            local rand = math.random(#values.sounds.whistle)
+            shell_whistle = values.sounds.whistle[rand]
+        end
+
+        local shell_sprite = values.sprite
+        if FdAssertTableKeys(variant, "sprite") then
+            shell_sprite = variant.sprite
+        end
+
+        -- Instantiate shell
+        ---@type Shell
+        local shell = FdObjectNew({
+            type = STATES.selected_shell,
+            variant = STATES.selected_variant,
+            inaccuracy = STATES.shell_inaccuracy,
+            pitch = STATES.selected_attack_angle,
+            heading = STATES.selected_attack_heading,
+            sprite = shell_sprite,
+            snd_whistle = LoadLoop("MOD/assets/snd/" .. shell_whistle .. ".ogg")
+        }, DEFAULT_SHELL)
+
+        shell.destination = aim_pos
+
+        -- Fire shell manually
+        if not STATES.quicksalvo.enabled then
+            ShellInit(shell)
+            return
+        end
+
+        -- Queue shell in quick salvo
+        shell.state = SHELL_STATE.QUEUED
+        shell.delay = G_QUICK_SALVO_DELAY
+        table.insert(QUICK_SALVO, shell)
     end
-
-    local shell_whistle = values.sounds.whistle;
-    if type(values.sounds.whistle) == "table" then
-        local rand = math.random(#values.sounds.whistle)
-        shell_whistle = values.sounds.whistle[rand]
-    end
-
-    local shell_sprite = values.sprite
-    if FdAssertTableKeys(variant, "sprite") then
-        shell_sprite = variant.sprite
-    end
-
-    -- Instantiate shell
-    ---@type Shell
-    local shell = FdObjectNew({
-        type = STATES.selected_shell,
-        variant = STATES.selected_variant,
-        inaccuracy = STATES.shell_inaccuracy,
-        pitch = STATES.selected_attack_angle,
-        heading = STATES.selected_attack_heading,
-        sprite = shell_sprite,
-        snd_whistle = LoadLoop("MOD/assets/snd/" .. shell_whistle .. ".ogg")
-    }, DEFAULT_SHELL)
-
-    shell.destination = aim_pos
-
-    -- Fire shell manually
-    if not STATES.quicksalvo.enabled then
-        ShellInit(shell)
-        return
-    end
-
-    -- Queue shell in quick salvo
-    shell.state = SHELL_STATE.QUEUED
-    shell.delay = G_QUICK_SALVO_DELAY
-    table.insert(QUICK_SALVO, shell)
 
     PlaySound(SND_UI["salvo_mark"], sound_pos, 0.4)
 end
