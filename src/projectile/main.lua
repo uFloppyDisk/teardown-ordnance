@@ -18,6 +18,9 @@ local HOOK_TYPES = {
     "onUpdate",
 }
 
+---@type { [string]: integer }
+local shell_values_class_lookup = {}
+
 ---comment
 ---@param type_name string
 ---@param hook_name string
@@ -150,6 +153,30 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
             return skip
         end)
     end
+
+    local props = def.props
+
+    -- Insert projectile info into legacy shell picker for the time being
+    local _ = (function()
+        local shell_value_index = shell_values_class_lookup[props.munition_class]
+        if not shell_value_index then
+            local munition_class = {
+                name = props.munition_class,
+                variants = {},
+            }
+
+            table.insert(SHELL_VALUES, munition_class)
+            shell_values_class_lookup[munition_class.name] = #SHELL_VALUES
+        end
+
+        local variant = {
+            id = type_name,
+            name = props.munition_type,
+        }
+
+        shell_value_index = shell_values_class_lookup[props.munition_class]
+        table.insert(SHELL_VALUES[shell_value_index].variants, variant)
+    end)()
 end
 
 ---comment
