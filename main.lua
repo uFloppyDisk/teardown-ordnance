@@ -449,12 +449,11 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function update(delta)
-    for index, projectile in ipairs(__PROJECTILES) do
+    for index, projectile in ipairs(Projectiles.getProjectiles()) do
         Projectiles.update(projectile, delta)
 
         if projectile.state == SHELL_STATE.NONE or projectile.state == SHELL_STATE.DETONATED then
-            DebugPrint(string.format("Removing %s projectile at index %d...", projectile.type, index))
-            table.remove(__PROJECTILES, index)
+            Projectiles.removeProjectile(index)
         end
     end
 

@@ -36,6 +36,10 @@ function Projectiles.getProjectiles()
     return __PROJECTILES
 end
 
+function Projectiles.removeProjectile(index)
+    table.remove(__PROJECTILES, index)
+end
+
 ---comment
 ---@param projectile Projectile
 ---@return table
@@ -130,8 +134,14 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
                 local skip_or_error = nil
                 success, skip_or_error = pcall(hook, ...)
                 if not success then
-                    FdLog(string.format('[ERROR]: Caught error while executing "%s" %s handler: %s', type_name, name,
-                        skip_or_error --[[@as string]]))
+                    FdLog(
+                        string.format(
+                            '[ERROR]: Caught error while executing "%s" %s handler: %s',
+                            type_name,
+                            name,
+                            skip_or_error --[[@as string]]
+                        )
+                    )
                 end
 
                 skip = skip or skip_or_error == true
