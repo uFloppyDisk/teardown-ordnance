@@ -1,7 +1,7 @@
 ---@type { [string]: ProjectileBehaviour }
 ProjectileBehaviour = {}
 
-ProjectileBehaviour.Physics = {
+ProjectileBehaviour.HasPhysics = {
     afterInit = function(projectile)
         if not projectile.transform then
             projectile.transform = Transform(projectile.destination, Quat())
@@ -45,7 +45,7 @@ ProjectileBehaviour.Physics = {
     end,
 }
 
-ProjectileBehaviour.Ballistics = {
+ProjectileBehaviour.HasBallistics = {
     onInit = function(projectile, props)
         local destination = projectile.destination
         local velocity = props.muzzleVelocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
@@ -83,7 +83,7 @@ ProjectileBehaviour.Ballistics = {
     end,
 }
 
-ProjectileBehaviour.ImpactFuze = {
+ProjectileBehaviour.HasImpactFuze = {
     onUpdate = function(projectile, props)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -102,7 +102,7 @@ ProjectileBehaviour.ImpactFuze = {
     end,
 }
 
-ProjectileBehaviour.DrawSprite = {
+ProjectileBehaviour.HasSprite = {
     onTick = function(projectile, props)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -120,7 +120,7 @@ ProjectileBehaviour.DrawSprite = {
     end,
 }
 
-ProjectileBehaviour.Sounds = function()
+ProjectileBehaviour.HasSounds = function()
     local WHISTLE_VOLUME = 100
     local WHISTLE_MIN_VELOCITY = 100
     local WHISTLE_MAX_DISTANCE_TO_GROUND = 500
@@ -177,7 +177,7 @@ ProjectileBehaviour.Sounds = function()
     }
 end
 
-ProjectileBehaviour.Queueable = function()
+ProjectileBehaviour.IsQueueable = function()
     local function getValue(projectile, event_name)
         return projectile._cache.queue[event_name]
     end
@@ -252,10 +252,10 @@ end
 
 ---@type ProjectileBehaviour[]
 PROJECTILE_DEFAULT_BEHAVIOURS = {
-    ProjectileBehaviour.Physics,
-    ProjectileBehaviour.Ballistics,
-    ProjectileBehaviour.Queueable,
-    ProjectileBehaviour.ImpactFuze,
-    ProjectileBehaviour.DrawSprite,
-    ProjectileBehaviour.Sounds,
+    ProjectileBehaviour.HasPhysics,
+    ProjectileBehaviour.HasBallistics,
+    ProjectileBehaviour.IsQueueable,
+    ProjectileBehaviour.HasImpactFuze,
+    ProjectileBehaviour.HasSprite,
+    ProjectileBehaviour.HasSounds,
 }
