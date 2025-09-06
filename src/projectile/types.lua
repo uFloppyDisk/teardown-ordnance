@@ -9,7 +9,7 @@
 ---
 ---@class ProjectileSoundManifest
 ---@field fire? number
----@field whistle? number
+---@field whistle? number|number[]
 ---
 ---@see MakeHole
 ---@class ProjectileMakeHoleSizes

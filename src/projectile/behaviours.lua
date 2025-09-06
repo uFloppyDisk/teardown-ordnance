@@ -121,6 +121,10 @@ ProjectileBehaviour.DrawSprite = {
 }
 
 ProjectileBehaviour.Sounds = function()
+    local WHISTLE_VOLUME = 100
+    local WHISTLE_MIN_VELOCITY = 100
+    local WHISTLE_MAX_DISTANCE_TO_GROUND = 500
+
     local function getValue(projectile, event_name)
         return projectile._cache.sounds[event_name]
     end
@@ -131,21 +135,43 @@ ProjectileBehaviour.Sounds = function()
 
     ---@type ProjectileBehaviourFuncs
     return {
-        onInit = function(projectile)
+        onInit = function(projectile, props)
             projectile._cache.sounds = {}
+
+            local elected_whistle = props.sounds.whistle
+            if elected_whistle ~= nil then
+                if type(elected_whistle) == "table" then
+                    elected_whistle = elected_whistle[math.random(1, #elected_whistle)]
+                end
+
+                setValue(projectile, "elected_whistle", elected_whistle)
+                DebugPrint(string.format("Elected whistle sound %d", elected_whistle))
+            end
         end,
         onTick = function(projectile, props)
-            if
-                projectile.state == SHELL_STATE.ACTIVE
-                and not getValue(projectile, "fire")
-                and FdAssertTableKeys(props, "sounds", "fire")
-            then
+            if projectile.state ~= SHELL_STATE.ACTIVE then
+                return
+            end
+
+            if not getValue(projectile, "fire") and FdAssertTableKeys(props, "sounds", "fire") then
                 FdPlayDistantSound(props.sounds.fire, {
                     heading = projectile._initial.attack.heading,
                     use_random_pitch = true,
                 })
 
                 setValue(projectile, "fire", true)
+            end
+
+            local elected_whistle = getValue(projectile, "elected_whistle")
+            if elected_whistle and VecLength(projectile.velocity) > WHISTLE_MIN_VELOCITY then
+                local distance_ground = VecLength(VecSub(projectile.transform.pos, projectile.destination))
+
+                if distance_ground < WHISTLE_MAX_DISTANCE_TO_GROUND then
+                    DebugWatch("whistle", "playing")
+                    PlayLoop(elected_whistle, projectile.transform.pos, WHISTLE_VOLUME)
+                else
+                    DebugWatch("whistle", "waiting")
+                end
             end
         end,
     }
