@@ -48,7 +48,7 @@ ProjectileBehaviour.HasPhysics = {
 ProjectileBehaviour.HasBallistics = {
     onInit = function(projectile, props)
         local destination = projectile.destination
-        local velocity = props.muzzleVelocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
+        local velocity = props.muzzle_velocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
         local heading = projectile._initial.attack.heading
         local pitch = projectile._initial.attack.pitch
 
@@ -96,7 +96,7 @@ ProjectileBehaviour.HasImpactFuze = {
             ProjectileUtil.hitscan(projectile.transform, projectile._cache.previous_transform)
         if hit then
             local pos = detonate_position --[[@as TVec]]
-            ProjectileUtil.detonate(pos, props.explosiveYield, props.makeHoleSizes)
+            ProjectileUtil.detonate(pos, props.explosive_yield, props.hole_sizes)
             projectile.state = SHELL_STATE.DETONATED
         end
     end,

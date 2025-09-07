@@ -42,11 +42,11 @@
 ---@class ProjectileProps
 ---@field munition_class string Ordnance class, calibre, or weapon system
 ---@field munition_type string Munition variant. Ex. "High Explosive"
----@field muzzleVelocity? number Muzzle velocity or top speed during ascent in m/s
+---@field muzzle_velocity? number Muzzle velocity or top speed during ascent in m/s
 ---@field sprite? ProjectileSprite
 ---@field sounds? ProjectileSoundManifest
----@field explosiveYield? number Size of projectile explosion if applicable [0, 4]
----@field makeHoleSizes? ProjectileMakeHoleSizes
+---@field explosive_yield? number Size of projectile explosion if applicable [0, 4]
+---@field hole_sizes? ProjectileMakeHoleSizes
 ---
 ---@class (exact) ProjectileBehaviourFuncs
 ---@field afterInit? ProjectileAfterInitFn

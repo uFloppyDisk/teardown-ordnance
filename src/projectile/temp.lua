@@ -19,8 +19,8 @@ Projectiles.defineProjectile("test_projectile", PROJECTILE_DEFAULT_BEHAVIOURS, f
                     LoadLoop("MOD/assets/snd/155mm_whistle_3.ogg", 100),
                 },
             },
-            explosiveYield = 4,
-            makeHoleSizes = {
+            explosive_yield = 4,
+            hole_sizes = {
                 soft = 50,
                 medium = 50,
                 hard = 50,
