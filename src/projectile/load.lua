@@ -7,3 +7,4 @@
 #include "src/projectile/behaviours.lua"
 #include "src/projectile/main.lua"
 
+#include "src/projectile/munitions/155mm_high_explosive.lua"
