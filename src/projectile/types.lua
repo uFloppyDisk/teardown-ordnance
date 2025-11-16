@@ -29,14 +29,16 @@
 ---@field delay number
 ---@field [string] any
 ---
----@class (exact) Projectile
+---@class (exact) ProtoProjectile
 ---@field _initial ProjectileInitialValues
 ---@field _cache ProjectileCache
+---@field type string
+---
+---@class (exact) Projectile : ProtoProjectile
 ---@field age number
 ---@field destination TVec
 ---@field state SHELL_STATE
 ---@field transform TTransform
----@field type string
 ---@field velocity TVec
 ---
 ---@class ProjectileProps
@@ -52,6 +54,7 @@
 ---@field afterInit? ProjectileAfterInitFn
 ---@field afterTick? ProjectileAfterTickFn
 ---@field afterUpdate? ProjectileAfterUpdateFn
+---@field beforeInit? ProjectileBeforeInitFn
 ---@field beforeTick? ProjectileBeforeTickFn
 ---@field beforeUpdate? ProjectileBeforeUpdateFn
 ---@field onDraw? ProjectileDrawFn
@@ -63,6 +66,7 @@
 ---@field props ProjectileProps
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
+---@alias ProjectileBeforeInitFn fun(projectile: ProtoProjectile, props: ProjectileProps): boolean? Skip next?
 ---@alias ProjectileAfterInitFn ProjectileInitFn
 ---
 ---@alias ProjectileTickFn fun(projectile: Projectile, props: ProjectileProps, dt: number): boolean? Skip next?
@@ -79,6 +83,7 @@
 ---| '"afterInit"'
 ---| '"afterTick"'
 ---| '"afterUpdate"'
+---| '"beforeInit"'
 ---| '"beforeTick"'
 ---| '"beforeUpdate"'
 ---| '"onDraw"'

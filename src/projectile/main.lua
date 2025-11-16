@@ -10,6 +10,7 @@ local HOOK_TYPES = {
     "afterInit",
     "afterTick",
     "afterUpdate",
+    "beforeInit",
     "beforeTick",
     "beforeUpdate",
     "onDraw",
@@ -44,7 +45,7 @@ function Projectiles.removeProjectile(index)
 end
 
 ---comment
----@param projectile Projectile
+---@param projectile ProtoProjectile
 ---@return table
 function Projectiles.getProjectileProps(projectile)
     local props = __PROJECTILES_TYPES[projectile.type]
@@ -92,7 +93,7 @@ end
 
 ---comment
 ---@param type_name string
----@param behaviours ProjectileBehaviourFuncs[]
+---@param behaviours ProjectileBehaviour[]
 ---@param definitionGenerator ProjectileDefinitionGenerator
 function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator)
     if __PROJECTILES_TYPES[type_name] ~= nil then
@@ -124,6 +125,9 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
 
     for _, name in ipairs(HOOK_TYPES) do
         if def[name] then
+            if hooks_by_type[name] == nil then
+                hooks_by_type[name] = {}
+            end
             table.insert(hooks_by_type[name], def[name])
         end
     end
@@ -192,14 +196,21 @@ function Projectiles.init(type_name, initial_values)
         _initial = initial_values,
         _cache = {},
         type = type_name,
-        age = 0,
-        state = initial_values.state or SHELL_STATE.ACTIVE,
-        destination = ProjectileUtil.calcDeviation(initial_values.requested_destination, initial_values.deviation),
     }
 
     local props = Projectiles.getProjectileProps(projectile)
 
     local skip = false
+    skip = Projectiles.getHandler(type_name, "beforeInit")(projectile, props)
+    if skip then
+        return
+    end
+
+    projectile.age = projectile.age or 0
+    projectile.state = projectile.state or initial_values.state or SHELL_STATE.ACTIVE
+    projectile.destination =
+        ProjectileUtil.calcDeviation(initial_values.requested_destination, initial_values.deviation)
+
     skip = Projectiles.getHandler(type_name, "onInit")(projectile, props)
     if skip then
         return
