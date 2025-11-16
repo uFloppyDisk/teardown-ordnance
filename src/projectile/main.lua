@@ -8,7 +8,7 @@ __PROJECTILES_HANDLERS = {}
 ---@type ProjectileHandlerKey[]
 local HOOK_TYPES = {
     "afterInit",
-    "afterInit",
+    "afterTick",
     "afterUpdate",
     "beforeTick",
     "beforeUpdate",
