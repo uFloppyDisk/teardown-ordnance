@@ -33,6 +33,9 @@ ProjectileBehaviour.HasPhysics = {
             { 0, 1, 0, 0.5 },
         })
     end,
+}
+
+ProjectileBehaviour.Expires = {
     afterUpdate = function(projectile)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -252,6 +255,7 @@ end
 
 ---@type ProjectileBehaviour[]
 PROJECTILE_DEFAULT_BEHAVIOURS = {
+    ProjectileBehaviour.Expires,
     ProjectileBehaviour.HasPhysics,
     ProjectileBehaviour.HasBallistics,
     ProjectileBehaviour.IsQueueable,
