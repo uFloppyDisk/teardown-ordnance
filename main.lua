@@ -182,7 +182,7 @@ function tick(delta)
     local sound_pos = GetCameraTransform().pos
 
     SetToolTransform(Transform(Vec(0.2, -0.3, -0.4), QuatEuler(-20, -35, -5)))
-    SetToolHandPoseLocalTransform(Transform(Vec(0, 0.08, 0), QuatEuler(0, 180, 0)), nil)
+    SetToolHandPoseLocalTransform(Transform(Vec(0, 0.08, 0), QuatEuler(0, 180, 0)), Transform())
 
     if G_DEV then
         if #DEBUG_POSITIONS > 0 then
@@ -222,13 +222,13 @@ function tick(delta)
 
     -- Capture user's current player transform for locking camera
     if InputPressed(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
-        PLAYER_LOCK_TRANSFORM = GetPlayerTransform(true)
+        PLAYER_LOCK_TRANSFORM = GetPlayerTransform()
 
         STATES.input_attack_invert = false
 
         local heading = STATES.selected_attack_heading
         if not STATES.tactical.enabled then
-            local _, py, _ = GetQuatEuler(GetPlayerTransform(true).rot)
+            local _, py, _ = GetQuatEuler(GetPlayerTransform().rot)
 
             heading = (heading - py) % 360
         end
@@ -240,12 +240,12 @@ function tick(delta)
 
     -- User change pitch/heading event
     if InputReleased(KEYBINDS["KEYBIND_ADJUST_ATTACK"]) then
-        local transform_player_current = GetPlayerTransform(true)
+        local transform_player_current = GetPlayerTransform()
         local transform_player_reset = Transform(transform_player_current.pos, PLAYER_LOCK_TRANSFORM.rot)
 
         local velocity_player_current = GetPlayerVelocity()
 
-        SetPlayerTransform(transform_player_reset, true)
+        SetPlayerTransform(transform_player_reset)
         SetPlayerVelocity(velocity_player_current)
     end
 
