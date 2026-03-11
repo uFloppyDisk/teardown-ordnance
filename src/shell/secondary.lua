@@ -1,5 +1,7 @@
 function PhysBodyTick(body)
-    if not IsHandleValid(body.handle) then return true end
+    if not IsHandleValid(body.handle) then
+        return true
+    end
 
     local disp_manage = {
         ["IN"] = PhysBodyIncendiaryTick,
@@ -7,7 +9,9 @@ function PhysBodyTick(body)
         ["frag"] = PhysBodyFragTick,
     }
 
-    if not FdAssertTableKeys(disp_manage, body.type) then return false end
+    if not FdAssertTableKeys(disp_manage, body.type) then
+        return false
+    end
 
     local shapes = GetBodyShapes(body.handle)
     return disp_manage[body.type](shapes, body)
@@ -26,7 +30,9 @@ function ShellSecInit(self, parameters, detonate)
     local isDetonated = true
 
     if FdAssertTableKeys(parameters, "trigger_height") then
-        if not detonate then isDetonated = false end
+        if not detonate then
+            isDetonated = false
+        end
 
         if parameters.trigger_height < self.distance_ground then
             return isDetonated
@@ -75,7 +81,9 @@ function ShellSecInit(self, parameters, detonate)
 end
 
 function ShellSecTick(self, delta, variant)
-    if self.secondary.timer <= 0 then return true end
+    if self.secondary.timer <= 0 then
+        return true
+    end
 
     local disp_tick_secondary = {
         ["SM"] = ShellSecTickSmoke,
@@ -92,7 +100,9 @@ function ShellSecTick(self, delta, variant)
         return true
     end
 
-    if result == true then return true end
+    if result == true then
+        return true
+    end
 
     self.secondary.timer = self.secondary.timer - delta
     return false

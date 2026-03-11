@@ -23,10 +23,14 @@ function KeybindHint(bind, label, size)
 
         for index, current_bind in ipairs(bind) do
             local w, _, icon = InputIcon(current_bind, size_target, { true, false }, are_previous_pressed)
-            if index ~= #bind then UiTranslate(GAP_BETWEEN, 0) end
+            if index ~= #bind then
+                UiTranslate(GAP_BETWEEN, 0)
+            end
 
             are_previous_pressed = are_previous_pressed and icon.is_pressed
-            if index > 1 then table.insert(plus_pos, w) end
+            if index > 1 then
+                table.insert(plus_pos, w)
+            end
             scale = math.max(scale, icon.scale)
         end
 

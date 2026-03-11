@@ -7,10 +7,12 @@ CAMERA_DEFAULT_FOV = nil
 local HUD_HINT_KEYBIND_MIN_WIDTH = 28
 
 function ContextTacticalInit()
-    if STATES.tactical.camera_settings.camera_transform ~= nil then return end
+    if STATES.tactical.camera_settings.camera_transform ~= nil then
+        return
+    end
 
-    STATES.tactical.camera_settings.camera_transform = FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0),
-        QuatEuler(-90, 0, 0))
+    STATES.tactical.camera_settings.camera_transform =
+        FdGetCameraTransform(FdGetPlayerTransform(), Vec(0, 100, 0), QuatEuler(-90, 0, 0))
     CAMERA_DEFAULT_FOV = CfgGetValue("TACTICAL_DEFAULT_CAMERA_FOV") or 75
     CAMERA_CURRENT_FOV = CAMERA_DEFAULT_FOV
     STATES.tactical.camera_settings.target_camera_fov = CAMERA_CURRENT_FOV
@@ -37,14 +39,26 @@ function ContextTacticalTick(delta)
     local pos_translate = Vec(0, 0, 0)
 
     -- Camera up/down/left/right key events
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then pos_translate[3] = pos_translate[3] - 1 end
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS")) then pos_translate[3] = pos_translate[3] + 1 end
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG")) then pos_translate[1] = pos_translate[1] - 1 end
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS")) then pos_translate[1] = pos_translate[1] + 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_NEG")) then
+        pos_translate[3] = pos_translate[3] - 1
+    end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Z_POS")) then
+        pos_translate[3] = pos_translate[3] + 1
+    end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_NEG")) then
+        pos_translate[1] = pos_translate[1] - 1
+    end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_X_POS")) then
+        pos_translate[1] = pos_translate[1] + 1
+    end
 
     -- Camera elevation key events
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then pos_translate[2] = pos_translate[2] - 1 end
-    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then pos_translate[2] = pos_translate[2] + 1 end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_NEG")) then
+        pos_translate[2] = pos_translate[2] - 1
+    end
+    if InputDown(CfgGetValue("KEYBIND_TACTICAL_TRANSLATE_Y_POS")) then
+        pos_translate[2] = pos_translate[2] + 1
+    end
 
     -- Camera elevation bounds logic
     local current_camera_z = STATES.tactical.camera_settings.camera_transform.pos[2]
@@ -89,13 +103,17 @@ function ContextTacticalTick(delta)
 
     -- Camera zoom key event
     local _ = (function()
-        if InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then return end
-        if STATES.quicksalvo.enabled and InputDown(CfgGetValue("KEYBIND_ADJUST_DELAY")) then return end
+        if InputDown(CfgGetValue("KEYBIND_ADJUST_INACCURACY")) then
+            return
+        end
+        if STATES.quicksalvo.enabled and InputDown(CfgGetValue("KEYBIND_ADJUST_DELAY")) then
+            return
+        end
 
         if InputValue("mousewheel") ~= 0 then
             local offset = -5 * InputValue("mousewheel")
-            STATES.tactical.camera_settings.target_camera_fov = FdClamp(
-                STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
+            STATES.tactical.camera_settings.target_camera_fov =
+                FdClamp(STATES.tactical.camera_settings.target_camera_fov + offset, 25, 120)
             SetValue("CAMERA_CURRENT_FOV", STATES.tactical.camera_settings.target_camera_fov, "linear", 0.15)
         end
     end)()
@@ -126,8 +144,11 @@ local function drawGrid(metres, width, world_depth, opacity)
     local alpha = opacity or 1
 
     local ui_width, ui_height = UiWidth(), UiHeight()
-    local point_below = Vec(STATES.tactical.camera_settings.camera_transform.pos[1], 0,
-        STATES.tactical.camera_settings.camera_transform.pos[3])
+    local point_below = Vec(
+        STATES.tactical.camera_settings.camera_transform.pos[1],
+        0,
+        STATES.tactical.camera_settings.camera_transform.pos[3]
+    )
 
     local current_point, current_point_inverted = {}, {}
     local wx, wz = math.ceil(point_below[1] / step) * step, math.ceil(point_below[3] / step) * step
@@ -165,7 +186,7 @@ local function drawGrid(metres, width, world_depth, opacity)
 
         wx, wz = wx + step, wz + step
         iter = iter + 1
-    until (current_point[1] > ui_width and current_point[2] > ui_height)
+    until current_point[1] > ui_width and current_point[2] > ui_height
 end
 
 ---@param pos table World position.
@@ -192,28 +213,34 @@ local function drawPlayer()
 end
 
 local function drawCursor()
-    if not STATES.tactical.hitscan.hit then return end
+    if not STATES.tactical.hitscan.hit then
+        return
+    end
 
-    local opacity = FdMapToRange(
-        FdClamp(STATES.selected_attack_angle, 20, 84),
-        78, 84,
-        1, 0.65
-    )
+    local opacity = FdMapToRange(FdClamp(STATES.selected_attack_angle, 20, 84), 78, 84, 1, 0.65)
 
     drawHUDMarker(STATES.tactical.hitscan.pos, 7, FdGetRGBA(COLOUR["yellow_dark"], opacity))
 end
 
 ---@param display DISPLAY_STATE
 local function drawQueuedSalvo(display)
-    if display == DISPLAY_STATE.HIDDEN then return end
-    if #QUICK_SALVO <= 0 then return end
+    if display == DISPLAY_STATE.HIDDEN then
+        return
+    end
+    if #QUICK_SALVO <= 0 then
+        return
+    end
 
     local rect_size = 10
     local rect_w, rect_h = rect_size, rect_size
 
     local function drawShellInfo(shell, is_next)
-        if display ~= DISPLAY_STATE.VISIBLE then return end
-        if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then return end
+        if display ~= DISPLAY_STATE.VISIBLE then
+            return
+        end
+        if not CfgGetValue("TACTICAL_SHELL_LABELS_TOGGLE") then
+            return
+        end
 
         local shell_type = SHELL_VALUES[shell.type]
 
@@ -251,8 +278,8 @@ local function drawQueuedSalvo(display)
 
     for index, shell in ipairs(QUICK_SALVO) do
         local x, y, dist = UiWorldToPixel(shell.destination)
-        rect_size = FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))),
-            5, 15)
+        rect_size =
+            FdClamp(rect_size * (1 * (100 / (dist * (STATES.tactical.camera_settings.current_camera_fov / 75)))), 5, 15)
 
         UiPush()
         UiTranslate(x - (rect_w / 2), y - (rect_h / 2))
@@ -276,9 +303,8 @@ function ContextTacticalDraw()
 
     local m_pos = STATES.tactical.mouse_pos
 
-    STATES.tactical.hitscan.pos,
-    STATES.tactical.hitscan.hit,
-    STATES.tactical.hitscan.dist = FdGetMousePosInWorld(m_pos[1], m_pos[2])
+    STATES.tactical.hitscan.pos, STATES.tactical.hitscan.hit, STATES.tactical.hitscan.dist =
+        FdGetMousePosInWorld(m_pos[1], m_pos[2])
 
     FdWatch("Mouse Position", "{" .. m_pos[1] .. ", " .. m_pos[2] .. "}")
     UiPop()
@@ -287,7 +313,7 @@ function ContextTacticalDraw()
 
     if CfgGetValue("TACTICAL_DRAW_GRID_TOGGLE") then
         local world_depth = 0
-        if InputDown('space') and STATES.tactical.hitscan.hit then
+        if InputDown("space") and STATES.tactical.hitscan.hit then
             world_depth = STATES.tactical.hitscan.pos[2]
         end
 

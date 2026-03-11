@@ -22,7 +22,7 @@ local function subInit(self)
         ---@type SubSmoke
         local sub = FdObjectNew({
             transform = TransformCopy(transform),
-            velocity = Vec(FdMapToRange(math.random(), 0, 1, 10, 25), 0, 0)
+            velocity = Vec(FdMapToRange(math.random(), 0, 1, 10, 25), 0, 0),
         }, DEFAULT_SUBMUNITION)
 
         FdAddToDebugTable(DEBUG_POSITIONS, { transform.pos, FdGetRGBA(COLOUR["white"]) })
@@ -41,11 +41,8 @@ local function subInit(self)
             created_at = ELAPSED_TIME,
             type = "SM",
             handle = sub.body,
-            ttl = FdMapToRange(math.random(), 0, 1, 0.3, 2) * FdClamp(FdMapToRange(
-                random_pitch / pitch.max,
-                pitch_ratio_min, 0.8,
-                1, 0.01
-            ), 0.01, 1)
+            ttl = FdMapToRange(math.random(), 0, 1, 0.3, 2)
+                * FdClamp(FdMapToRange(random_pitch / pitch.max, pitch_ratio_min, 0.8, 1, 0.01), 0.01, 1),
         }
         table.insert(BODIES, body)
 
@@ -56,11 +53,7 @@ local function subInit(self)
             sub.body,
             VecScale(
                 VecNormalize(TransformToParentVec(sub.transform, Vec(1, 0, 0))),
-                VecLength(sub.velocity) * FdClamp(FdMapToRange(
-                    random_pitch / pitch.max,
-                    0.5, 1,
-                    0.5, 4
-                ), 0.5, 4)
+                VecLength(sub.velocity) * FdClamp(FdMapToRange(random_pitch / pitch.max, 0.5, 1, 0.5, 4), 0.5, 4)
             )
         )
     end
@@ -75,19 +68,19 @@ local function doIgnitedWP(self, variant)
     ParticleCollide(0)
 
     ParticleColor(1, 0.1718, 0)
-    ParticleAlpha(1, 0, 'linear', 0, 0)
+    ParticleAlpha(1, 0, "linear", 0, 0)
     ParticleEmissive(10)
 
     local particle_cfg = {
         VecCopy(self.position),
         VecCopy(self.secondary.velocity),
-        0.45
+        0.45,
     }
 
     local i = 6
     repeat
         local radius = variant.secondary.radius * FdMapToRange(math.random(), 0, 1, 0.3, 1)
-        ParticleRadius(radius / 2, radius, 'linear', 0.1, 0.1)
+        ParticleRadius(radius / 2, radius, "linear", 0.1, 0.1)
 
         SpawnParticle(unpack(particle_cfg))
 
@@ -114,16 +107,16 @@ local function doBodyPrimary(self, variant, radius, offset)
     ParticleCollide(0)
 
     ParticleColor(1, 1, 1)
-    ParticleAlpha(1, 0, 'linear', 0, 0)
+    ParticleAlpha(1, 0, "linear", 0, 0)
 
     local particle_cfg = {
         VecCopy(self.position),
         VecCopy(G_VEC_WIND),
-        self.secondary.timer
+        self.secondary.timer,
     }
 
     for _ = 0, 6, 1 do
-        ParticleRadius(radius / FdMapToRange(math.random(), 0, 1, 1.1, 1.7), radius, 'linear', 0.02)
+        ParticleRadius(radius / FdMapToRange(math.random(), 0, 1, 1.1, 1.7), radius, "linear", 0.02)
         SpawnParticle(unpack(particle_cfg))
     end
 end
@@ -165,7 +158,7 @@ local function doMushroomHead(self, variant, velocity, range, radius, angles, of
     local particle_cfg = {
         VecCopy(position_original),
         VecAdd(Vec(0, range, 0), G_VEC_WIND),
-        self.secondary.timer
+        self.secondary.timer,
     }
 
     local instances = 6
@@ -180,7 +173,7 @@ local function doMushroomHead(self, variant, velocity, range, radius, angles, of
 
         local par_rot = 0.6 * (range / velocity)
         ParticleRotation(par_rot, 0)
-        if (i >= (instances / 2)) then
+        if i >= (instances / 2) then
             ParticleRotation(-par_rot, 0)
         end
 
@@ -226,10 +219,16 @@ function ShellSecTickSmoke(self, _, variant)
         end
     end
 
-    if timer_ratio < 0.10 then return end
+    if timer_ratio < 0.10 then
+        return
+    end
 
     if math.random() > 0.96 then
-        doBodyPrimary(self, variant, variant.secondary.radius * FdMapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio)
+        doBodyPrimary(
+            self,
+            variant,
+            variant.secondary.radius * FdMapToRange(math.random(), 0, 1, 0.1, 0.5) * timer_ratio
+        )
     end
 end
 
@@ -237,17 +236,23 @@ end
 ---@param shapes number[]
 ---@param body ManagedBody
 function PhysBodySmokeTick(shapes, body)
-    if IsShapeBroken(shapes[1]) then return true end
+    if IsShapeBroken(shapes[1]) then
+        return true
+    end
 
     local bound_x, bound_y = GetBodyBounds(body.handle)
     local pos = VecLerp(bound_x, bound_y, 0.5)
     local velocity = GetBodyVelocity(body.handle)
     PointLight(pos, 1, 0.4668, 0.1229, 0.7)
 
-    if IsPointInWater(pos) then return false end
+    if IsPointInWater(pos) then
+        return false
+    end
 
     if not IsBodyActive(body.handle) then
-        if math.random() > 0.05 then return false end
+        if math.random() > 0.05 then
+            return false
+        end
     end
 
     -- SpawnFire(pos)
@@ -256,7 +261,9 @@ function PhysBodySmokeTick(shapes, body)
         ParticleReset()
 
         local radius = FdMapToRange(math.random(), 0, 1, 0.05, 0.2)
-        if math.random() > 0.8 then radius = radius * FdMapToRange(math.random(), 0, 1, 1.5, 5) end
+        if math.random() > 0.8 then
+            radius = radius * FdMapToRange(math.random(), 0, 1, 1.5, 5)
+        end
         ParticleRadius(radius / 2, radius * (FdMapToRange(math.random(), 0, 1, 1, 1.5)), "linear")
 
         ParticleType("plain")
@@ -265,7 +272,7 @@ function PhysBodySmokeTick(shapes, body)
 
         local iterations = 4
         for i = 0, iterations, 1 do
-            ParticleAlpha(math.random() * 0.6, 0, 'linear', 0, 0.7)
+            ParticleAlpha(math.random() * 0.6, 0, "linear", 0, 0.7)
 
             local spawn_pos = VecLerp(
                 VecAdd(pos, VecScale(velocity, 1 / 60)),
@@ -277,6 +284,8 @@ function PhysBodySmokeTick(shapes, body)
         end
     end
 
-    if math.random() > 0.05 then return false end
+    if math.random() > 0.05 then
+        return false
+    end
     return false
 end

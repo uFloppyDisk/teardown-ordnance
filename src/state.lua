@@ -33,14 +33,14 @@ STATES.tactical = {
     hitscan = {
         hit = false,
         pos = Vec(),
-        dist = nil
+        dist = nil,
     },
     camera_settings = {
         camera_transform = nil,
         target_camera_fov = nil,
-        current_camera_fov = nil
+        current_camera_fov = nil,
     },
-    camera_defaults = {}
+    camera_defaults = {},
 }
 
 local DEFAULT_STATE = STATES
@@ -58,7 +58,9 @@ end
 ---@return any
 function GetStateValue(keyOrKeyRef)
     local key = keyOrKeyRef
-    if keyRef[keyOrKeyRef] ~= nil then key = keyRef[keyOrKeyRef] end
+    if keyRef[keyOrKeyRef] ~= nil then
+        key = keyRef[keyOrKeyRef]
+    end
 
     local path = parseKey(key)
 
@@ -66,7 +68,9 @@ function GetStateValue(keyOrKeyRef)
     for _, seg in ipairs(path) do
         head = head[seg]
 
-        if head == nil then return nil end
+        if head == nil then
+            return nil
+        end
     end
 
     return head

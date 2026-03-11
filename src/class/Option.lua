@@ -13,7 +13,7 @@ OPTION = {
     value_display_exp = 0,
 
     width = 100,
-    height = 30
+    height = 30,
 }
 
 function OPTION:new(o)

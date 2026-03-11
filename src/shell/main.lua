@@ -2,7 +2,7 @@ local PHYSICAL_FRAG_SPAWN_CHANCE = CfgGetValue("PHYSICAL_FRAGMENTATION_SPAWN_CHA
 local PHYSICAL_FRAG_TTL = 40
 local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
 local PHYSICAL_FRAG_BBR_DECAY_CHANCE = 0.75
-local PHYSICAL_FRAG_BBR_DECAY_RATE = 100       -- Must be divisible by 100
+local PHYSICAL_FRAG_BBR_DECAY_RATE = 100 -- Must be divisible by 100
 local PHYSICAL_FRAG_BBR_LUMINOSITY_BASE = 0.25 -- Emissive scale 0-1
 local PHYSICAL_FRAG_VELOCITY_BASE = 100
 local PHYSICAL_FRAG_VELOCITY_VARI = 150
@@ -59,7 +59,9 @@ function PhysBodyFragTick(shapes, body)
         body.kelvin = body.kelvin - PHYSICAL_FRAG_BBR_DECAY_RATE
         local isEmissive = setShapesBlackbodyRadiation(shapes, body.kelvin, PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
 
-        if not isEmissive then body.kelvin = nil end
+        if not isEmissive then
+            body.kelvin = nil
+        end
     end
 
     if not body.shouldHandle or VecLength(vec) <= 40 then
@@ -84,10 +86,30 @@ function ShellDrawSprite(self)
     local transform_pos = Transform(self.position, rotation)
     local transform_pos_90 = Transform(self.position, QuatRotateQuat(rotation, QuatAxisAngle(Vec(0, 1, 0), 90)))
 
-    DrawSprite(self.sprite.img, transform_pos_90, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor),
-        0.4, 0.4, 0.4, 1, true, false) -- Second
-    DrawSprite(self.sprite.img, transform_pos, self.sprite.width, (self.sprite.width * self.sprite.scaling_factor), 0.4,
-        0.4, 0.4, 1, true, false)
+    DrawSprite(
+        self.sprite.img,
+        transform_pos_90,
+        self.sprite.width,
+        (self.sprite.width * self.sprite.scaling_factor),
+        0.4,
+        0.4,
+        0.4,
+        1,
+        true,
+        false
+    ) -- Second
+    DrawSprite(
+        self.sprite.img,
+        transform_pos,
+        self.sprite.width,
+        (self.sprite.width * self.sprite.scaling_factor),
+        0.4,
+        0.4,
+        0.4,
+        1,
+        true,
+        false
+    )
 end
 
 ---Calculate origin of fragmentation to prevent level geometry from absorbing it all
@@ -98,7 +120,7 @@ end
 ---@return TVec
 local function solveFragOrigin(source_pos, source_dist, check_dist, shape)
     source_pos = VecCopy(source_pos)
-    QueryRequire('large')
+    QueryRequire("large")
     local _, distance = QueryRaycast(VecAdd(VecCopy(source_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
 
     local dist_diff = FdRound(distance, 4) - source_dist
@@ -123,8 +145,8 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         local position_new = TransformToParentPoint(transform, Vec(((frag_dist - 5) + (math.random() * 10)), 0, 0))
         local transform_new = Transform(position_new, transform.rot)
 
-        local hit, hit_distance = QueryRaycast(pos, VecNormalize(VecSub(position_new, pos)),
-            VecLength(VecSub(position_new, pos)))
+        local hit, hit_distance =
+            QueryRaycast(pos, VecNormalize(VecSub(position_new, pos)), VecLength(VecSub(position_new, pos)))
         if not hit then
             return false, transform_new
         end
@@ -176,7 +198,9 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
 
     local hit_final, line_end = checkHit(rotation)
 
-    if hit_final then return true, line_end end
+    if hit_final then
+        return true, line_end
+    end
 
     if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() < PHYSICAL_FRAG_SPAWN_CHANCE then
         local frag_variant = math.ceil(math.random() * 3)
@@ -186,8 +210,10 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
             valid = true,
             created_at = ELAPSED_TIME,
             type = "frag",
-            handle = Spawn("MOD/assets/vox/frag" .. frag_variant .. ".xml",
-                Transform(VecLerp(self.position, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot))[1],
+            handle = Spawn(
+                "MOD/assets/vox/frag" .. frag_variant .. ".xml",
+                Transform(VecLerp(self.position, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot)
+            )[1],
             shouldHandle = true,
             ttl = PHYSICAL_FRAG_TTL,
             kelvin = math.random(10, 27) * 100,
@@ -204,13 +230,17 @@ local function shellFragTick(self, index, pos, frag_size, frag_dist, rot, halt)
         )
         SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
 
-        local isEmissive = setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin,
-            PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
-        if not isEmissive then frag.kelvin = nil end
+        local isEmissive =
+            setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin, PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
+        if not isEmissive then
+            frag.kelvin = nil
+        end
     end
 
     if CfgGetValue("G_FRAGMENTATION_DEBUG") then
-        if line_end == nil then return false end
+        if line_end == nil then
+            return false
+        end
 
         FdAddToDebugTable(DEBUG_LINES, { pos, line_end.pos, FdGetRGBA(COLOUR["red"], 0.1) })
         FRAG_STATS[3] = FRAG_STATS[3] + 1
@@ -239,12 +269,18 @@ local function detonate(self, pos)
     local hole = variant.size_makehole
     MakeHole(pos, hole[1], hole[2], hole[3], false)
 
-    if variant.size_explosion <= 0 then return end
+    if variant.size_explosion <= 0 then
+        return
+    end
 
     Explosion(pos, variant.size_explosion)
 
-    if variant.size_explosion < 0.5 then return end
-    if not CfgGetValue("G_SIMULATE_FRAGMENTATION") then return end
+    if variant.size_explosion < 0.5 then
+        return
+    end
+    if not CfgGetValue("G_SIMULATE_FRAGMENTATION") then
+        return
+    end
 
     local FRAG_AMOUNT = CfgGetValue("SHELL_FRAGMENTATION_AMOUNT") or 250
     local FRAG_SIZE = (CfgGetValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
@@ -257,7 +293,7 @@ local function detonate(self, pos)
 
     local check_dist = 0.5
 
-    QueryRequire('large')
+    QueryRequire("large")
     local hit, distance, _, shape = QueryRaycast(pos, Vec(0, 1, 0), check_dist)
 
     local frag_origin = pos
@@ -275,8 +311,15 @@ local function detonate(self, pos)
         FdLog(FRAG_STATS[3] .. " - missed")
         FdLog(FRAG_STATS[4] .. " - redirected")
         FdLog("-------------")
-        FdLog("TOTAL: " .. FRAG_STATS[1] .. " - " ..
-            FRAG_STATS[4] .. " redirected = " .. (FRAG_STATS[1] - FRAG_STATS[4]) .. ")")
+        FdLog(
+            "TOTAL: "
+                .. FRAG_STATS[1]
+                .. " - "
+                .. FRAG_STATS[4]
+                .. " redirected = "
+                .. (FRAG_STATS[1] - FRAG_STATS[4])
+                .. ")"
+        )
     end
 end
 
@@ -289,14 +332,14 @@ local function tickActive(self, delta)
 
     -- TODO - More intelligent out of bounds detection
     -- Mark shell for deletion as the shell has gone out of bounds.
-    if (self.distance_ground > 5000) then
+    if self.distance_ground > 5000 then
         self.state = SHELL_STATE.DETONATED
         return
     end
 
     -- Check if shell has a secondary state and that the secondary has not been activated yet;
     -- if so, check various trigger conditions
-    if (FdAssertTableKeys(variant, "secondary") and not self.secondary.active) then
+    if FdAssertTableKeys(variant, "secondary") and not self.secondary.active then
         ShellSecInit(self, variant.secondary)
     end
 
@@ -340,8 +383,8 @@ local function tickActive(self, delta)
 
     -- Stop increasing kinetic energy after first hit
     if not self.hit_once then
-        self.kinetic_energy = FdClamp((values.weight * math.pow(math.abs(VecLength(self.vel_current)), 2)) / 1000, 0,
-            5000)
+        self.kinetic_energy =
+            FdClamp((values.weight * math.pow(math.abs(VecLength(self.vel_current)), 2)) / 1000, 0, 5000)
     end
 
     FdWatch("shell(CURRENT VELOCITY)", self.vel_current)
@@ -354,10 +397,13 @@ local function tickActive(self, delta)
     end
 
     -- Hit detection and ballistics system
-    QueryRequire('large')
+    QueryRequire("large")
     QueryRequire("physical")
-    local hit, hit_distance, _, shape_initial = QueryRaycast(self.position,
-        VecNormalize(VecSub(position_new, self.position)), VecLength(VecSub(position_new, self.position)))
+    local hit, hit_distance, _, shape_initial = QueryRaycast(
+        self.position,
+        VecNormalize(VecSub(position_new, self.position)),
+        VecLength(VecSub(position_new, self.position))
+    )
     if not hit then
         self.position = VecCopy(position_new)
         return
@@ -381,12 +427,19 @@ local function tickActive(self, delta)
     ---@return TVec?
     local function solveBallistics(pos_hit, radius)
         local trigger_detonation = false
-        local material_initial = GetShapeMaterialAtPosition(shape_initial, (pos_hit))
+        local material_initial = GetShapeMaterialAtPosition(shape_initial, pos_hit)
         FdLog("Initial material is '" .. material_initial .. "'")
 
         -- Perform recursive check for materials encountered during this tick
-        local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(self.position,
-            position_new, { pos_hit }, radius, { material_initial }, { shape_initial }, 6)
+        local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(
+            self.position,
+            position_new,
+            { pos_hit },
+            radius,
+            { material_initial },
+            { shape_initial },
+            6
+        )
 
         local position_detonation
         if hit_positions ~= nil then
@@ -403,7 +456,9 @@ local function tickActive(self, delta)
 
         -- Iterate over all materials found in recursive QueryRaycast and determine outcome based on penetration values
         for index, material in pairs(hit_materials) do
-            if trigger_detonation then break end
+            if trigger_detonation then
+                break
+            end
 
             FdLog("Material at index " .. index .. " is '" .. material .. "'")
 
@@ -434,14 +489,20 @@ local function tickActive(self, delta)
         end
 
         -- QueryRaycast in the opposite direction to check if bottom material is impenetrable. Fixes fringe QueryRejectShape edge case.
-        hit, hit_distance, _, shape_initial = QueryRaycast(position_new,
-            VecNormalize(VecSub(self.position, position_new)), VecLength(VecSub(self.position, position_new)), 0)
-        local position_initial_hit = VecAdd(position_new,
-            VecScale(VecNormalize(VecSub(self.position, position_new)), hit_distance))
+        hit, hit_distance, _, shape_initial = QueryRaycast(
+            position_new,
+            VecNormalize(VecSub(self.position, position_new)),
+            VecLength(VecSub(self.position, position_new)),
+            0
+        )
+        local position_initial_hit =
+            VecAdd(position_new, VecScale(VecNormalize(VecSub(self.position, position_new)), hit_distance))
 
-        if not hit then return false end
+        if not hit then
+            return false
+        end
 
-        local bottom_material = GetShapeMaterialAtPosition(shape_initial, (position_initial_hit))
+        local bottom_material = GetShapeMaterialAtPosition(shape_initial, position_initial_hit)
         FdLog("Bottom material detected as '" .. bottom_material .. "'")
 
         if bottom_material ~= "rock" and bottom_material ~= "none" then
@@ -456,10 +517,8 @@ local function tickActive(self, delta)
         return true, position_initial_hit
     end
 
-    local pos_initial_hit = VecAdd(
-        self.position,
-        VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance)
-    )
+    local pos_initial_hit =
+        VecAdd(self.position, VecScale(VecNormalize(VecSub(position_new, self.position)), hit_distance))
     local radius = self.sprite.width / 2
 
     FdAddToDebugTable(DEBUG_POSITIONS, { pos_initial_hit, COLOUR["white"] })
@@ -556,7 +615,7 @@ local function fire(self)
 
     local x_at_t = VecAdd(VecScale(velocity_3d, at_time), VecCopy(self.destination))
     local y_at_t = -0.5 * (math.abs(G_VEC_GRAVITY[2]) * (at_time * at_time)) -- -1/2gt^2
-    y_at_t = y_at_t + (velocity_vertical * at_time) + self.destination[2]    -- + (vy0)t + y0
+    y_at_t = y_at_t + (velocity_vertical * at_time) + self.destination[2] -- + (vy0)t + y0
 
     self.position = Vec(x_at_t[1], y_at_t, x_at_t[3])
     -- self.position = VecAdd(VecCopy(self.destination), Vec(0, 2, 0)) -- Testing
@@ -572,7 +631,6 @@ local function fire(self)
 
     playFireSound(self)
 end
-
 
 -- #region Shell Control
 

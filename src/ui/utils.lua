@@ -28,8 +28,12 @@ function FdUiContainer(children, translate)
 
     local w, h = UiEndFrame()
     UiPop()
-    if translate[1] then UiTranslate(w, 0) end
-    if translate[2] then UiTranslate(0, h) end
+    if translate[1] then
+        UiTranslate(w, 0)
+    end
+    if translate[2] then
+        UiTranslate(0, h)
+    end
 
     return w, h
 end
