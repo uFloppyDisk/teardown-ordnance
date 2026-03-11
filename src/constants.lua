@@ -872,7 +872,7 @@ SHELL_VALUES = {
                 size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 10,
-                    trigger_sound = LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
+                    trigger_sound = 0, --LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
                     trigger_sound_volume = 900,
                     trigger_height = 450,
                     particle_radius = 10,
@@ -886,7 +886,7 @@ SHELL_VALUES = {
                 size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 10,
-                    trigger_sound = LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
+                    trigger_sound = 0, --LoadSound("MOD/assets/snd/155mm_shell_cluster_secondary_trigger.ogg"),
                     trigger_sound_volume = 900,
                     trigger_height = 100,
                     particle_radius = 10,
@@ -894,7 +894,7 @@ SHELL_VALUES = {
             },
         },
         sprite = {
-            img = LoadSprite("MOD/assets/img/" .. "155mm_HE" .. ".png"),
+            img = 0, --LoadSprite("MOD/assets/img/" .. "155mm_HE" .. ".png"),
             scaling_factor = 5.33,
             width = 0.155 * 2,
         },
@@ -923,7 +923,7 @@ SHELL_VALUES = {
                 id = "PF",
                 name = "Parachuted Flare",
                 sprite = {
-                    img = LoadSprite("MOD/assets/img/" .. "60mm_ILL" .. ".png"),
+                    img = 0, --LoadSprite("MOD/assets/img/" .. "60mm_ILL" .. ".png"),
                     scaling_factor = 5.25,
                     width = 0.06 * 2,
                 },
@@ -932,7 +932,7 @@ SHELL_VALUES = {
                 size_makehole = { 0.1, 0, 0 },
                 secondary = {
                     timer = 30,
-                    trigger_sound = LoadSound("MOD/assets/snd/60mm_ILL_secondary_pop_distant.ogg"),
+                    trigger_sound = 0, --LoadSound("MOD/assets/snd/60mm_ILL_secondary_pop_distant.ogg"),
                     trigger_height = 75,
                 },
             },
@@ -950,7 +950,7 @@ SHELL_VALUES = {
             },
         },
         sprite = {
-            img = LoadSprite("MOD/assets/img/" .. "60mm_HE" .. ".png"),
+            img = 0, --LoadSprite("MOD/assets/img/" .. "60mm_HE" .. ".png"),
             scaling_factor = 4.08,
             width = 0.06 * 2,
         },
@@ -972,7 +972,7 @@ SHELL_VALUES = {
                 size_explosion = 4,
                 size_makehole = { 50, 20, 5 },
                 sprite = {
-                    img = LoadSprite("MOD/assets/img/m31a1.png"),
+                    img = 0, --LoadSprite("MOD/assets/img/m31a1.png"),
                     scaling_factor = 4.2,
                     width = 1,
                 },
@@ -986,7 +986,7 @@ SHELL_VALUES = {
             },
         },
         sprite = {
-            img = LoadSprite("MOD/assets/img/155mm_HE.png"),
+            img = 0, --LoadSprite("MOD/assets/img/155mm_HE.png"),
             scaling_factor = 4.08,
             width = 0.06 * 2,
         },
