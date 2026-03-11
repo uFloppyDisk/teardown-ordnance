@@ -21,7 +21,9 @@ local dampened = {
 }
 
 local function getScaledDimensions(dim, scale)
-    if dim == nil then return {} end
+    if dim == nil then
+        return {}
+    end
     return { x = (dim.x or dim[1]) * scale, y = (dim.y or dim[2]) * scale }
 end
 
@@ -37,7 +39,9 @@ local function dampenValue(key, value, max, min_magnitude)
     max = max or 1
     min_magnitude = (min_magnitude ~= nil and min_magnitude) or 0
 
-    if math.abs(value) <= min_magnitude then return end
+    if math.abs(value) <= min_magnitude then
+        return
+    end
 
     dampened[key] = FdClamp(value / max * DAMPENED_RANGE, -DAMPENED_RANGE, DAMPENED_RANGE)
     SetValueInTable(dampened, key, 0, "linear", DAMPENED_DURATION)
@@ -58,10 +62,8 @@ local KEY = function(icon)
     local slice = getScaledDimensions(icon.img.slice, icon.scale)
 
     local text_width, text_height = UiGetTextSize(icon.label)
-    local w = string.len(icon.label) == 1 and size.x or
-        math.max(size.x, text_width + slice.x * 2)
-    local h = string.len(icon.label) == 1 and size.y or
-        math.max(size.y, text_height + slice.y * 2)
+    local w = string.len(icon.label) == 1 and size.x or math.max(size.x, text_width + slice.x * 2)
+    local h = string.len(icon.label) == 1 and size.y or math.max(size.y, text_height + slice.y * 2)
 
     UiPush()
     UiColor(0, 0, 0, 0)
@@ -74,7 +76,9 @@ local KEY = function(icon)
     UiPush()
 
     UiFrameSkipItem(true)
-    if icon.is_pressed then UiTranslate(1, 1) end
+    if icon.is_pressed then
+        UiTranslate(1, 1)
+    end
     UiImageBox(icon.img.src, w, h, slice.x, slice.y)
 
     UiPush()
@@ -94,18 +98,14 @@ local MOUSE = function(icon)
 
     local size = getScaledDimensions(img_plate.size, icon.scale)
 
-    local bound_to_btn =
-        icon.bind == "lmb" or
-        icon.bind == "rmb" or
-        icon.bind == "mmb"
-    local bound_to_move =
-        icon.bind == "mousemove" or
-        icon.bind == "mousedx" or
-        icon.bind == "mousedy"
+    local bound_to_btn = icon.bind == "lmb" or icon.bind == "rmb" or icon.bind == "mmb"
+    local bound_to_move = icon.bind == "mousemove" or icon.bind == "mousedx" or icon.bind == "mousedy"
     local bound_to_scroll = icon.bind == "scroll"
 
     local pre_dx, pre_dy = (function()
-        if not bound_to_move then return 0, 0 end
+        if not bound_to_move then
+            return 0, 0
+        end
 
         local dx = InputValue("mousedx")
         local dy = InputValue("mousedy")
@@ -147,18 +147,26 @@ local MOUSE = function(icon)
 
     UiPush()
 
-    if icon.is_pressed then UiTranslate(1, 1) end
+    if icon.is_pressed then
+        UiTranslate(1, 1)
+    end
     UiImageBox(img_plate.src, size.x, size.y, 0, 0)
 
     local _ = (function()
-        if not bound_to_btn then return end
+        if not bound_to_btn then
+            return
+        end
 
-        if icon.is_pressed then setActiveColour() end
+        if icon.is_pressed then
+            setActiveColour()
+        end
         UiImageBox(icon.img.src, size.x, size.y, 0, 0)
     end)()
 
     local _ = (function()
-        if not bound_to_move then return end
+        if not bound_to_move then
+            return
+        end
 
         local img_move = UI_IMAGE.MOUSE_MOVE_BASE
         local img_move_up = UI_IMAGE.MOUSE_MOVE_UP
@@ -183,21 +191,29 @@ local MOUSE = function(icon)
             UiImageBox(img_move_down.src, size.x, size.y, 0, 0)
         end
 
-        if not can_be_active or not hasDirection(dx, dy) then return end
+        if not can_be_active or not hasDirection(dx, dy) then
+            return
+        end
 
         UiPush()
 
         setActiveColour(math.abs(dx))
-        if dx ~= 0 then UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0) end
+        if dx ~= 0 then
+            UiImageBox((dx < 0 and img_move_left.src) or img_move_right.src, size.x, size.y, 0, 0)
+        end
 
         setActiveColour(math.abs(dy))
-        if dy ~= 0 then UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0) end
+        if dy ~= 0 then
+            UiImageBox((dy < 0 and img_move_up.src) or img_move_down.src, size.x, size.y, 0, 0)
+        end
 
         UiPop()
     end)()
 
     local _ = (function()
-        if not bound_to_scroll then return end
+        if not bound_to_scroll then
+            return
+        end
 
         local img_scroll = UI_IMAGE.MOUSE_SCROLL_BASE
         local img_scroll_up = UI_IMAGE.MOUSE_SCROLL_UP
@@ -207,10 +223,14 @@ local MOUSE = function(icon)
         UiImageBox(img_scroll_up.src, size.x, size.y, 0, 0)
         UiImageBox(img_scroll_down.src, size.x, size.y, 0, 0)
 
-        if not can_be_active then return end
+        if not can_be_active then
+            return
+        end
 
         dampenValue("scroll", InputValue("mousewheel"), 1)
-        if dampened.scroll == 0 then return end
+        if dampened.scroll == 0 then
+            return
+        end
 
         UiPush()
         setActiveColour(math.abs(dampened.scroll) / DAMPENED_RANGE)
@@ -255,7 +275,9 @@ end
 ---@return number Key icon height
 ---@return table icon icon data
 function InputIcon(key, size, translate, can_be_active)
-    if can_be_active == nil then can_be_active = true end
+    if can_be_active == nil then
+        can_be_active = true
+    end
     local bind = CfgGetKeybind(key)
     local Icon, def = getInputFnType(bind)
 

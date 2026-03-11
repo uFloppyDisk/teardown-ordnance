@@ -62,12 +62,19 @@ local function subTick(self, variant, delta, sub)
     local position_new = TransformToParentPoint(sub.transform, VecScale(sub.velocity, delta))
     local transform_new = Transform(position_new, sub.transform.rot)
 
-    if IsPointInWater(position_new) then return nil end
+    if IsPointInWater(position_new) then
+        return nil
+    end
 
-    local hit, hit_distance, normal = QueryRaycast(sub.transform.pos,
-        VecNormalize(VecSub(position_new, sub.transform.pos)), VecLength(VecSub(position_new, sub.transform.pos)))
+    local hit, hit_distance, normal = QueryRaycast(
+        sub.transform.pos,
+        VecNormalize(VecSub(position_new, sub.transform.pos)),
+        VecLength(VecSub(position_new, sub.transform.pos))
+    )
     if not hit then
-        if timer_ratio < 0.5 then return nil end -- If WP has been deployed for too long without hitting anything, extinguish it
+        if timer_ratio < 0.5 then
+            return nil
+        end -- If WP has been deployed for too long without hitting anything, extinguish it
 
         FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
 
@@ -76,10 +83,7 @@ local function subTick(self, variant, delta, sub)
         ParticleAlpha(1, 0, "smooth")
         ParticleStretch(1)
         ParticleCollide(0.01)
-        ParticleColor(
-            1, 1, 1,
-            1, 0.706, 0.42
-        )
+        ParticleColor(1, 1, 1, 1, 0.706, 0.42)
 
         do
             local step = 1 / 5
@@ -96,7 +100,9 @@ local function subTick(self, variant, delta, sub)
 
         PointLight(sub.transform.pos, FdGetUnpackedRGBA({ 1, 0.706, 0.42 }, sub.brightness))
 
-        if timer_ratio < 0.75 then return transform_new end -- Stop particle trail after some time
+        if timer_ratio < 0.75 then
+            return transform_new
+        end -- Stop particle trail after some time
 
         ParticleReset()
         ParticleAlpha(1, 0, "smooth")
@@ -108,8 +114,8 @@ local function subTick(self, variant, delta, sub)
             local step = 1 / (math.floor(FdMapToRange(velocity_magnitude, 50, 150, 1, 5)))
             local cur = 0
             repeat
-                local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2))) *
-                    FdClamp(FdMapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
+                local rand_radius = (sub.smoke_radius - (math.random() * (sub.smoke_radius / 2)))
+                    * FdClamp(FdMapToRange(timer_elapsed, 0, 0.25, 0.4, 1), 0, 1)
                 ParticleRadius(rand_radius, rand_radius, "smooth", 0, 0)
 
                 local pos = VecLerp(sub.transform.pos, transform_new.pos, cur)
@@ -123,8 +129,8 @@ local function subTick(self, variant, delta, sub)
         return transform_new
     end
 
-    local position_hit = VecAdd(sub.transform.pos,
-        VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
+    local position_hit =
+        VecAdd(sub.transform.pos, VecScale(VecNormalize(VecSub(position_new, sub.transform.pos)), hit_distance))
 
     FdAddToDebugTable(DEBUG_LINES, { sub.transform.pos, position_hit, COLOUR["orange"] })
     FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
@@ -161,7 +167,7 @@ local function subTick(self, variant, delta, sub)
         valid = true,
         created_at = ELAPSED_TIME,
         type = "IN",
-        handle = sub.body
+        handle = sub.body,
     }
     table.insert(BODIES, body)
 
@@ -179,8 +185,8 @@ local function subTick(self, variant, delta, sub)
     local velocity_wp = VecLength(sub.velocity) * (math.random() * 0.08 + 0.02)
 
     -- Reduce WP velocity if reflected direction is too close to normal
-    velocity_wp = velocity_wp *
-        FdClamp(FdMapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
+    velocity_wp = velocity_wp
+        * FdClamp(FdMapToRange(VecLength(VecSub(reflected_direction, normal)), 0, 0.5, 0.25, 1), 0.25, 1)
 
     local cross_direction = VecCross(normal, reflected_direction)
     if math.random() < 0.5 then
@@ -212,7 +218,9 @@ local function subTick(self, variant, delta, sub)
 
             QueryRejectBody(sub.body)
             hit, point, normal, shape = QueryClosestPoint(transform_spawn.pos, 5)
-            if not hit then break end
+            if not hit then
+                break
+            end
 
             FdAddToDebugTable(DEBUG_POSITIONS, { point, COLOUR["orange"] })
             SpawnFire(point)
@@ -231,13 +239,17 @@ end
 ---@param delta number
 ---@param variant any
 function ShellSecTickIncendiary(self, delta, variant)
-    if self.secondary.timer < 0 then return true end
+    if self.secondary.timer < 0 then
+        return true
+    end
 
     if not FdAssertTableKeys(self, "secondary", "submunitions") then
         subInit(self)
     end
 
-    if #self.secondary.submunitions == 0 then return true end
+    if #self.secondary.submunitions == 0 then
+        return true
+    end
 
     for _, sub in ipairs(self.secondary.submunitions) do
         ---@cast sub SubIncendiary
@@ -260,16 +272,22 @@ end
 ---@param shapes number[]
 ---@param body ManagedBody
 function PhysBodyIncendiaryTick(shapes, body)
-    if IsShapeBroken(shapes[1]) then return true end
+    if IsShapeBroken(shapes[1]) then
+        return true
+    end
 
     local bound_x, bound_y = GetBodyBounds(body.handle)
     local pos = VecLerp(bound_x, bound_y, 0.5)
     PointLight(pos, 1, 0.706, 0.42, 10)
 
-    if IsPointInWater(pos) then return false end
+    if IsPointInWater(pos) then
+        return false
+    end
 
     if not IsBodyActive(body.handle) then
-        if math.random() > 0.05 then return false end
+        if math.random() > 0.05 then
+            return false
+        end
     end
 
     SpawnFire(pos)
@@ -287,11 +305,15 @@ function PhysBodyIncendiaryTick(shapes, body)
         SpawnParticle(pos, G_VEC_WIND, math.random() * 10 + 10)
     end
 
-    if math.random() > 0.05 then return false end
+    if math.random() > 0.05 then
+        return false
+    end
 
     QueryRejectBody(body.handle)
     local hit, pos_fire = QueryClosestPoint(pos, 5)
-    if not hit then return false end
+    if not hit then
+        return false
+    end
 
     FdAddToDebugTable(DEBUG_POSITIONS, { pos_fire, COLOUR["orange"] })
     SpawnFire(pos_fire)

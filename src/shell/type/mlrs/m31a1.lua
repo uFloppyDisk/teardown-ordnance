@@ -39,13 +39,8 @@ local function subInit(self)
         local rotation = QuatEuler(0, 360 * math.random(), 0)
         local distance = Vec(MISSILE_MAX_OFFSET_DISTANCE * math.random(), 0, 0)
 
-        local transform = Transform(
-            TransformToParentPoint(
-                Transform(VecCopy(self.position), rotation),
-                distance
-            ),
-            rotation
-        )
+        local transform =
+            Transform(TransformToParentPoint(Transform(VecCopy(self.position), rotation), distance), rotation)
 
         ---@type SubIncendiary
         local sub = FdObjectNew({
@@ -86,19 +81,21 @@ local function subTick(self, delta, variant)
 
     local travel_direction = VecNormalize(VecSub(position_new, self.transform.pos))
 
-    local hit, hit_distance = QueryRaycast(self.transform.pos, travel_direction,
-        VecLength(VecSub(position_new, self.transform.pos)))
+    local hit, hit_distance =
+        QueryRaycast(self.transform.pos, travel_direction, VecLength(VecSub(position_new, self.transform.pos)))
     if not hit then
         FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
 
         local emission_fadein = FdClamp(self.age / ENGINE_EMISSION_FADEIN, 0, 1)
-        local emission_fadeout = 1 -
-            FdClamp((self.age - ENGINE_EMISSION_FADEOUT_START_AGE) / ENGINE_EMISSION_FADEOUT, 0, 1)
+        local emission_fadeout = 1
+            - FdClamp((self.age - ENGINE_EMISSION_FADEOUT_START_AGE) / ENGINE_EMISSION_FADEOUT, 0, 1)
 
         local emission_intensity = math.min(emission_fadein, emission_fadeout) * ENGINE_EMISSION_INTENSITY
 
-        local engine_offset = VecAdd(self.transform.pos,
-            VecScale(travel_direction, -variant.sprite.width * variant.sprite.scaling_factor / 2))
+        local engine_offset = VecAdd(
+            self.transform.pos,
+            VecScale(travel_direction, -variant.sprite.width * variant.sprite.scaling_factor / 2)
+        )
         PointLight(
             engine_offset,
             ENGINE_EMISSION_COLOUR[1],
@@ -110,8 +107,8 @@ local function subTick(self, delta, variant)
         return true, transform_new
     end
 
-    local position_hit = VecAdd(self.transform.pos,
-        VecScale(VecNormalize(VecSub(position_new, self.transform.pos)), hit_distance))
+    local position_hit =
+        VecAdd(self.transform.pos, VecScale(VecNormalize(VecSub(position_new, self.transform.pos)), hit_distance))
 
     FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, position_hit, COLOUR["orange"] })
     FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
@@ -137,13 +134,17 @@ end
 ---@param delta number
 ---@param variant any
 function ShellSecTickM31A1(self, delta, variant)
-    if self.secondary.timer < 0 then return true end
+    if self.secondary.timer < 0 then
+        return true
+    end
 
     if not FdAssertTableKeys(self, "secondary", "submunitions") then
         subInit(self)
     end
 
-    if #self.secondary.submunitions == 0 then return true end
+    if #self.secondary.submunitions == 0 then
+        return true
+    end
 
     for index, sub in ipairs(self.secondary.submunitions) do
         ---@cast sub SubM31A1
@@ -153,7 +154,9 @@ function ShellSecTickM31A1(self, delta, variant)
 
                 local handle = LoadSound("MOD/assets/snd/" .. variant.secondary.sounds.fire .. ".ogg")
                 local heading = (function()
-                    if self.pitch >= 90 then return nil end
+                    if self.pitch >= 90 then
+                        return nil
+                    end
 
                     return self.heading
                 end)()

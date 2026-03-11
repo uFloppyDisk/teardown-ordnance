@@ -15,7 +15,7 @@ local function subInit(self)
         local sub = FdObjectNew({
             index = i,
             transform = TransformCopy(transform),
-            velocity = Vec(math.random() * 10 + 5, 0, 0)
+            velocity = Vec(math.random() * 10 + 5, 0, 0),
         }, DEFAULT_SUBMUNITION)
 
         local vel_to_sub = TransformToLocalVec(sub.transform, VecNormalize(self.secondary.inertia))
@@ -39,21 +39,24 @@ local function subTick(self, delta, sprite)
     local position_new = TransformToParentPoint(self.transform, VecScale(self.velocity, delta))
     local transform_new = Transform(position_new, self.transform.rot)
 
-    local look_rotation = QuatRotateQuat(QuatLookAt(self.transform.pos, GetCameraTransform().pos),
-        QuatAxisAngle(Vec(0, 0, 1), 180))
+    local look_rotation =
+        QuatRotateQuat(QuatLookAt(self.transform.pos, GetCameraTransform().pos), QuatAxisAngle(Vec(0, 0, 1), 180))
     local draw_pos = Transform(self.transform.pos, look_rotation)
     DrawSprite(sprite, draw_pos, 0.0635, 0.0635, 0.4, 0.4, 0.4, 1, true, false)
 
-    local hit, hit_distance = QueryRaycast(self.transform.pos, VecNormalize(VecSub(position_new, self.transform.pos)),
-        VecLength(VecSub(position_new, self.transform.pos)))
+    local hit, hit_distance = QueryRaycast(
+        self.transform.pos,
+        VecNormalize(VecSub(position_new, self.transform.pos)),
+        VecLength(VecSub(position_new, self.transform.pos))
+    )
     if not hit then
         FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, transform_new.pos, FdGetRGBA(COLOUR["orange"], 0.15) })
 
         return transform_new
     end
 
-    local position_hit = VecAdd(self.transform.pos,
-        VecScale(VecNormalize(VecSub(position_new, self.transform.pos)), hit_distance))
+    local position_hit =
+        VecAdd(self.transform.pos, VecScale(VecNormalize(VecSub(position_new, self.transform.pos)), hit_distance))
 
     FdAddToDebugTable(DEBUG_LINES, { self.transform.pos, position_hit, COLOUR["orange"] })
     FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
