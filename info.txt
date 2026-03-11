@@ -2,3 +2,4 @@ name = Ordnance [FD]
 author = FloppyDisk
 description = [noupload] Launch different caliber and type artillery at will. ** Press ESC in options menu to back out.
 tags = Tool
+version = 2
