@@ -1,4 +1,13 @@
+#version 2
+---@diagnostic disable:exp-in-action
+---@diagnostic disable:undefined-global
+---
 #include "src/load.lua"
+#include "src/server/load.lua"
+#include "src/client/load.lua"
+---
+---@diagnostic enable:exp-in-action
+---@diagnostic enable:undefined-global
 
 ELAPSED_TIME = 0
 
@@ -47,6 +56,13 @@ end
 -- #endregion functions
 
 -- #region Main
+function server.init()
+    OrdServer.init()
+end
+
+function client.init()
+    OrdClient.init()
+end
 
 ---@diagnostic disable-next-line: lowercase-global
 function init()
