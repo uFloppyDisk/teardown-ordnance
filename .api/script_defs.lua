@@ -18,6 +18,10 @@
 TSharedUserdata = {}
 function TSharedUserdata.create(name) return nil end
 
+server = {}
+client = {}
+shared = {}
+
 ---
 --- Example:
 --- ```lua
@@ -122,7 +126,7 @@ function HasVersion(version) return false end
 ---
 --- Example:
 --- ```lua
---- function update()
+--- function client.update()
 --- 	local t = GetTime()
 --- 	DebugPrint(t)
 --- end
@@ -136,12 +140,12 @@ function GetTime() return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local dt = GetTimeStep()
 --- 	DebugPrint("tick dt: " .. dt)
 --- end
 --- 
---- function update()
+--- function client.update()
 --- 	local dt = GetTimeStep()
 --- 	DebugPrint("update dt: " .. dt)
 --- end
@@ -152,67 +156,72 @@ function GetTimeStep() return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local name = InputLastPressedKey()
 --- 	if string.len(name) > 0 then
 --- 		DebugPrint(name)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return string name Name of last pressed key, empty if no key is pressed
-function InputLastPressedKey() return "" end
+function InputLastPressedKey(playerId) return "" end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		DebugPrint("interact")
 --- 	end
 --- end
 --- ```
 ---@param input string The input identifier
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean pressed True if input was pressed during last frame
-function InputPressed(input) return false end
+function InputPressed(input, playerId) return false end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if InputReleased("interact") then
 --- 		DebugPrint("interact")
 --- 	end
 --- end
 --- ```
 ---@param input string The input identifier
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean pressed True if input was released during last frame
-function InputReleased(input) return false end
+function InputReleased(input, playerId) return false end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		DebugPrint("interact")
 --- 	end
 --- end
 --- ```
 ---@param input string The input identifier
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean pressed True if input is currently held down
-function InputDown(input) return false end
+function InputDown(input, playerId) return false end
 
 ---
 --- Example:
 --- ```lua
 --- local scrollPos = 0
---- function tick()
+--- function client.tick()
 --- 	scrollPos = scrollPos + InputValue("mousewheel")
 --- 	DebugPrint(scrollPos)
 --- end
 --- ```
 ---@param input string The input identifier
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number value Depends on input type
-function InputValue(input) return 0 end
+function InputValue(input, playerId) return 0 end
 
 function IsControllerButtonDown(...) end
 
@@ -220,7 +229,7 @@ function IsControllerButtonDown(...) end
 ---
 --- Example:
 --- ```lua
---- function update()
+--- function client.update()
 ---     -- Prints '2' because InputClear() allows the game to "forget" the player's input
 --- 	if InputDown("interact") then
 ---         InputClear()
@@ -254,7 +263,7 @@ function InputResetOnTransition() end
 --- ```lua
 --- #include "ui/ui_helpers.lua"
 --- 
---- function update()
+--- function client.update()
 --- 	if LastInputDevice() == UI_DEVICE_GAMEPAD then
 --- 		DebugPrint("Last input was from gamepad")
 --- 	elseif LastInputDevice() == UI_DEVICE_MOUSE then
@@ -281,7 +290,7 @@ function LastInputDevice() return 0 end
 --- Example:
 --- ```lua
 --- myValue = 0
---- function tick()
+--- function client.tick()
 --- 	--This will change the value of myValue from 0 to 1 in a linear fasion over 0.5 seconds
 --- 	SetValue("myValue", 1, "linear", 0.5)
 --- 	DebugPrint(myValue)
@@ -326,21 +335,39 @@ function SetValueInTable(tableId, memberName, newValue, type, length) end
 ---
 --- Example:
 --- ```lua
---- function tick()
 --- 
----     -- Primary button which will be placed in the main pause menu below "Main menu" button
---- 	if PauseMenuButton("Back to Hub", "main_bottom") then
---- 		StartLevel("hub", "level/hub.xml")
---- 	end
+--- function server.startLevel(mission, path)
+--- 	StartLevel(mission, path)
+--- end
 --- 
---- 	-- Primary button which will be placed in the main pause menu above "Main menu" button
---- 	if PauseMenuButton("Back to Hub", "main_top") then
---- 		StartLevel("hub", "level/hub.xml")
---- 	end
+--- function server.respawnPlayer(player)
+--- 	-- Respawn player
+--- end
 --- 
---- 	-- Button will be placed in the bottom bar of the pause menu
---- 	if PauseMenuButton("MyMod Settings") then
---- 		visible = true
+--- function client.tick()
+--- 
+--- 
+--- 	for p in Players() do
+--- 		if IsPlayerHost(p) then
+--- 			-- Primary button which will be placed in the main pause menu below "Main menu" button
+--- 			if PauseMenuButton("Back to Hub", "main_bottom") then
+--- 				ServerCall("server.startLevel", "hub", "level/hub.xml")
+--- 			end
+--- 
+--- 			-- Primary button which will be placed in the main pause menu above "Main menu" button
+--- 			if PauseMenuButton("Back to Hub", "main_top") then
+--- 				ServerCall("server.startLevel", "hub", "level/hub.xml")
+--- 			end
+--- 
+--- 			-- Button will be placed in the bottom bar of the pause menu
+--- 			if PauseMenuButton("MyMod Settings") then
+--- 				visible = true
+--- 			end
+--- 		else
+--- 			if PauseMenuButton("Respawn (wait 8s)", "bottom_bar", true) then
+--- 				ServerCall("server.respawnPlayer", p)
+--- 			end
+--- 		end
 --- 	end
 --- end
 --- 
@@ -353,8 +380,9 @@ function SetValueInTable(tableId, memberName, newValue, type, length) end
 --- ```
 ---@param title string Text on button
 ---@param location? string Button location. If "bottom_bar" - bottom bar, if "main_bottom" - below "Main menu" button, if "main_top" - above "Main menu" button. Default "bottom_bar".
+---@param disabled? boolean Disable button. Button will be rendered as grayed out. Default is false. Only available when used with "bottom_bar".
 ---@return boolean clicked True if clicked, false otherwise
-function PauseMenuButton(title, location) return false end
+function PauseMenuButton(title, location, disabled) return false end
 
 --- Checks that file exists on the specified path.
 --- It is preferable to use UiHasImage whenever possible - it has better performance
@@ -397,7 +425,7 @@ function Command(command, arg0, arg1, arg2, arg3, arg4) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	--Start level with no active layers
 --- 	StartLevel("level1", "MOD/level1.xml")
 --- 
@@ -417,7 +445,8 @@ function ResumeLevel(...) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- 
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		--Pause game and bring up pause menu on HUD
 --- 		SetPaused(true)
@@ -431,7 +460,9 @@ function SetPaused(paused) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- 
+--- 
+--- function server.tick()
 --- 	if InputPressed("interact") then
 --- 		Restart()
 --- 	end
@@ -443,13 +474,59 @@ function Restart() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		Menu()
 --- 	end
 --- end
 --- ```
 function Menu() end
+
+---
+--- Example:
+--- ```lua
+--- 
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if GetPlayerHealth(p) == 0) then
+--- 			ClientCall(p, "client.showRespawnBtn")
+--- 		end
+--- 	end
+--- 
+--- 	if matchEnded then
+--- 		ClientCall(0, "client.displayParticles", "confetti", 200, 0.3, Vec(0, 30, 0))
+--- 	end
+--- end
+--- 
+--- function client.showRespawnBtn()
+--- 	-- show respawn ui..
+--- end
+--- 
+--- function client.displayParticles(particleName, amount, life, pos)
+--- 	-- spawn particles..
+--- end
+--- ```
+---@param playerId number Player ID of the recipient. Use 0 to broadcast to every player.
+---@param _function string Name of the function to be invoked. This function must exist within issuing script.
+---@param [param1, any .., paramN] (any) Optional parameters to send to the recipent(s). Arguments should match the signature of the specified function.
+function ClientCall(playerId, _function, _param1_) end
+
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	if UiTextButton("I am Ready") then
+--- 		ServerCall("server.setPlayerReady", GetLocalPlayer())
+--- 	end
+--- end
+--- 
+--- function server.setPlayerReady(playerId)
+--- 	shared.playersReady[playerId] = true
+--- end
+--- ```
+---@param _function string Name of the function to be invoked. This function must exist within issuing script.
+---@param [param1, any .., paramN] (any) Optional parameters to send to the server. Arguments should match the signature of the specified function.
+function ServerCall(_function, _param1_) end
 
 function CompleteAchievement(...) end
 
@@ -559,7 +636,8 @@ function HasKey(key) return false end
 --- ```
 ---@param key string Registry key
 ---@param value number Desired value
-function SetInt(key, value) end
+---@param sync? boolean Synchronize to clients
+function SetInt(key, value, sync) end
 
 ---
 --- Example:
@@ -583,7 +661,8 @@ function GetInt(key) return 0 end
 --- ```
 ---@param key string Registry key
 ---@param value number Desired value
-function SetFloat(key, value) end
+---@param sync? boolean Synchronize to clients
+function SetFloat(key, value, sync) end
 
 ---
 --- Example:
@@ -607,7 +686,8 @@ function GetFloat(key) return 0 end
 --- ```
 ---@param key string Registry key
 ---@param value boolean Desired value
-function SetBool(key, value) end
+---@param sync? boolean Synchronize to clients
+function SetBool(key, value, sync) end
 
 ---
 --- Example:
@@ -631,7 +711,8 @@ function GetBool(key) return false end
 --- ```
 ---@param key string Registry key
 ---@param value string Desired value
-function SetString(key, value) end
+---@param sync? boolean Synchronize to clients
+function SetString(key, value, sync) end
 
 ---
 --- Example:
@@ -644,31 +725,6 @@ function SetString(key, value) end
 ---@param key string Registry key
 ---@return string value String value of registry node or "" if not found
 function GetString(key) return "" end
-
----
---- Example:
---- ```lua
---- local count = GetEventCount("playerdead")
---- for i=1, count do
---- 	local id, attacker = GetEvent("playerdead", i)
---- end
---- ```
----@param type string Event type
----@return number value Number of event available
-function GetEventCount(type) return 0 end
-
----
---- Example:
---- ```lua
---- local count = GetEventCount("playerdead")
---- for i=1, count do
---- 	local id, attacker = GetEvent("playerdead", i)
---- end
---- ```
----@param type string Event type
----@param index number Event index (starting with one)
----@return any returnValues Return values depending on event type
-function GetEvent(type, index) return nil end
 
 --- Sets the color registry key value
 ---
@@ -736,7 +792,7 @@ function HasTranslationByKey(key) return false end
 --- 3 -- Italian
 --- 4 -- German
 --- 5 -- Simplified Chinese
---- 6 -- Japenese
+--- 6 -- Japanese
 --- 7 -- Russian
 --- 8 -- Polish
 --- ENDTABLE
@@ -762,6 +818,42 @@ function LoadLanguageTable(id) end
 ---@param id? number User id
 ---@return string value User nickname
 function GetUserNickname(id) return "" end
+
+---
+--- Example:
+--- ```lua
+--- local count = GetEventCount("matchended")
+--- for i=1, count do
+--- 	local name1, name2, score1, score2 = GetEvent("matchended", i)
+--- end
+--- ```
+---@param type string Event type
+---@return number value Number of event available
+function GetEventCount(type) return 0 end
+
+--- Post a custom event with the specified name and parameters.
+--- The parameters will be saved in a memory stream and can be retrieved later using GetEvent.
+---
+--- Example:
+--- ```lua
+--- PostEvent("matchended", "team1", "team2", 5, 10)
+--- ```
+---@param eventName string Event name
+---@param [param1, any .., paramN] (any) Optional parameters to send with the event.
+function PostEvent(eventName, _param1_) end
+
+---
+--- Example:
+--- ```lua
+--- local count = GetEventCount("matchended")
+--- for i=1, count do
+--- 	local name1, name2, score1, score2 = GetEvent("matchended", i)
+--- end
+--- ```
+---@param type string Event type
+---@param index number Event index (starting with one)
+---@return any returnValues Return values depending on event type
+function GetEvent(type, index) return nil end
 
 function HasInputController(...) end
 
@@ -918,6 +1010,16 @@ function IsRunningOnIOS() return false end
 --- ```
 ---@param name string Requested character skin
 function SetPlayerCharacter(name) end
+
+--- Clears the current quick save.
+---
+--- Example:
+--- ```lua
+--- function init()
+---     ClearQuickSave()
+--- end
+--- ```
+function ClearQuickSave() end
 --- Create new vector and optionally initializes it to the provided values.
 --- A Vec is equivalent to a regular lua table with three numbers.
 ---
@@ -1525,11 +1627,74 @@ function TransformToParentPoint(t, p) return Vec() end
 ---@param p TVec Vector representing position
 ---@return TVec r Transformed position
 function TransformToLocalPoint(t, p) return Vec() end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	SetRandomSeed(42)
+--- 	result = RollDie()
+--- end
+--- ```
+---@param seed number Random seed
+function SetRandomSeed(seed) end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	isHeads = GetRandomBool()
+--- 
+--- 	if isHeads then
+--- 		win = true
+--- 	end
+--- end
+--- ```
+---@return boolean result Random true/false
+function GetRandomBool() return false end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	dieRoll = GetRandomInt(1,6)
+--- 	-- dieRoll is 1,2,3,4,5 or 6
+--- end
+--- ```
+---@param min number Lower number
+---@param max number Upper number
+---@return number result Random number in given range, including max.
+function GetRandomInt(min, max) return 0 end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	-- Generate a random angle in range [0, 360]
+--- 	randomAngleDeg = GetRandomFloat(0.0f, 360.0f)
+--- end
+--- ```
+---@param min number Lower number
+---@param max number Upper number
+---@return number result Random number in given range, including max.
+function GetRandomFloat(min, max) return 0 end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	-- Generate a random direction.
+--- 	ricochetDirection = GetRandomDirection()
+--- end
+--- ```
+---@param length? number Optional length use to scale the generated direction.
+---@return any vector Random direction with unit length
+function GetRandomDirection(length) return nil end
 --- Returns an entity with the specified tag and type. This is a universal method that is an alternative to FindBody, FindShape, FindVehicle, etc.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	--You may use this function in a similar way to other "Find functions" like FindBody, FindShape, FindVehicle, etc.
 --- 	local myCar = FindEntity("myCar", false, "vehicle")
 --- 
@@ -1550,7 +1715,7 @@ function FindEntity(tag, global, type) return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	-- You may use this function in a similar way to other "Find functions" like FindBody, FindShape, FindVehicle, etc.
 --- 	local cars = FindEntities("car", false, "vehicle")
 --- 
@@ -1571,7 +1736,7 @@ function FindEntities(tag, global, type) return nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local car = FindEntity("car", true, "vehicle")
 --- 	DebugWatch("car", car)
 --- 
@@ -1591,7 +1756,7 @@ function GetEntityChildren(handle, tag, recursive, type) return nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local wheel = FindEntity("", true, "wheel")
 --- 	local vehicle = GetEntityParent(wheel,  "", "vehicle")
 --- 	DebugWatch("Wheel vehicle", GetEntityType(vehicle) .. " " .. tostring(vehicle))
@@ -1787,7 +1952,7 @@ function GetEntityType(handle) return "" end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = FindBody("testbody", true)
 --- 	local isDynamic = GetProperty(body, "dynamic")
 --- 	DebugWatch("isDynamic", isDynamic)
@@ -1950,13 +2115,18 @@ function SetBodyVelocity(handle, velocity) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- handle = 0
+--- function server.init()
 --- 	handle = FindBody("body", true)
 --- 	local vel = Vec(0,10,0)
 --- 	SetBodyVelocity(handle, vel)
 --- end
 --- 
---- function tick()
+--- function client.init()
+--- 	handle = FindBody("body", true)
+--- end
+--- 
+--- function client.tick()
 --- 	DebugPrint(VecStr(GetBodyVelocity(handle)))
 --- end
 --- ```
@@ -1968,13 +2138,18 @@ function GetBodyVelocity(handle) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- handle = 0
+--- function server.init()
 --- 	handle = FindBody("body", true)
 --- 	local vel = Vec(0,10,0)
 --- 	SetBodyVelocity(handle, vel)
 --- end
 --- 
---- function tick()
+--- function client.init()
+--- 	handle = FindBody("body", true)
+--- end
+--- 
+--- function client.tick()
 --- 	DebugPrint(VecStr(GetBodyVelocityAtPos(handle, Vec(0, 0, 0))))
 --- end
 --- ```
@@ -1988,7 +2163,7 @@ function GetBodyVelocityAtPos(handle, pos) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	handle = FindBody("body", true)
 --- 	local angVel = Vec(0,100,0)
 --- 	SetBodyAngularVelocity(handle, angVel)
@@ -2001,13 +2176,18 @@ function SetBodyAngularVelocity(handle, angVel) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- handle = 0
+--- function server.init()
 --- 	handle = FindBody("body", true)
 --- 	local angVel = Vec(0,100,0)
 --- 	SetBodyAngularVelocity(handle, angVel)
 --- end
 --- 
---- function tick()
+--- function client.init()
+--- 	handle = FindBody("body", true)
+--- end
+--- 
+--- function client.tick()
 --- 	DebugPrint(VecStr(GetBodyAngularVelocity(handle)))
 --- end
 --- ```
@@ -2023,7 +2203,7 @@ function GetBodyAngularVelocity(handle) return Vec() end
 --- Example:
 --- ```lua
 --- -- try to break the body to see the logs
---- function tick()
+--- function client.tick()
 --- 	handle = FindBody("body", true)
 --- 	if IsBodyActive(handle) then
 --- 		DebugPrint("Body is active")
@@ -2045,11 +2225,21 @@ function GetBodyHit(...) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- handle = 0
+--- function server.tick()
 --- 	handle = FindBody("body", true)
 --- 
 --- 	-- Forces body to "sleep"
 --- 	SetBodyActive(handle, false)
+--- end
+--- 
+--- function client.init()
+--- 	handle = FindBody("body", true)
+--- end
+--- 
+--- function client.tick()
+--- 	handle = FindBody("body", true)
+--- 
 --- 	if IsBodyActive(handle) then
 --- 		DebugPrint("Body is active")
 --- 	end
@@ -2063,7 +2253,7 @@ function SetBodyActive(handle, active) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function applyImpulse()
 --- 	handle = FindBody("body", true)
 --- 
 --- 	local pos = Vec(0,1,0)
@@ -2080,7 +2270,7 @@ function ApplyBodyImpulse(handle, position, impulse) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- 
 --- 	local shapes = GetBodyShapes(handle)
@@ -2097,7 +2287,7 @@ function GetBodyShapes(handle) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- 
 --- 	local vehicle = GetBodyVehicle(handle)
@@ -2108,11 +2298,29 @@ function GetBodyShapes(handle) return nil end
 ---@return number handle Get parent vehicle for body, or zero if not part of vehicle
 function GetBodyVehicle(body) return 0 end
 
+---
+--- Example:
+--- ```lua
+--- local animator = GetBodyAnimator(body)
+--- ```
+---@param body number Body handle
+---@return number handle Get parent animator for body, or zero if not part of an animator hierarchy
+function GetBodyAnimator(body) return 0 end
+
+---
+--- Example:
+--- ```lua
+--- local player = GetBodyPlayer(body)
+--- ```
+---@param body number Body handle
+---@return number playerId Get parent player for body, or zero if not part of a player animator hierarchy
+function GetBodyPlayer(body) return 0 end
+
 --- Return the world space, axis-aligned bounding box for a body.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- 
 --- 	local min, max = GetBodyBounds(handle)
@@ -2129,11 +2337,11 @@ function GetBodyBounds(handle) return Vec(), Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	--Visualize center of mass on for body
 --- 	local com = GetBodyCenterOfMass(handle)
 --- 	local worldPoint = TransformToParentPoint(GetBodyTransform(handle), com)
@@ -2151,11 +2359,11 @@ function GetBodyCenterOfMass(handle) return Vec() end
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsBodyVisible(handle, 25) then
 --- 		--Body is within 25 meters visible to the camera
 --- 		DebugPrint("visible")
@@ -2167,19 +2375,20 @@ function GetBodyCenterOfMass(handle) return Vec() end
 ---@param handle number Body handle
 ---@param maxDist number Maximum visible distance
 ---@param rejectTransparent? boolean See through transparent materials. Default false.
+---@param playerId? number Player ID. On player, zero means local player.
 ---@return boolean visible Return true if body is visible
-function IsBodyVisible(handle, maxDist, rejectTransparent) return false end
+function IsBodyVisible(handle, maxDist, rejectTransparent, playerId) return false end
 
 --- Determine if any shape of a body has been broken.
 ---
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugPrint(IsBodyBroken(handle))
 --- end
 --- ```
@@ -2193,11 +2402,11 @@ function IsBodyBroken(handle) return false end
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugPrint(IsBodyJointedToStatic(handle))
 --- end
 --- ```
@@ -2211,11 +2420,11 @@ function IsBodyJointedToStatic(handle) return false end
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		--Draw white outline at 50% transparency
 --- 		DrawBodyOutline(handle, 0.5)
@@ -2238,11 +2447,11 @@ function DrawBodyOutline(handle, r, g, b, a) end
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		DrawBodyHighlight(handle, 0.5)
 --- 	end
@@ -2259,11 +2468,11 @@ function WatchBodyHit(...) end
 --- Example:
 --- ```lua
 --- local handle = 0
---- function init()
+--- function client.init()
 --- 	handle = FindBody("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(Vec(1, 0, 0))
 --- 	local hit, p, n, s = GetBodyClosestPoint(handle, Vec(1, 0, 0))
 --- 	if hit then
@@ -2287,12 +2496,12 @@ function GetBodyClosestPoint(body, origin) return false, Vec(), Vec(), 0 end
 --- ```lua
 --- local handleA = 0
 --- local handleB = 0
---- function init()
+--- function server.init()
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
 --- 
---- function update()
+--- function server.update()
 --- 	--Constrain the velocity between bodies A and B so that the relative velocity
 --- 	--along the X axis at point (0, 5, 0) is always 3 m/s
 --- 	ConstrainVelocity(handleA, handleB, Vec(0, 5, 0), Vec(1, 0, 0), 3)
@@ -2315,12 +2524,12 @@ function ConstrainVelocity(bodyA, bodyB, point, dir, relVel, min, max) end
 --- ```lua
 --- local handleA = 0
 --- local handleB = 0
---- function init()
+--- function server.init()
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
 --- 
---- function update()
+--- function server.update()
 --- 	--Constrain the angular velocity between bodies A and B so that the relative angular velocity
 --- 	--along the Y axis is always 3 rad/s
 --- 	ConstrainAngularVelocity(handleA, handleB, Vec(1, 0, 0), 3)
@@ -2344,12 +2553,12 @@ function ConstrainAngularVelocity(bodyA, bodyB, dir, relAngVel, min, max) end
 --- ```lua
 --- local handleA = 0
 --- local handleB = 0
---- function init()
+--- function server.init()
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
 --- 
---- function update()
+--- function server.update()
 --- 	--Constrain the origo of body a to an animated point in the world
 --- 	local worldPos = Vec(0, 3+math.sin(GetTime()), 0)
 --- 	ConstrainPosition(handleA, 0, GetBodyTransform(handleA).pos, worldPos)
@@ -2377,12 +2586,12 @@ function ConstrainPosition(bodyA, bodyB, pointA, pointB, maxVel, maxImpulse) end
 --- ```lua
 --- local handleA = 0
 --- local handleB = 0
---- function init()
+--- function server.init()
 --- 	handleA = FindBody("body", true)
 --- 	handleB = FindBody("target", true)
 --- end
 --- 
---- function update()
+--- function server.update()
 --- 	--Constrain the orietation of body a to an upright orientation in the world
 --- 	ConstrainOrientation(handleA, 0, GetBodyTransform(handleA).rot, Quat())
 --- 
@@ -2403,11 +2612,11 @@ function ConstrainOrientation(bodyA, bodyB, quatA, quatB, maxAngVel, maxAngImpul
 --- Example:
 --- ```lua
 --- local handle
---- function init()
+--- function client.init()
 --- 	handle = GetWorldBody()
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(GetBodyTransform(handle).pos)
 --- end
 --- ```
@@ -2419,7 +2628,7 @@ function GetWorldBody() return 0 end
 --- ```lua
 --- local target = 0
 --- local escape = 0
---- function init()
+--- function client.init()
 --- 	--Search for a shape tagged "mybox" in script scope
 --- 	target = FindShape("mybox")
 --- 
@@ -2427,7 +2636,7 @@ function GetWorldBody() return 0 end
 --- 	escape = FindShape("laserturret", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(GetShapeWorldTransform(target).pos)
 --- 	DebugCross(GetShapeWorldTransform(escape).pos)
 --- end
@@ -2441,12 +2650,12 @@ function FindShape(tag, global) return 0 end
 --- Example:
 --- ```lua
 --- local shapes = {}
---- function init()
+--- function client.init()
 --- 	--Search for shapes tagged "body"
 --- 	shapes = FindShapes("body", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	for i=1, #shapes do
 --- 		local shape = shapes[i]
 --- 		DebugCross(GetShapeWorldTransform(shape).pos)
@@ -2462,11 +2671,11 @@ function FindShapes(tag, global) return nil end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	--Shape transform in body local space
 --- 	local shapeTransform = GetShapeLocalTransform(shape)
 --- 
@@ -2487,13 +2696,17 @@ function GetShapeLocalTransform(handle) return Transform() end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape")
 --- 	local transform = Transform(Vec(0, 1, 0), QuatEuler(0, 90, 0))
 --- 	SetShapeLocalTransform(shape, transform)
 --- end
 --- 
---- function tick()
+--- function client.init()
+--- 	shape = FindShape("shape")
+--- end
+--- 
+--- function client.tick()
 --- 	--Shape transform in body local space
 --- 	local shapeTransform = GetShapeLocalTransform(shape)
 --- 
@@ -2520,11 +2733,11 @@ function SetShapeLocalTransform(handle, transform) end
 --- --worldTranform = TransformToParentTransform(bodyTransform, shapeTransform)
 --- 
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(GetShapeWorldTransform(shape).pos)
 --- end
 --- ```
@@ -2538,11 +2751,11 @@ function GetShapeWorldTransform(handle) return Transform() end
 --- Example:
 --- ```lua
 --- local body = 0
---- function init()
---- 	body = GetShapeBody(FindShape("shape", true), true)
+--- function client.init()
+--- 	body = GetShapeBody(FindShape("shape", true))
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(GetBodyCenterOfMass(body))
 --- end
 --- ```
@@ -2553,9 +2766,8 @@ function GetShapeBody(handle) return 0 end
 ---
 --- Example:
 --- ```lua
---- local shape = 0
---- function init()
---- 	shape = FindShape("shape", true)
+--- function printJoints()
+--- 	local shape = FindShape("shape", true)
 --- 
 --- 	local hinges = GetShapeJoints(shape)
 --- 	for i=1, #hinges do
@@ -2571,9 +2783,9 @@ function GetShapeJoints(shape) return nil end
 ---
 --- Example:
 --- ```lua
---- local shape = 0
---- function init()
---- 	shape = FindShape("shape", true)
+--- function printLights()
+--- 	--Print all lights owned by a shape
+--- 	local shape = FindShape("shape", true)
 --- 
 --- 	local light = GetShapeLights(shape)
 --- 	for i=1, #light do
@@ -2589,9 +2801,8 @@ function GetShapeLights(shape) return nil end
 ---
 --- Example:
 --- ```lua
---- local shape = 0
---- function init()
---- 	shape = FindShape("shape", true)
+--- function printShapeBounds()
+--- 	local shape = FindShape("shape", true)
 --- 
 --- 	local min, max = GetShapeBounds(shape)
 --- 	local boundsSize = VecSub(max, min)
@@ -2611,7 +2822,7 @@ function GetShapeBounds(handle) return Vec(), Vec() end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape", true)
 --- 
 --- 	--Pulsate emissiveness and light intensity for shape
@@ -2628,7 +2839,7 @@ function SetShapeEmissiveScale(handle, scale) end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape", true)
 --- 
 --- 	local density = 10.0
@@ -2648,11 +2859,11 @@ function GetShapeStrength(...) end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local pos = GetCameraTransform().pos
 --- 	local dir = Vec(0, 0, 1)
 --- 	local hit, dist, normal, shape = QueryRaycast(pos, dir, 10)
@@ -2681,7 +2892,7 @@ function GetShapeMaterialAtPosition(handle, pos, includeUnphysical) return "", 0
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- 	local mat = GetShapeMaterialAtIndex(shape, 0, 0, 0)
 --- 	DebugPrint("The voxel is of material: " .. mat)
@@ -2704,7 +2915,7 @@ function GetShapeMaterialAtIndex(handle, x, y, z) return "", 0, 0, 0, 0, 0 end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- 	local x, y, z = GetShapeSize(shape)
 --- 	DebugPrint("Shape size: " .. x .. ";" .. y .. ";" .. z)
@@ -2722,7 +2933,7 @@ function GetShapeSize(handle) return 0, 0, 0, 0 end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- 	local voxelCount = GetShapeVoxelCount(shape)
 --- 	DebugPrint(voxelCount)
@@ -2739,11 +2950,11 @@ function GetShapeVoxelCount(handle) return 0 end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsShapeVisible(shape, 25) then
 --- 		DebugPrint("Shape is visible")
 --- 	else
@@ -2754,8 +2965,9 @@ function GetShapeVoxelCount(handle) return 0 end
 ---@param handle number Shape handle
 ---@param maxDist number Maximum visible distance
 ---@param rejectTransparent? boolean See through transparent materials. Default false.
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server(host) player.
 ---@return boolean visible Return true if shape is visible
-function IsShapeVisible(handle, maxDist, rejectTransparent) return false end
+function IsShapeVisible(handle, maxDist, rejectTransparent, playerId) return false end
 
 --- Determine if shape has been broken. Note that a shape can be transfered
 --- to another body during destruction, but might still not be considered
@@ -2764,11 +2976,11 @@ function IsShapeVisible(handle, maxDist, rejectTransparent) return false end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugPrint("Is shape broken: " .. tostring(IsShapeBroken(shape)))
 --- end
 --- ```
@@ -2782,11 +2994,11 @@ function IsShapeBroken(handle) return false end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		--Draw white outline at 50% transparency
 --- 		DrawShapeOutline(shape, 0.5)
@@ -2808,11 +3020,11 @@ function DrawShapeOutline(handle, r, g, b, a) end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		DrawShapeHighlight(shape, 0.5)
 --- 	end
@@ -2833,7 +3045,7 @@ function DrawShapeHighlight(handle, amount) end
 --- local shapeB = 0
 --- local shapeC = 0
 --- local shapeD = 0
---- function init()
+--- function server.init()
 --- 	shapeA = FindShape("shapeA")
 --- 	shapeB = FindShape("shapeB")
 --- 	shapeC = FindShape("shapeC")
@@ -2858,7 +3070,7 @@ function SetShapeCollisionFilter(handle, layer, mask) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	local shape = FindShape("some_shape")
 --- 	local layer, mask = GetShapeCollisionFilter(shape)
 --- end
@@ -2874,8 +3086,16 @@ function GetShapeCollisionFilter(handle) return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
+--- 
+--- server.tick()
+--- 	local players = GetAllPlayers()
+--- 	for i=1, #players do
+--- 		tickPlayer(players[i])
+--- 	end
+--- end
+--- 
+--- function tickPlayer(playerId)
+--- 	if InputPressed("interact", playerId) then
 --- 		local t = Transform(Vec(0, 5, 0), QuatEuler(0, 0, 0))
 --- 		local handle = CreateShape(FindBody("shape", true), t, FindShape("shape", true))
 --- 		DebugPrint(handle)
@@ -2892,7 +3112,7 @@ function CreateShape(body, transform, refShape) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	ClearShape(FindShape("shape", true))
 --- end
 --- ```
@@ -2906,7 +3126,7 @@ function ClearShape(shape) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	ResizeShape(FindShape("shape", true), -5, 0, -5, 5, 5, 5)
 --- end
 --- ```
@@ -2925,7 +3145,7 @@ function ResizeShape(shape, xmi, ymi, zmi, xma, yma, zma) return false, Vec() en
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetShapeBody(FindShape("shape", true), FindBody("custombody", true), true)
 --- end
 --- ```
@@ -2939,7 +3159,7 @@ function SetShapeBody(shape, body, transform) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	CopyShapeContent(FindShape("shape", true), FindShape("shape2", true))
 --- end
 --- ```
@@ -2951,7 +3171,7 @@ function CopyShapeContent(src, dst) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	CopyShapePalette(FindShape("shape", true), FindShape("shape2", true))
 --- end
 --- ```
@@ -2965,7 +3185,7 @@ function CopyShapePalette(src, dst) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	local palette = GetShapePalette(FindShape("shape2", true))
 --- 	for i = 1, #palette do
 --- 		DebugPrint(palette[i])
@@ -2980,7 +3200,7 @@ function GetShapePalette(shape) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local type, r, g, b, a, reflectivity, shininess, metallic, emissive = GetShapeMaterial(FindShape("shape2", true), 1)
 --- 	DebugPrint(type)
 --- end
@@ -3005,7 +3225,7 @@ function GetShapeMaterial(shape, entry) return "", 0, 0, 0, 0, 0, 0, 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetBrush("sphere", 3, 3)
 --- end
 --- ```
@@ -3018,11 +3238,11 @@ function SetBrush(type, size, index, object) end
 --- Draw voxelized line between (x0,y0,z0) and (x1,y1,z1) into shape using the material
 --- set up with SetBrush. Paint mode will only change material of existing voxels (where
 --- the current material index is non-zero). noOverwrite mode will only fill in voxels if the
---- space isn't already accupied by another shape in the scene.
+--- space isn't already occupied by another shape in the scene.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetBrush("sphere", 3, 1)
 --- 	DrawShapeLine(FindShape("shape"), 0, 0, 0, 10, 50, 5, false, true)
 --- end
@@ -3043,7 +3263,7 @@ function DrawShapeLine(shape, x0, y0, z0, x1, y1, z1, paint, noOverwrite) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetBrush("sphere", 3, 4)
 --- 	DrawShapeBox(FindShape("shape", true), 0, 0, 0, 10, 50, 5)
 --- end
@@ -3066,7 +3286,7 @@ function DrawShapeBox(shape, x0, y0, z0, x1, y1, z1) end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	SetBrush("sphere", 3, 4)
 --- 	shape = FindShape("shape")
 --- 	ExtrudeShape(shape, 0, 5, 0, -1, 0, 0, 50, "exact")
@@ -3091,7 +3311,7 @@ function ExtrudeShape(shape, x, y, z, dx, dy, dz, steps, mode) end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape", true)
 --- 	TrimShape(shape)
 --- end
@@ -3107,7 +3327,7 @@ function TrimShape(shape) return Vec() end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape", true)
 --- 	SplitShape(shape, true)
 --- end
@@ -3126,7 +3346,7 @@ function SplitShape(shape, removeResidual) return nil end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function server.init()
 --- 	shape = FindShape("shape", true)
 --- 	DebugPrint(shape)
 --- 	shape = MergeShape(shape)
@@ -3148,7 +3368,7 @@ function DeleteShape(...) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugWatch("IsShapeDisconnected", IsShapeDisconnected(FindShape("shape", true)))
 --- end
 --- ```
@@ -3159,7 +3379,7 @@ function IsShapeDisconnected(shape) return false end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugWatch("IsStaticShapeDetached", IsStaticShapeDetached(FindShape("shape_glass", true)))
 --- end
 --- ```
@@ -3172,11 +3392,11 @@ function IsStaticShapeDetached(shape) return false end
 --- Example:
 --- ```lua
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	shape = FindShape("shape", true)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(Vec(1, 0, 0))
 --- 	local hit, p, n, s = GetShapeClosestPoint(shape, Vec(1, 0, 0))
 --- 	if hit then
@@ -3197,12 +3417,12 @@ function GetShapeClosestPoint(shape, origin) return false, Vec(), Vec() end
 --- ```lua
 --- local shapeA = 0
 --- local shapeB = 0
---- function init()
+--- function client.init()
 --- 	shapeA = FindShape("shape")
 --- 	shapeB = FindShape("shape2")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugPrint(IsShapeTouching(shapeA, shapeB))
 --- end
 --- ```
@@ -3215,11 +3435,11 @@ function IsShapeTouching(a, b) return false end
 --- Example:
 --- ```lua
 --- local loc = 0
---- function init()
+--- function client.init()
 --- 	loc = FindLocation("loc1")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	DebugCross(GetLocationTransform(loc).pos)
 --- end
 --- ```
@@ -3232,7 +3452,7 @@ function FindLocation(tag, global) return 0 end
 --- Example:
 --- ```lua
 --- local locations
---- function init()
+--- function client.init()
 --- 	locations = FindLocations("loc1")
 --- 
 --- 	for i=1, #locations do
@@ -3250,7 +3470,7 @@ function FindLocations(tag, global) return nil end
 --- Example:
 --- ```lua
 --- local location = 0
---- function init()
+--- function client.init()
 --- 	location = FindLocation("loc1")
 --- 	DebugPrint(VecStr(GetLocationTransform(location).pos))
 --- end
@@ -3262,7 +3482,7 @@ function GetLocationTransform(handle) return Transform() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("doorhinge")
 --- 	DebugPrint(joint)
 --- end
@@ -3276,7 +3496,7 @@ function FindJoint(tag, global) return 0 end
 --- Example:
 --- ```lua
 --- --Search for locations tagged "doorhinge" in script scope
---- function init()
+--- function client.init()
 --- 	local hinges = FindJoints("doorhinge")
 --- 	for i=1, #hinges do
 --- 		local joint = hinges[i]
@@ -3292,7 +3512,7 @@ function FindJoints(tag, global) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local broken = IsJointBroken(FindJoint("joint"))
 --- 	DebugPrint(broken)
 --- end
@@ -3306,7 +3526,7 @@ function IsJointBroken(joint) return false end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("joint")
 --- 	if GetJointType(joint) == "rope" then
 --- 		DebugPrint("Joint is rope")
@@ -3324,7 +3544,7 @@ function SetRopeSlack(...) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("joint")
 --- 	--joint is connected to A and B
 --- 
@@ -3349,13 +3569,13 @@ function GetJointOtherShape(joint, shape) return 0 end
 --- local mainBody
 --- local shapes
 --- local joint
---- function init()
+--- function server.init()
 --- 	joint = FindJoint("joint")
 --- 	mainBody = GetVehicleBody(FindVehicle("vehicle"))
 --- 	shapes = GetJointShapes(joint)
 --- end
 --- 
---- function tick()
+--- function server.tick()
 --- 	-- Check to see if joint chain is still connected to vehicle main body
 --- 	-- If not then disable motors
 --- 
@@ -3388,7 +3608,7 @@ function GetJointShapes(joint) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	--Set motor speed to 0.5 radians per second
 --- 	SetJointMotor(FindJoint("hinge"), 0.5)
 --- end
@@ -3407,7 +3627,7 @@ function SetJointMotor(joint, velocity, strength) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	--Make joint reach a 45 degree angle, going at a maximum of 3 radians per second
 --- 	SetJointMotorTarget(FindJoint("hinge"), 45, 3)
 --- end
@@ -3423,7 +3643,7 @@ function SetJointMotorTarget(joint, target, maxVel, strength) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local min, max = GetJointLimits(FindJoint("hinge"))
 --- 	DebugPrint(min .. "-" .. max)
 --- end
@@ -3438,7 +3658,7 @@ function GetJointLimits(joint) return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local current = GetJointMovement(FindJoint("hinge"))
 --- 	DebugPrint(current)
 --- end
@@ -3451,11 +3671,11 @@ function GetJointMovement(joint) return 0 end
 --- Example:
 --- ```lua
 --- local body = 0
---- function init()
+--- function client.init()
 --- 	body = FindBody("body")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	--Draw outline for all bodies in jointed structure
 --- 	local all = GetJointedBodies(body)
 --- 	for i=1,#all do
@@ -3471,7 +3691,7 @@ function GetJointedBodies(body) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	DetachJointFromShape(FindJoint("joint"), FindShape("door"))
 --- end
 --- ```
@@ -3484,7 +3704,7 @@ function DetachJointFromShape(joint, shape) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("joint")
 --- 	local numberPoints = GetRopeNumberOfPoints(joint)
 --- end
@@ -3498,7 +3718,7 @@ function GetRopeNumberOfPoints(joint) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("joint")
 --- 	numberPoints = GetRopeNumberOfPoints(joint)
 --- 
@@ -3517,7 +3737,7 @@ function GetRopePointPosition(joint, index) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local joint = FindJoint("joint")
 --- 	local mi, ma = GetRopeBounds(joint)
 --- 
@@ -3534,8 +3754,8 @@ function GetRopeBounds(joint) return Vec(), Vec() end
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	local playerCameraTransform = GetPlayerCameraTransform()
+--- function doPlayerAction(playerId)
+--- 	local playerCameraTransform = GetPlayerCameraTransform(playerId)
 --- 	local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
 --- 
 --- 	local hit, dist, joint = QueryRaycastRope(playerCameraTransform.pos, dir, 5)
@@ -3709,8 +3929,8 @@ function PlayAnimationLoop(handle, name, weight, filter) end
 ---
 --- Example:
 --- ```lua
---- --This will play a single animation "Shooting" with a 80% influence but only on the skeleton starting at bone "Spine"
---- PlayAnimation(animator, "Shooting", 0.8, "Spine")
+--- --This will control the weight and speed of the animation thas was initiated by PlayAnimation
+--- PlayAnimationInstance(animator, handle, 0.8, 1.0)
 --- ```
 ---@param handle number Animator handle
 ---@param instance number Instance handle
@@ -3947,10 +4167,222 @@ function GetBoneWorldTransform(handle, name) return Transform() end
 ---@return TTransform transform Local space transform of the bone in bindpose
 function GetBoneBindPoseTransform(handle, name) return Transform() end
 
+function IsMultiplayer(...) end
+
+--- BEGINTABLE sessionInitParams		-- Type
+--- name								-- string
+--- visibility							-- integer (0 - private, 1 - public)
+--- modsEnabled							-- boolean
+--- maxMembers  						-- integer
+--- ENDTABLE
 ---
 --- Example:
 --- ```lua
 --- function init()
+--- 	NetSessionCreate({
+--- 		name = "MySession",
+--- 		visibility = 1,
+--- 		modsEnabled = true,
+--- 		maxMembers = 8,
+--- 	})
+--- end
+--- ```
+---@param sessionInitParams any 
+function NetSessionCreate(sessionInitParams) end
+
+---@return string name Generates a default session name
+function GenerateSessionName() return "" end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	NetSessionLeave()
+--- end
+--- ```
+function NetSessionLeave() end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	NetSessionJoinByCode("td123")
+--- end
+--- ```
+---@param code string Invite code
+function NetSessionJoinByCode(code) end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	NetSessionJoinById("740d50d1-041d-4d82-aff3-11628ab3115d")
+--- end
+--- ```
+---@param id string Session id
+function NetSessionJoinById(id) end
+
+--- BEGINTABLE sessionInfo	-- Type
+--- id						-- string
+--- name  					-- string
+--- inviteCode				-- string
+--- isOwner					-- boolean
+--- maxMembers  			-- integer
+--- modsEnabled  			-- boolean
+--- isLoadingMods			-- boolean
+--- isPublic				-- boolean
+--- members  				-- array [memberInfo]
+--- mods  					-- array [modInfo]
+--- levelId  				-- string
+--- ENDTABLE
+--- BEGINTABLE memberInfo	-- Type
+--- id  					-- string
+--- name  					-- string
+--- character				-- string
+--- isLeader  				-- boolean
+--- isLocalUser  			-- boolean
+--- isModsLoaded			-- boolean
+--- ENDTABLE
+--- BEGINTABLE modInfo		-- Type
+--- id  					-- string
+--- name  					-- string
+--- state					-- boolean
+--- bytesSize  				-- boolean
+--- ENDTABLE
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local currentSessionInfo = NetSessionGetCurrent()
+--- end
+--- ```
+---@return any sessionInfo 
+function NetSessionGetCurrent() return nil end
+
+--- BEGINTABLE sessionFilter		-- Type
+--- sessionName						-- string (does not affect result if empty)
+--- modsEnabled						-- integer (0 - all, 1 - enabled, 2 - disabled)
+--- activeModIds					-- string (space-separated mod ids, does not affect result if empty)
+--- ENDTABLE
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local filter = { name="MySession", modsEnabled=true, activeModIds={}"
+--- 	NetSessionListRefresh({
+--- 		modsEnabled = 0,
+--- 		activeModIds = "builtin-mpdeathmatch builtin-mprace"
+--- 	})
+--- end
+--- ```
+---@param sessionFilter any 
+function NetSessionListRefresh(sessionFilter) end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local count = NetSessionListGetCount()
+--- end
+--- ```
+---@return number count Number of sessions in session list
+function NetSessionListGetCount() return 0 end
+
+--- BEGINTABLE sessionInfo	-- Type
+--- id						-- string
+--- name					-- string
+--- ownerName				-- string
+--- gameModeTitleOriginal	-- string
+--- gameModeId				-- string
+--- levelModName			-- string
+--- levelId					-- string
+--- levelPath				-- string
+--- download				-- integer
+--- ping					-- integer
+--- players					-- integer
+--- maxPlayers				-- integer
+--- modsEnabled				-- boolean
+--- mods  					-- array
+--- BEGINTABLE modInfo		-- Type
+--- id  					-- string
+--- name  					-- string
+--- bytesSize				-- integer
+--- ENDTABLE
+--- ENDTABLE
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local session = NetSessionListGetAt(1)
+--- end
+--- ```
+---@param index number Session list entry index (starting with one)
+---@return any sessionInfo 
+function NetSessionListGetAt(index) return nil end
+
+--- TODO: use code descriptions, text represention is a temporal solution
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local error, errorText = NetSessionGetLastError()
+--- end
+--- ```
+---@return number error error-code value
+---@return string debugText debug error text
+function NetSessionGetLastError() return 0, "" end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local opStatus, op = NetSessionOpStatus()
+--- end
+--- ```
+---@return number status Current operation status (0 - OK, 1 - PENDING, 2 - ERROR)
+---@return number operation Pending operation descriptor (0 if not pending)
+function NetSessionOpStatus() return 0, 0 end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local minPlayersCount, maxPlayersCount = NetSessionGetPlayersCountRange()
+--- end
+--- ```
+---@return number min Minimal number of players in session
+---@return number max Maximum number of players in session
+function NetSessionGetPlayersCountRange() return 0, 0 end
+
+---
+--- Example:
+--- ```lua
+--- function init()
+--- 	local members = NetSessionGetCurrent().members
+--- 	if #members > 1 then
+--- 		local memberId = members[#members-1].id
+--- 		NetSessionKickMember(memberId)
+--- 	end
+--- end
+--- ```
+---@param id number Member id
+function NetSessionKickMember(id) end
+
+---
+--- Example:
+--- ```lua
+--- function tick()
+--- 	if InputPressed("i") then
+--- 		PresenceOpenInviteOverlay()
+--- 	end
+--- end
+--- ```
+function PresenceOpenInviteOverlay() end
+
+---
+--- Example:
+--- ```lua
+--- function client.init()
 --- 	local light = FindLight("main")
 --- 	DebugPrint(light)
 --- end
@@ -3963,7 +4395,7 @@ function FindLight(tag, global) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Search for lights tagged "main" in script scope
 --- 	local lights = FindLights("main")
 --- 	for i=1, #lights do
@@ -3982,7 +4414,7 @@ function FindLights(tag, global) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetLightEnabled(FindLight("main"), false)
 --- end
 --- ```
@@ -3995,7 +4427,7 @@ function SetLightEnabled(handle, enabled) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	--Set light color to yellow
 --- 	SetLightColor(FindLight("main"), 1, 1, 0)
 --- end
@@ -4012,7 +4444,7 @@ function SetLightColor(handle, r, g, b) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	--Pulsate light
 --- 	SetLightIntensity(FindLight("main"), math.sin(GetTime())*0.5 + 1.0)
 --- end
@@ -4026,7 +4458,7 @@ function SetLightIntensity(handle, intensity) end
 --- Example:
 --- ```lua
 --- local light = 0
---- function init()
+--- function client.init()
 --- 	light = FindLight("main")
 --- 	local t = GetLightTransform(light)
 --- 	DebugPrint(VecStr(t.pos))
@@ -4040,7 +4472,7 @@ function GetLightTransform(handle) return Transform() end
 --- Example:
 --- ```lua
 --- local light = 0
---- function init()
+--- function client.init()
 --- 	light = FindLight("main")
 --- 	local shape = GetLightShape(light)
 --- 	DebugPrint(shape)
@@ -4054,7 +4486,7 @@ function GetLightShape(handle) return 0 end
 --- Example:
 --- ```lua
 --- local light = 0
---- function init()
+--- function client.init()
 --- 	light = FindLight("main")
 --- 	if IsLightActive(light) then
 --- 		DebugPrint("Light is active")
@@ -4069,7 +4501,7 @@ function IsLightActive(handle) return false end
 --- Example:
 --- ```lua
 --- local light = 0
---- function init()
+--- function client.init()
 --- 	light = FindLight("main")
 --- 	local point = Vec(0, 10, 0)
 --- 	local affected = IsPointAffectedByLight(light, point)
@@ -4086,7 +4518,7 @@ function IsPointAffectedByLight(handle, point) return false end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	DisableAllLights()
 --- end
 --- ```
@@ -4096,32 +4528,35 @@ function DisableAllLights() end
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	local flashlight = GetFlashlight()
+--- function setFlashlightColor(playerId)
+--- 	local flashlight = GetFlashlight(playerId)
 --- 	SetProperty(flashlight, "color", Vec(0.5, 0, 1))
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle of the player's flashlight
-function GetFlashlight() return 0 end
+function GetFlashlight(playerId) return 0 end
 
 --- Sets a new entity of the Light type as a flashlight.
 ---
 --- Example:
 --- ```lua
 --- local oldLight = 0
---- function tick()
+--- function server.tick()
+--- 	... -- some code
 --- 	-- in order not to lose the original flashlight, it is better to save it's handle
---- 	oldLight = GetFlashlight()
---- 	SetFlashlight(FindEntity("mylight", true))
+--- 	oldLight = GetFlashlight(playerId)
+--- 	SetFlashlight(FindEntity("mylight", true), playerId)
 --- end
 --- ```
 ---@param handle number Handle of the light
-function SetFlashlight(handle) end
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetFlashlight(handle, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	local goal = FindTrigger("goal")
 --- end
 --- ```
@@ -4133,7 +4568,7 @@ function FindTrigger(tag, global) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Find triggers tagged "toxic" in script scope
 --- 	local triggers = FindTriggers("toxic")
 --- 	for i=1, #triggers do
@@ -4150,7 +4585,7 @@ function FindTriggers(tag, global) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local trigger = FindTrigger("toxic")
 --- 	local t = GetTriggerTransform(trigger)
 --- 	DebugPrint(t.pos)
@@ -4163,7 +4598,7 @@ function GetTriggerTransform(handle) return Transform() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	local trigger = FindTrigger("toxic")
 --- 	local t = Transform(Vec(0, 1, 0), QuatEuler(0, 90, 0))
 --- 	SetTriggerTransform(trigger, t)
@@ -4177,7 +4612,7 @@ function SetTriggerTransform(handle, transform) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local trigger = FindTrigger("toxic")
 --- 	local mi, ma = GetTriggerBounds(trigger)
 --- 
@@ -4198,12 +4633,12 @@ function GetTriggerBounds(handle) return Vec(), Vec() end
 --- ```lua
 --- local trigger = 0
 --- local body = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- 	body = FindBody("body")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsBodyInTrigger(trigger, body) then
 --- 		DebugPrint("In trigger!")
 --- 	end
@@ -4220,12 +4655,12 @@ function IsBodyInTrigger(trigger, body) return false end
 --- ```lua
 --- local trigger = 0
 --- local vehicle = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- 	vehicle = FindVehicle("vehicle")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsVehicleInTrigger(trigger, vehicle) then
 --- 		DebugPrint("In trigger!")
 --- 	end
@@ -4242,12 +4677,12 @@ function IsVehicleInTrigger(trigger, vehicle) return false end
 --- ```lua
 --- local trigger = 0
 --- local shape = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- 	shape = FindShape("shape")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsShapeInTrigger(trigger, shape) then
 --- 		DebugPrint("In trigger!")
 --- 	end
@@ -4263,12 +4698,12 @@ function IsShapeInTrigger(trigger, shape) return false end
 --- ```lua
 --- local trigger = 0
 --- local point = {}
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic", true)
 --- 	point = Vec(0, 0, 0)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if IsPointInTrigger(trigger, point) then
 --- 		DebugPrint("In trigger!")
 --- 	end
@@ -4284,14 +4719,15 @@ function IsPointInTrigger(trigger, point) return false end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local p = Vec(1.5, 3, 2.5)
 --- 	DebugWatch("In boundaries", IsPointInBoundaries(p))
 --- end
 --- ```
 ---@param point TVec Point
----@return boolean value True if point is inside scene boundaries
-function IsPointInBoundaries(point) return false end
+---@return boolean value True if point is inside scene boundaries or if there are no boundaries
+---@return number dist Distance to the scene boundaries. Zero if there are no boundaries or if point is outside.
+function IsPointInBoundaries(point) return false, 0 end
 
 --- This function will check if trigger is empty. If trigger contains any part of a body
 --- it will return false and the highest point as second return value.
@@ -4299,11 +4735,11 @@ function IsPointInBoundaries(point) return false end
 --- Example:
 --- ```lua
 --- local trigger = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local empty, highPoint = IsTriggerEmpty(trigger)
 --- 	if not empty then
 --- 		--highPoint[2] is the tallest point in trigger
@@ -4322,7 +4758,7 @@ function IsTriggerEmpty(handle, demolision) return false, Vec() end
 --- Example:
 --- ```lua
 --- local trigger = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- 	local p = Vec(0, 10, 0)
 --- 	local dist = GetTriggerDistance(trigger, p)
@@ -4340,7 +4776,7 @@ function GetTriggerDistance(trigger, point) return 0 end
 --- Example:
 --- ```lua
 --- local trigger = 0
---- function init()
+--- function client.init()
 --- 	trigger = FindTrigger("toxic")
 --- 	local p = Vec(0, 10, 0)
 --- 	local closest = GetTriggerClosestPoint(trigger, p)
@@ -4355,7 +4791,7 @@ function GetTriggerClosestPoint(trigger, point) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local screen = FindScreen("tv")
 --- 	DebugPrint(screen)
 --- end
@@ -4368,7 +4804,7 @@ function FindScreen(tag, global) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Find screens tagged "tv" in script scope
 --- 	local screens = FindScreens("tv")
 --- 	for i=1, #screens do
@@ -4386,7 +4822,7 @@ function FindScreens(tag, global) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetScreenEnabled(FindScreen("tv"), true)
 --- end
 --- ```
@@ -4397,7 +4833,7 @@ function SetScreenEnabled(screen, enabled) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local b = IsScreenEnabled(FindScreen("tv"))
 --- 	DebugPrint(b)
 --- end
@@ -4411,7 +4847,7 @@ function IsScreenEnabled(screen) return false end
 --- Example:
 --- ```lua
 --- local screen = 0
---- function init()
+--- function client.init()
 --- 	screen = FindScreen("tv")
 --- 	local shape = GetScreenShape(screen)
 --- 	DebugPrint(shape)
@@ -4421,10 +4857,20 @@ function IsScreenEnabled(screen) return false end
 ---@return number shape Shape handle or zero if none
 function GetScreenShape(screen) return 0 end
 
+--- Return playerId that interacts with a screen, or zero if not interacted with
 ---
 --- Example:
 --- ```lua
---- function init()
+--- local player = GetScreenPlayer(screen)
+--- ```
+---@param screen number Screen handle
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function GetScreenPlayer(screen, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- function client.init()
 --- 	local vehicle = FindVehicle("mycar")
 --- end
 --- ```
@@ -4436,7 +4882,7 @@ function FindVehicle(tag, global) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Find all vehicles in level tagged "boat"
 --- 	local boats = FindVehicles("boat")
 --- 	for i=1, #boats do
@@ -4453,7 +4899,7 @@ function FindVehicles(tag, global) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	local t = GetVehicleTransform(vehicle)
 --- end
@@ -4466,7 +4912,7 @@ function GetVehicleTransform(vehicle) return Transform() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("car", true)
 --- 	local t = GetVehicleExhaustTransforms(vehicle)
 --- 	for i = 1, #t do
@@ -4482,7 +4928,7 @@ function GetVehicleExhaustTransforms(vehicle) return nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("car", true)
 --- 	local t = GetVehicleVitalTransforms(vehicle)
 --- 	for i = 1, #t do
@@ -4497,7 +4943,7 @@ function GetVehicleVitalTransforms(vehicle) return nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("car", true)
 --- 	local t = GetVehicleBodies(vehicle)
 --- 	for i = 1, #t do
@@ -4512,7 +4958,7 @@ function GetVehicleBodies(vehicle) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	local body = GetVehicleBody(vehicle)
 --- 	if IsBodyBroken(body) then
@@ -4527,7 +4973,7 @@ function GetVehicleBody(vehicle) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	local health = GetVehicleHealth(vehicle)
 --- 	DebugPrint(health)
@@ -4542,7 +4988,7 @@ function SetVehicleEngineHealth(...) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local params = GetVehicleParams(FindVehicle("car", true))
 --- 	for key, value in pairs(params) do
 --- 		DebugWatch(key, value)
@@ -4557,7 +5003,7 @@ function GetVehicleParams(vehicle) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetVehicleParam(FindVehicle("car", true), "topspeed", 200)
 --- end
 --- ```
@@ -4569,7 +5015,7 @@ function SetVehicleParam(handle, param, value) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	local driverPos = GetVehicleDriverPos(vehicle)
 --- 	local t = GetVehicleTransform(vehicle)
@@ -4581,7 +5027,18 @@ function SetVehicleParam(handle, param, value) end
 ---@return TVec pos Driver position as vector in vehicle space
 function GetVehicleDriverPos(vehicle) return Vec() end
 
-function GetVehicleLocationWorldTransform(...) end
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	local vehicle = FindVehicle("vehicle")
+--- 	local pos = GetVehicleAvailableSeatPos(vehicle)
+--- 	DebugPrint(pos)
+--- end
+--- ```
+---@param vehicle number Vehicle handle
+---@return TVec pos World space position of the next available seat. {0, 0, 0} if none is available.
+function GetVehicleAvailableSeatPos(vehicle) return Vec() end
 
 ---
 --- Example:
@@ -4607,7 +5064,7 @@ function GetVehicleDrive(vehicle) return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	--Drive mycar forwards
 --- 	local v = FindVehicle("mycar")
 --- 	DriveVehicle(v, 1, 0, false)
@@ -4619,12 +5076,219 @@ function GetVehicleDrive(vehicle) return 0 end
 ---@param handbrake boolean Handbrake control
 function DriveVehicle(vehicle, drive, steering, handbrake) end
 
+---
+--- Example:
+--- ```lua
+--- local t = GetVehicleLocationWorldTransform(vehicle, "player_steeringwheel")
+--- ```
+---@param vehicle number Vehicle handle
+---@param name string Name of location
+---@return TTransform transform World transform
+function GetVehicleLocationWorldTransform(vehicle, name) return Transform() end
+
+---
+--- Example:
+--- ```lua
+--- local passengers, seats, hasDriver = GetVehiclePassengerCount(vehicle)
+--- ```
+---@param vehicle number Vehicle handle
+---@return number count Number of passengers
+---@return number seats Number of seats
+---@return boolean hasDriver If vehicle has a driver
+function GetVehiclePassengerCount(vehicle) return 0, 0, false end
+
+--- Works only for vehicles with 'customhealth' tag. 'customhealth' disables the common vehicles damage system.
+--- So this function needed for custom vehicle damage systems.
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	if InputPressed("usetool", playerId) then
+--- 		SetVehicleHealth(FindVehicle("car", true), 0.0)
+--- 	end
+--- end
+--- ```
+---@param vehicle number Vehicle handle
+---@param health number Set vehicle health (between zero and one)
+function SetVehicleHealth(vehicle, health) end
+
+---
+--- Example:
+--- ```lua
+--- function client.init()
+--- 	local rig = FindRig("myrig")
+--- end
+--- ```
+---@param tag? string Tag name
+---@param global? boolean Search in entire scene
+---@return number handle Handle to first rig with specified tag or zero if not found
+function FindRig(tag, global) return 0 end
+
+---
+--- Example:
+--- ```lua
+---     local t = GetRigWorldTransform(rig)
+--- ```
+---@param rig number Rig handle
+---@return TTransform transform World transform, nil if rig is missing
+function GetRigWorldTransform(rig) return Transform() end
+
+---
+--- Example:
+--- ```lua
+---     SetRigWorldTransform(rig, Transform(...))
+--- ```
+---@param rig number Rig handle
+---@param transform TTransform New world transform
+function SetRigWorldTransform(rig, transform) end
+
+---
+--- Example:
+--- ```lua
+--- local foot_t = GetRigLocationWorldTransform(rigid, "ik_foot_l")
+--- ```
+---@param rig number Rig handle
+---@param name string Name of location
+---@return TTransform transform World transform, nil if rig is missing or location is missing
+function GetRigLocationWorldTransform(rig, name) return Transform() end
+
+---
+--- Example:
+--- ```lua
+---     SetRigLocationWorldTransform(rig, "some_location_name", Transform(...))
+--- ```
+---@param rig number Rig handle
+---@param name string Name of location
+---@param transform TTransform New world transform
+function SetRigLocationWorldTransform(rig, name, transform) end
+
+---
+--- Example:
+--- ```lua
+--- local t = GetRigLocationLocalTransform(rigid, "some_location_name")
+--- ```
+---@param rig number Rig handle
+---@param name string Name of location
+---@return TTransform transform Local transform, nil if rig is missing or location is missing
+function GetRigLocationLocalTransform(rig, name) return Transform() end
+
+---
+--- Example:
+--- ```lua
+---     local someBody = FindBody("bodyname")
+---     SetPlayerRigTransform(someBody, GetBodyTransform(someBody))
+--- ```
+---@param rig number Rig handle
+---@param name string Name of location
+---@param transform TTransform New world transform
+function SetRigLocationLocalTransform(rig, name, transform) end
+
+---
+--- Example:
+--- ```lua
+--- local playerIds = GetAllPlayers()
+--- ```
+---@return any name List of all player Ids
+function GetAllPlayers() return nil end
+
+---
+--- Example:
+--- ```lua
+--- local maxPlayerCount = GetMaxPlayers()
+--- -- create an UI big enough to fit a the max player count
+--- createGameModeUI(maxPlayerCount)
+--- ```
+---@return any count Number of max players for the session. Returns 1 for non-multiplayer.
+function GetMaxPlayers() return nil end
+
+---
+--- Example:
+--- ```lua
+--- local playerCount = GetPlayerCount()
+--- ```
+---@return number count Number of players
+function GetPlayerCount() return 0 end
+
+---
+--- Example:
+--- ```lua
+--- local playerIds = GetAddedPlayers()
+--- ```
+---@return any playerIds List of added player Ids
+function GetAddedPlayers() return nil end
+
+---
+--- Example:
+--- ```lua
+--- local playerIds = GetRemovedPlayers()
+--- ```
+---@return any playerIds List of removed player Ids
+function GetRemovedPlayers() return nil end
+
+---
+--- Example:
+--- ```lua
+--- local name = GetPlayerName(0)
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return string name Player name
+function GetPlayerName(playerId) return "" end
+
+---
+--- Example:
+--- ```lua
+--- local p = GetLocalPlayer()
+--- ```
+---@return number GetLocalPlayer Local player ID.
+function GetLocalPlayer() return 0 end
+
+---
+--- Example:
+--- ```lua
+--- if IsPlayerLocal(attacker) then
+--- 	score = score + 1
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean IsPlayerLocal Whether a player is the local player.
+function IsPlayerLocal(playerId) return false end
+
+---
+--- Example:
+--- ```lua
+--- local character = GetPlayerCharacter(0)
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return string character Character id
+function GetPlayerCharacter(playerId) return "" end
+
+---
+--- Example:
+--- ```lua
+--- local isHost = IsPlayerHost()
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean IsPlayerHost Whether a player is the host
+function IsPlayerHost(playerId) return false end
+
+---
+--- Example:
+--- ```lua
+--- local isValid = IsPlayerValid(flagCarrier)
+--- if not isValid then
+--- 	dropFlag()
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean IsPlayerValid Whether a player is valid (existing player)
+function IsPlayerValid(playerId) return false end
+
 --- Return center point of player. This function is deprecated.
 --- Use GetPlayerTransform instead.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local p = GetPlayerPos()
 --- 	DebugPrint(p)
 --- 
@@ -4633,8 +5297,9 @@ function DriveVehicle(vehicle, drive, steering, handbrake) end
 --- 	DebugPrint(p)
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TVec position Player center position
-function GetPlayerPos() return Vec() end
+function GetPlayerPos(playerId) return Vec() end
 
 function DisableCrouch(...) end
 
@@ -4647,6 +5312,7 @@ function DisableCrouch(...) end
 --- ```
 ---@param position TVec Start position of the search
 ---@param maxdist? number Max search distance
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean hit TRUE if hit, FALSE otherwise.
 ---@return TVec startpos Player can modify start position when close to walls etc
 ---@return TVec endpos Hit position
@@ -4655,7 +5321,7 @@ function DisableCrouch(...) end
 ---@return number hitdist Distance of the hit
 ---@return any hitentity Handle of the entitiy being hit
 ---@return any hitmaterial Name of the material being hit
-function GetPlayerAimInfo(position, maxdist) return false, Vec(), Vec(), Vec(), Vec(), 0, nil, nil end
+function GetPlayerAimInfo(position, maxdist, playerId) return false, Vec(), Vec(), Vec(), Vec(), 0, nil, nil end
 
 function GetPlayerToolRecoil(...) end
 
@@ -4663,150 +5329,120 @@ function GetPlayerToolRecoil(...) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local pitchRotation = Quat(Vec(1,0,0), GetPlayerPitch())
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number pitch Current player pitch angle
-function GetPlayerPitch() return 0 end
+function GetPlayerPitch(playerId) return 0 end
 
 --- The player yaw angle is applied to the player camera transform. It represents the top-down angle of rotation of the player.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local compassBearing = GetPlayerYaw()
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number yaw Current player yaw angle
-function GetPlayerYaw() return 0 end
+function GetPlayerYaw(playerId) return 0 end
 
 --- Sets the player pitch.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	-- look straight ahead
---- 	SetPlayerPitch(0.0)
+--- 	SetPlayerPitch(0.0, playerId)
 --- end
 --- ```
 ---@param pitch number Pitch.
-function SetPlayerPitch(pitch) end
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerPitch(pitch, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 ---     local crouch = GetPlayerCrouch()
 ---     if crouch > 0.0 then
 ---         ...
 ---     end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number recoil Current player crouch
-function GetPlayerCrouch() return 0 end
+function GetPlayerCrouch(playerId) return 0 end
 
 --- The player transform is located at the bottom of the player. The player transform
 --- considers heading (looking left and right). Forward is along negative Z axis.
---- Player pitch (looking up and down) does not affect player transform unless includePitch
---- is set to true. If you want the transform of the eye, use GetPlayerCameraTransform() instead.
+--- Player pitch (looking up and down) does not affect player transform.
+--- If you want the transform of the eye, use GetPlayerCameraTransform() instead.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local t = GetPlayerTransform()
 --- 	DebugPrint(TransformStr(t))
 --- end
 --- ```
----@param includePitch? boolean Include the player pitch (look up/down) in transform
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform transform Current player transform
-function GetPlayerTransform(includePitch) return Transform() end
+function GetPlayerTransform(playerId) return Transform() end
 
---- Instantly teleport the player to desired transform. Unless includePitch is
---- set to true, up/down look angle will be set to zero during this process.
+--- The player transform is located at the bottom of the player. Forward is along negative Z axis.
+--- If you want the transform of the eye, use GetPlayerCameraTransform() instead.
+---
+--- Example:
+--- ```lua
+--- local t = GetPlayerTransform()
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return any transform Current player transform, including pitch (look up/down)
+function GetPlayerTransformWithPitch(playerId) return nil end
+
+--- Instantly teleport the player to desired transform, excluding pitch.
+--- If you want to include pitch, use SetPlayerTransformWithPitch instead.
 --- Player velocity will be reset to zero.
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("jump") then
+--- function server.tick()
+--- 	if InputPressed("jump", playerId) then
 --- 		local t = Transform(Vec(50, 0, 0), QuatEuler(0, 90, 0))
---- 		SetPlayerTransform(t)
+--- 		SetPlayerTransform(t, playerId)
 --- 	end
 --- end
 --- ```
 ---@param transform TTransform Desired player transform
----@param includePitch? boolean Set player pitch (look up/down) as well
-function SetPlayerTransform(transform, includePitch) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerTransform(transform, playerId) end
 
+--- Instantly teleport the player to desired transform, including pitch.
+--- Player velocity will be reset to zero.
 ---
 --- Example:
 --- ```lua
----     --Clear specific rig
----     ClearPlayerRig(someId)
---- 
----     --Clear all rigs
----     ClearPlayerRig(-1)
+--- local t = Transform(Vec(10, 0, 0), QuatEuler(30, 90, 0))
+--- SetPlayerTransform(t, playerId)
 --- ```
----@param rig-id number Unique rig-id, -1 means all rigs
-function ClearPlayerRig(rig_id) end
-
----
---- Example:
---- ```lua
----     local someBody = FindBody("bodyname")
----     SetPlayerRigLocationLocalTransform(someBody, "ik_foot_l", TransformToLocalTransform(GetBodyTransform(someBody), GetLocationTransform(FindLocation("ik_foot_l"))))
---- ```
----@param rig-id number Unique id
----@param name string Name of location
----@param location any Rig Local transform of the location
-function SetPlayerRigLocationLocalTransform(rig_id, name, location) end
-
---- This will both update the rig identified by the 'id' and make it active
----
---- Example:
---- ```lua
----     local someBody = FindBody("bodyname")
----     SetPlayerRigTransform(someBody, GetBodyTransform(someBody))
---- ```
----@param rig-id number Unique id
----@param location any New world transform
-function SetPlayerRigTransform(rig_id, location) end
-
----@return any location Transform of the current active player-rig, nil otherwise
-function GetPlayerRigTransform() return nil end
-
----
---- Example:
---- ```lua
---- local t = GetPlayerRigLocationWorldTransform("ik_hand_l")
---- ```
----@param name string Name of location
----@return any location Transform of a location in world space
-function GetPlayerRigLocationWorldTransform(name) return nil end
-
----@param tag string Tag name
----@param value? string Tag value
-function SetPlayerRigTags(tag, value) end
-
----@param tag string Tag name
----@return boolean exists Returns true if entity has tag
-function GetPlayerRigHasTag(tag) return false end
-
----@param tag string Tag name
----@return string value Returns the tag value, if any. Empty string otherwise.
-function GetPlayerRigTagValue(tag) return "" end
+---@param transform any Desired player transform
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerTransformWithPitch(transform, playerId) end
 
 --- Make the ground act as a conveyor belt, pushing the player even if ground shape is static.
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	SetPlayerGroundVelocity(Vec(2,0,0))
+--- function server.tick()
+--- 	SetPlayerGroundVelocity(Vec(2,0,0), playerId)
 --- end
 --- ```
 ---@param vel TVec Desired ground velocity
-function SetPlayerGroundVelocity(vel) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerGroundVelocity(vel, playerId) end
 
 --- The player eye transform is the same as what you get from GetCameraTransform when playing in first-person,
 --- but if you have set a camera transform manually with SetCameraTransform or playing in third-person, you can retrieve
@@ -4814,13 +5450,14 @@ function SetPlayerGroundVelocity(vel) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local t = GetPlayerEyeTransform()
 --- 	DebugPrint(TransformStr(t))
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform transform Current player eye transform
-function GetPlayerEyeTransform() return Transform() end
+function GetPlayerEyeTransform(playerId) return Transform() end
 
 --- The player camera transform is usually the same as what you get from GetCameraTransform,
 --- but if you have set a camera transform manually with SetCameraTransform, you can retrieve
@@ -4828,127 +5465,179 @@ function GetPlayerEyeTransform() return Transform() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local t = GetPlayerCameraTransform()
 --- 	DebugPrint(TransformStr(t))
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform transform Current player camera transform
-function GetPlayerCameraTransform() return Transform() end
+function GetPlayerCameraTransform(playerId) return Transform() end
 
 --- Call this function continously to apply a camera offset. Can be used for camera effects
 --- such as shake and wobble.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local t = Transform(Vec(), QuatAxisAngle(Vec(1, 0, 0), math.sin(GetTime()*3.0) * 3.0))
---- 	SetPlayerCameraOffsetTransform(t)
+--- 	SetPlayerCameraOffsetTransform(t, playerId)
 --- end
 --- ```
 ---@param transform TTransform Desired player camera offset transform
 ---@param stackable? boolean True if eye offset should summ up with multiple calls per tick
-function SetPlayerCameraOffsetTransform(transform, stackable) end
+---@param playerId? number Player ID. On client, zero means client player.
+function SetPlayerCameraOffsetTransform(transform, stackable, playerId) end
 
 --- Call this function during init to alter the player spawn transform.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function setPlayerSpawnTransform(playerId)
 --- 	local t = Transform(Vec(10, 0, 0), QuatEuler(0, 90, 0))
---- 	SetPlayerSpawnTransform(t)
+--- 	SetPlayerSpawnTransform(t, playerId)
 --- end
 --- ```
 ---@param transform TTransform Desired player spawn transform
-function SetPlayerSpawnTransform(transform) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerSpawnTransform(transform, playerId) end
 
 --- Call this function during init to alter the player spawn health amount.
 ---
 --- Example:
 --- ```lua
---- function init()
---- 	SetPlayerSpawnHealth(0.5)
+--- function playerJoined(playerId)
+--- 	SetPlayerSpawnHealth(0.5, playerId)
 --- end
 --- ```
 ---@param health number Desired player spawn health (between zero and one)
-function SetPlayerSpawnHealth(health) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerSpawnHealth(health, playerId) end
 
 --- Call this function during init to alter the player spawn active tool.
 ---
 --- Example:
 --- ```lua
---- function init()
---- 	SetPlayerSpawnTool("pistol")
+--- function playerJoined(playerId)
+--- 	SetPlayerSpawnTool("pistol", playerId)
 --- end
 --- ```
 ---@param id string Tool unique identifier
-function SetPlayerSpawnTool(id) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerSpawnTool(id, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vel = GetPlayerVelocity()
 --- 	DebugPrint(VecStr(vel))
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TVec velocity Player velocity in world space as vector
-function GetPlayerVelocity() return Vec() end
+function GetPlayerVelocity(playerId) return Vec() end
 
 --- Drive specified vehicle.
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
+--- function server.tick()
+--- 	if InputPressed("interact", playerId) then
 --- 		local car = FindVehicle("mycar")
---- 		SetPlayerVehicle(car)
+--- 		SetPlayerVehicle(car, playerId)
 --- 	end
 --- end
 --- ```
 ---@param vehicle number Handle to vehicle or zero to not drive.
-function SetPlayerVehicle(vehicle) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerVehicle(vehicle, playerId) end
 
 ---@param animator number Handle to animator or zero for no animator
-function SetPlayerAnimator(animator) end
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerAnimator(animator, playerId) end
 
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number animator Handle to animator or zero for no animator
-function GetPlayerAnimator() return 0 end
+function GetPlayerAnimator(playerId) return 0 end
+
+function CopyAnimatorWorldTransforms(...) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("jump") then
---- 		SetPlayerVelocity(Vec(0, 5, 0))
+--- local bodies = GetPlayerBodies(playerId)
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return any bodies Get bodies associated with a player
+function GetPlayerBodies(playerId) return nil end
+
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	if InputPressed("jump", playerId) then
+--- 		SetPlayerVelocity(Vec(0, 5, 0), playerId)
 --- 	end
 --- end
 --- ```
 ---@param velocity TVec Player velocity in world space as vector
-function SetPlayerVelocity(velocity) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerVelocity(velocity, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = GetPlayerVehicle()
 --- 	if vehicle ~= 0 then
 --- 		DebugPrint("Player drives the vehicle")
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Current vehicle handle, or zero if not in vehicle
-function GetPlayerVehicle() return 0 end
+function GetPlayerVehicle(playerId) return 0 end
 
 ---
 --- Example:
 --- ```lua
 --- local isGrounded = IsPlayerGrounded()
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean isGrounded Whether the player is grounded
-function IsPlayerGrounded() return false end
+function IsPlayerGrounded(playerId) return false end
 
-function IsPlayerJumping(...) end
+---
+--- Example:
+--- ```lua
+--- local vehicle = FindVehicle("myvehicle")
+--- local isDriver = IsPlayerVehicleDriver(vehicle)
+--- ```
+---@param handle number Vehicle handle
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean isDriver Whether the player is driver for this vehicle
+function IsPlayerVehicleDriver(handle, playerId) return false end
+
+---
+--- Example:
+--- ```lua
+--- local vehicle = FindVehicle("myvehicle")
+--- local isPassenger = IsPlayerVehiclePassenger(vehicle)
+--- ```
+---@param handle number Vehicle handle
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean isPassenger Whether the player is a passenger of this vehicle
+function IsPlayerVehiclePassenger(handle, playerId) return false end
+
+---
+--- Example:
+--- ```lua
+--- local isJumping = IsPlayerJumping()
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean isGrounded Whether the player is jumping or not
+function IsPlayerJumping(playerId) return false end
 
 --- 
 --- Get information about player ground contact. If the output boolean (contact) is false then
@@ -4957,7 +5646,7 @@ function IsPlayerJumping(...) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	hasGroundContact, shape, point, normal = GetPlayerGroundContact()
 --- 
 --- 	if hasGroundContact then
@@ -4966,49 +5655,53 @@ function IsPlayerJumping(...) end
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return boolean contact Whether the player is grounded
 ---@return number shape Handle to shape
 ---@return any point Point of contact
 ---@return any normal Normal of contact
-function GetPlayerGroundContact() return false, 0, nil, nil end
+function GetPlayerGroundContact(playerId) return false, 0, nil, nil end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local shape = GetPlayerGrabShape()
 --- 	if shape ~= 0 then
 --- 		DebugPrint("Player is grabbing a shape")
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to grabbed shape or zero if not grabbing.
-function GetPlayerGrabShape() return 0 end
+function GetPlayerGrabShape(playerId) return 0 end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = GetPlayerGrabBody()
 --- 	if body ~= 0 then
 --- 		DebugPrint("Player is grabbing a body")
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to grabbed body or zero if not grabbing.
-function GetPlayerGrabBody() return 0 end
+function GetPlayerGrabBody(playerId) return 0 end
 
 --- Release what the player is currently holding
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("jump") then
---- 		ReleasePlayerGrab()
+--- function server.tick()
+--- 	if InputPressed("jump", playerId) then
+--- 		ReleasePlayerGrab(playerId)
 --- 	end
 --- end
 --- ```
-function ReleasePlayerGrab() end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function ReleasePlayerGrab(playerId) end
 
 ---
 --- Example:
@@ -5018,64 +5711,69 @@ function ReleasePlayerGrab() end
 --- 	local pos = GetPlayerGrabPoint()
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TVec pos The world space grab point.
-function GetPlayerGrabPoint() return Vec() end
+function GetPlayerGrabPoint(playerId) return Vec() end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local shape = GetPlayerPickShape()
 --- 	if shape ~= 0 then
 --- 		DebugPrint("Picked shape " .. shape)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to picked shape or zero if nothing is picked
-function GetPlayerPickShape() return 0 end
+function GetPlayerPickShape(playerId) return 0 end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = GetPlayerPickBody()
 --- 	if body ~= 0 then
 --- 		DebugWatch("Pick body ", body)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to picked body or zero if nothing is picked
-function GetPlayerPickBody() return 0 end
+function GetPlayerPickBody(playerId) return 0 end
 
 --- Interactable shapes has to be tagged with "interact". The engine
 --- determines which interactable shape is currently interactable.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local shape = GetPlayerInteractShape()
 --- 	if shape ~= 0 then
 --- 		DebugPrint("Interact shape " .. shape)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to interactable shape or zero
-function GetPlayerInteractShape() return 0 end
+function GetPlayerInteractShape(playerId) return 0 end
 
 --- Interactable shapes has to be tagged with "interact". The engine
 --- determines which interactable body is currently interactable.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = GetPlayerInteractBody()
 --- 	if body ~= 0 then
 --- 		DebugPrint("Interact body " .. body)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to interactable body or zero
-function GetPlayerInteractBody() return 0 end
+function GetPlayerInteractBody(playerId) return 0 end
 
 --- Set the screen the player should interact with. For the screen
 --- to feature a mouse pointer and receieve input, the screen also
@@ -5083,120 +5781,242 @@ function GetPlayerInteractBody() return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
---- 		if GetPlayerScreen() ~= 0 then
---- 			SetPlayerScreen(0)
+--- function server.tick()
+--- 	if InputPressed("interact", playerId) then
+--- 		if GetPlayerScreen(playerId) ~= 0 then
+--- 			SetPlayerScreen(0, playerId)
 --- 		else
---- 			SetPlayerScreen(screen)
+--- 			SetPlayerScreen(screen, playerId)
 --- 		end
 --- 
 --- 	end
 --- end
 --- ```
 ---@param handle number Handle to screen or zero for no screen
-function SetPlayerScreen(handle) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerScreen(handle, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
---- 		if GetPlayerScreen() ~= 0 then
---- 			SetPlayerScreen(0)
+--- function server.tick()
+--- 	if InputPressed("interact", playerId) then
+--- 		if GetPlayerScreen(playerId) ~= 0 then
+--- 			SetPlayerScreen(0, playerId)
 --- 		else
---- 			SetPlayerScreen(screen)
+--- 			SetPlayerScreen(screen, playerId)
 --- 		end
 --- 
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to interacted screen or zero if none
-function GetPlayerScreen() return 0 end
+function GetPlayerScreen(playerId) return 0 end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
+--- function server.tick()
+--- 	if InputPressed("interact", playerId) then
 --- 		if GetPlayerHealth() < 0.75 then
---- 			SetPlayerHealth(1.0)
+--- 			SetPlayerHealth(1.0, playerId)
 --- 		else
---- 			SetPlayerHealth(0.5)
+--- 			SetPlayerHealth(0.5, playerId)
 --- 		end
 --- 	end
 --- end
 --- ```
 ---@param health number Set player health (between zero and one)
-function SetPlayerHealth(health) end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerHealth(health, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
+--- function server.tick()
+--- 	if InputPressed("interact", playerId) then
 --- 		if GetPlayerHealth() < 0.75 then
---- 			SetPlayerHealth(1.0)
+--- 			SetPlayerHealth(1.0, playerId)
 --- 		else
---- 			SetPlayerHealth(0.5)
+--- 			SetPlayerHealth(0.5, playerId)
 --- 		end
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number health Current player health
-function GetPlayerHealth() return 0 end
+function GetPlayerHealth(playerId) return 0 end
+
+--- Will be false if player is in vehicle, interacting with a screen, has pause menu open, is dead or uses interactive UI.
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if GetPlayerCanUseTool(p) and InputPressed("usetool", p) then
+--- 			-- fire laser
+--- 		end
+--- 	end
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean canusetool If the player currenty can use tool.
+function GetPlayerCanUseTool(playerId) return false end
 
 --- Enable or disable regeneration for player
 ---
 --- Example:
 --- ```lua
---- function init()
---- 	-- disable regeneration for player
---- 	SetPlayerRegenerationState(false)
+--- function playerJoined(playerId)
+--- 	-- initially disable regeneration for player
+--- 	SetPlayerRegenerationState(false, playerId)
 --- end
 --- ```
 ---@param state boolean State of player regeneration
-function SetPlayerRegenerationState(state) end
+---@param player? number Player ID change regeneration for
+function SetPlayerRegenerationState(state, player) end
+
+---
+--- Example:
+--- ```lua
+--- function playerJoined(playerId)
+--- 	-- Server sets player tool to "gun"
+--- 	SetPlayerTool("gun", playerId)
+--- end
+--- ```
+---@param tool any (string) Set Tool ID
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerTool(tool, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- local tool = GetPlayerTool()
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return any tool (string) Get Tool ID
+function GetPlayerTool(playerId) return nil end
 
 --- Respawn player at spawn position without modifying the scene
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputPressed("interact") then
---- 		RespawnPlayer()
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if InputPressed("interact", p) then
+--- 			RespawnPlayer(p)
+--- 		end
 --- 	end
 --- end
 --- ```
-function RespawnPlayer() end
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function RespawnPlayer(playerId) end
+
+--- Respawn player at spawn position without modifying the scene
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if InputPressed("interact", p) then
+--- 			RespawnPlayerAtTransform(Transform(Vec(1,2,3)), p)
+--- 		end
+--- 	end
+--- end
+--- ```
+---@param transform any Transform
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function RespawnPlayerAtTransform(transform, playerId) end
 
 --- This function gets base speed, but real player speed depends on many
 --- factors such as health, crouch, water, grabbing objects.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugPrint(GetPlayerWalkingSpeed())
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number speed Current player base walking speed
-function GetPlayerWalkingSpeed() return 0 end
+function GetPlayerWalkingSpeed(playerId) return 0 end
 
 --- This function sets base speed, but real player speed depends on many
 --- factors such as health, crouch, water, grabbing objects.
 ---
 --- Example:
 --- ```lua
---- function tick()
---- 	if InputDown("shift") then
---- 		SetPlayerWalkingSpeed(15.0)
---- 	else
---- 		SetPlayerWalkingSpeed(7.0)
+--- function server.tick()
+--- 
+--- 	for p in Players() do
+--- 		-- Set player walking speed based on whether shift is pressed
+--- 		if InputDown("shift", p) then
+--- 			SetPlayerWalkingSpeed(15.0, p)
+--- 		else
+--- 			SetPlayerWalkingSpeed(7.0, p)
+--- 		end
 --- 	end
 --- end
 --- ```
----@param speed number Set player base walking speed
-function SetPlayerWalkingSpeed(speed) end
+---@param speed number Set player walking speed
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerWalkingSpeed(speed, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	DebugPrint(GetPlayerCrouchSpeedScale())
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return number speed Current player walking speed while crouched
+function GetPlayerCrouchSpeedScale(playerId) return 0 end
+
+--- This function sets base speed the player is changed to while crouched
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if InputDown("shift") then
+--- 			SetPlayerCrouchSpeedScale(5.0, p)
+--- 		else
+--- 			SetPlayerCrouchSpeedScale(3.0, p)
+--- 		end
+--- 	end
+--- end
+--- ```
+---@param speed number Set player walking speed while crouched
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerCrouchSpeedScale(speed, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	DebugPrint(GetPlayerHurtSpeedScale())
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return number speed Current player walking speed when hurt
+function GetPlayerHurtSpeedScale(playerId) return 0 end
+
+--- This function sets base speed the player is interpolated towards based on the health
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	-- Reduce hurt penalty (default is 2/7 or roughly 0.29)
+--- 	for p in Players() do
+--- 		SetPlayerHurtSpeedScale(0.6, p)
+--- 	end
+--- end
+--- ```
+---@param speed number Set player walking speed when hurt
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetPlayerHurtSpeedScale(speed, playerId) end
 
 --- BEGINTABLE Param name	-- Type				-- Description
 --- health					-- float			-- Current value of the player's health.
@@ -5207,25 +6027,25 @@ function SetPlayerWalkingSpeed(speed) end
 --- friction				-- float			-- Player body friction
 --- frictionMode			-- string			-- Player friction combine mode
 --- flyMode					-- boolean &nbsp	-- If the value is True, the player will fly
+--- flashlightAllowed		-- boolean &nbsp	-- Changes ability to use flashlight
+--- disableInteract			-- boolean &nbsp	-- Disable interactions for player
+--- CollisionMask			-- int				-- Player collision mask bits (0-255) with respect to all shapes layer bits
 --- ENDTABLE
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	-- The parameter names are case-insensitive, so any of the specified writing styles will be correct:
 --- 	-- "GodMode", "godmode", "godMode"
 --- 	local paramName = "GodMode"
 --- 	local param = GetPlayerParam(paramName)
 --- 	DebugWatch(paramName, param)
---- 
---- 	if InputPressed("g") then
---- 		SetPlayerParam(paramName, not param)
---- 	end
 --- end
 --- ```
 ---@param parameter string Parameter name
+---@param player? number Player ID. On player, zero means local player.
 ---@return any value Parameter value
-function GetPlayerParam(parameter) return nil end
+function GetPlayerParam(parameter, player) return nil end
 
 --- BEGINTABLE Param name	-- Type				-- Description
 --- health					-- float			-- Current value of the player's health.
@@ -5236,26 +6056,32 @@ function GetPlayerParam(parameter) return nil end
 --- friction				-- float			-- Player body friction. Default is 0.8
 --- frictionMode			-- string			-- Player friction combine mode. Can be (average|minimum|multiply|maximum)
 --- flyMode					-- boolean &nbsp	-- If the value is True, the player will fly
+--- flashlightAllowed		-- boolean &nbsp	-- Changes ability to use flashlight
+--- disableInteract			-- boolean &nbsp	-- Disable interactions for player
+--- CollisionMask			-- int				-- Player collision mask bits (0-255) with respect to all shapes layer bits
 --- ENDTABLE
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	-- The parameter names are case-insensitive, so any of the specified writing styles will be correct:
 --- 	-- "JumpSpeed", "jumpspeed", "jumpSpeed"
 --- 	local paramName = "JumpSpeed"
---- 	local param = GetPlayerParam(paramName)
---- 	DebugWatch(paramName, param)
 --- 
---- 	if InputDown("shift") then
---- 		-- JumpSpeed sets for 1 frame
---- 		SetPlayerParam(paramName, 10)
+--- 	for p in Players() do
+--- 		-- Set player jump speed based on whether shift is pressed
+--- 		if InputDown("shift", p) then
+--- 			SetPlayerParam(paramName, 10, p)
+--- 		else
+--- 			SetPlayerParam(paramName, 5, p)
+--- 		end
 --- 	end
 --- end
 --- ```
 ---@param parameter string Parameter name
 ---@param value any Parameter value
-function SetPlayerParam(parameter, value) end
+---@param player? number Player ID. On player, zero means local player.
+function SetPlayerParam(parameter, value, player) end
 
 --- 
 --- Use this function to hide the player character.
@@ -5264,13 +6090,14 @@ function SetPlayerParam(parameter, value) end
 --- Example:
 --- ```lua
 --- 
---- function tick()
+--- function client.tick()
 --- 	...
 --- 	SetCameraTransform(t)
 --- 	SetPlayerHidden()
 --- end
 --- ```
-function SetPlayerHidden() end
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerHidden(playerId) end
 
 --- Register a custom tool that will show up in the player inventory and
 --- can be selected with scroll wheel. Do this only once per tool.
@@ -5278,16 +6105,32 @@ function SetPlayerHidden() end
 ---
 --- Example:
 --- ```lua
---- function init()
---- 	RegisterTool("lasergun", "Laser Gun", "MOD/vox/lasergun.vox")
---- 	SetBool("game.tool.lasergun.enabled", true)
+--- function server.init()
+--- 	RegisterTool("lasergun", "Laser Gun", "MOD/vox/lasergun.vox", 6)
 --- end
 --- 
---- function tick()
---- 	if GetString("game.player.tool") == "lasergun" then
---- 		--Tool is selected. Tool logic goes here.
+--- function server.tick()
+--- 	for p in Players() do
+--- 		if GetPlayerTool(p) == "lasergun" then
+--- 			--Tool is selected. Tool logic goes here.
+--- 
+--- 			if InputPressed("usetool", p) then
+--- 				-- Fire the tool
+--- 			end
+--- 		end
 --- 	end
 --- end
+--- 
+--- function client.tick()
+--- 	for p in Players() do
+--- 		if GetPlayerTool(p) == "lasergun" then
+--- 			if InputPressed("usetool", p) then
+--- 				-- Spawn client side particles, play sound, etc.
+--- 			end
+--- 		end
+--- 	end
+--- end
+--- 
 --- ```
 ---@param id string Tool unique identifier
 ---@param name string Tool name to show in hud
@@ -5295,39 +6138,68 @@ function SetPlayerHidden() end
 ---@param group? number Tool group for this tool (1-6) Default is 6.
 function RegisterTool(id, name, file, group) end
 
+--- 
+--- Sets the default amount of ammo granted when picking up an ammo crate
+--- associated with a specific tool. This is useful if your mod provides
+--- custom crates or ammo pickups for tools.
+--- 
+---
+--- Example:
+--- ```lua
+--- function server.init()
+--- 	RegisterTool("lasergun", "Laser Gun", "MOD/vox/lasergun.vox", 6)
+--- 	SetToolAmmoPickupAmount("lasergun", 30)
+--- end
+--- ```
+---@param toolId string Tool ID
+---@param ammo number The default ammo pickup amount
+function SetToolAmmoPickupAmount(toolId, ammo) end
+
+---
+--- Example:
+--- ```lua
+--- local ammo = GetToolAmmoPickupAmount("gun")
+--- ```
+---@param toolId string Tool ID
+---@return number ammo The default ammo pickup amount
+function GetToolAmmoPickupAmount(toolId) return 0 end
+
 --- Return body handle of the visible tool. You can use this to retrieve tool shapes
 --- and animate them, change emissiveness, etc. Do not attempt to set the tool body
 --- transform, since it is controlled by the engine. Use SetToolTranform for that.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local toolBody = GetToolBody()
 --- 	if toolBody~=0 then
 --- 		DebugPrint("Tool body: " .. toolBody)
 --- 	end
 --- end
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return number handle Handle to currently visible tool body or zero if none
-function GetToolBody() return 0 end
+function GetToolBody(playerId) return 0 end
 
 ---
 --- Example:
 --- ```lua
 --- local right, left = GetToolHandPoseLocalTransform()
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform right Transform of right hand relative to the tool body origin, or nil if the right hand is not used
 ---@return TTransform left Transform of left hand, or nil if left hand is not used
-function GetToolHandPoseLocalTransform() return Transform(), Transform() end
+function GetToolHandPoseLocalTransform(playerId) return Transform(), Transform() end
 
 ---
 --- Example:
 --- ```lua
 --- local right, left = GetToolHandPoseWorldTransform()
 --- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform right Transform of right hand in world space, or nil if the right hand is not used
 ---@return TTransform left Transform of left hand, or nil if left hand is not used
-function GetToolHandPoseWorldTransform() return Transform(), Transform() end
+function GetToolHandPoseWorldTransform(playerId) return Transform(), Transform() end
 
 --- Use this function to position the character's hands on the currently equipped tool. This function must be called every frame from the tick function.
 --- In third-person view, failing to call this function can lead to different outcomes depending on how the tool is animated:
@@ -5349,7 +6221,8 @@ function GetToolHandPoseWorldTransform() return Transform(), Transform() end
 --- ```
 ---@param right TTransform Transform of right hand relative to the tool body origin, or nil if right hand is not used
 ---@param left TTransform Transform of left hand, or nil if left hand is not used
-function SetToolHandPoseLocalTransform(right, left) end
+---@param playerId? number Player ID. On client, zero means client player.
+function SetToolHandPoseLocalTransform(right, left, playerId) end
 
 --- Return transform of a tool location in tool space. Locations can be defined using the tool prefab editor.
 ---
@@ -5359,8 +6232,9 @@ function SetToolHandPoseLocalTransform(right, left) end
 --- SetToolHandPoseLocalTransform(right, nil)
 --- ```
 ---@param name string Name of location
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform location Transform of a tool location in tool space or nil if location is not found.
-function GetToolLocationLocalTransform(name) return Transform() end
+function GetToolLocationLocalTransform(name, playerId) return Transform() end
 
 --- Return transform of a tool location in world space. Locations can be defined using the tool prefab editor. A tool location is defined in tool space and to get the world space transform a tool body is required.
 --- If a tool body does not exist this function will return nil.
@@ -5371,8 +6245,9 @@ function GetToolLocationLocalTransform(name) return Transform() end
 --- Shoot(muzzle, direction)
 --- ```
 ---@param name string Name of location
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
 ---@return TTransform location Transform of a tool location in world space or nil if the location is not found or if there is no visible tool body.
-function GetToolLocationWorldTransform(name) return Transform() end
+function GetToolLocationWorldTransform(name, playerId) return Transform() end
 
 --- Apply an additional transform on the visible tool body. This can be used to
 --- create tool animations. You need to set this every frame from the tick function.
@@ -5381,22 +6256,23 @@ function GetToolLocationWorldTransform(name) return Transform() end
 ---
 --- Example:
 --- ```lua
---- function init()
---- 	--Offset the tool half a meter to the right
+--- function client.tick()
+--- 	--Offset the tool half a meter to the right for the local player
 --- 	local offset = Transform(Vec(0.5, 0, 0))
 --- 	SetToolTransform(offset)
 --- end
 --- ```
 ---@param transform TTransform Tool body transform
----@param sway? number Tool sway amount. Default is 1.0.
-function SetToolTransform(transform, sway) end
+---@param sway? number Tool sway amount. Default is 1.0
+---@param playerId? number Player ID. On client, zero means client player.
+function SetToolTransform(transform, sway, playerId) end
 
 --- Set the allowed zoom for a registered tool. The zoom sensitivity will be factored
 --- with the user options for sensitivity.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	-- allow our scoped tool to zoom by factor 4.
 --- 	SetToolAllowedZoom(4.0, 0.5)
 --- end
@@ -5411,7 +6287,7 @@ function SetToolAllowedZoom(zoom, _zoom) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.tick()
 --- 
 --- 	if GetBool("game.thirdperson") then
 --- 		local toolTransform = Transform(Vec(0.3, -0.3, -0.2), Quat(0.0, 0.0, 15.0))
@@ -5431,14 +6307,15 @@ function SetToolAllowedZoom(zoom, _zoom) end
 --- end
 --- ```
 ---@param transform TTransform Tool body transform
-function SetToolTransformOverride(transform) end
+---@param playerId? number Player ID. On client, zero means client player.
+function SetToolTransformOverride(transform, playerId) end
 
 --- Apply an additional offset on the visible tool body. This can be used to
 --- tweak tool placement for different characters. You need to set this every frame from the tick function.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	--Offset the tool depending on character height
 --- 	local defaultEyeY = 1.7
 --- 	local offsetY = characterHeight - defaultEyeY
@@ -5447,12 +6324,313 @@ function SetToolTransformOverride(transform) end
 --- end
 --- ```
 ---@param offset TVec Tool body offset
-function SetToolOffset(offset) end
+---@param playerId? number Player ID. On client, zero means client player.
+function SetToolOffset(offset, playerId) end
 
 ---
 --- Example:
 --- ```lua
---- function init()
+--- SetToolAmmo("gun", 10, 1)
+--- ```
+---@param toolId string Tool ID
+---@param ammo number Total ammo
+---@param playerId? number Player ID. On server, zero means server (host) player.
+function SetToolAmmo(toolId, ammo, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- local ammo = GetToolAmmo("gun", 1)
+--- ```
+---@param toolId string Tool ID
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return number ammo Total ammo for tool
+function GetToolAmmo(toolId, playerId) return 0 end
+
+---
+--- Example:
+--- ```lua
+--- SetToolEnabled("gun", false, playerId)
+--- ```
+---@param toolId string Tool ID
+---@param enabled boolean Tool enabled
+---@param playerId? number Player ID
+function SetToolEnabled(toolId, enabled, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- if IsToolEnabled("gun", 1) then
+--- 	...
+--- end
+--- ```
+---@param toolId string Tool ID
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean enabled Tool enabled for player
+function IsToolEnabled(toolId, playerId) return false end
+
+--- Sets the base orientation when gravity is disabled with SetGravity.
+--- This will determine what direction is "up", "right" and "forward" as
+--- gravity is completely turned off.
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	SetGravity(Vec(0, 0, 0))
+--- 
+--- 	-- Turn players upside-down.
+--- 	for p in Players() do
+--- 		SetPlayerOrientation(QuatAxisAngle(Vec(1,0,0), 180), p)
+--- 	end
+--- end
+--- ```
+---@param orientation any Base orientation
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerOrientation(orientation, playerId) end
+
+--- Gets the base orientation of the player.
+--- This can be used to retrieve the base orientation of the player when using a custom gravity vector.
+---
+--- Example:
+--- ```lua
+--- function server.tick(dt)
+--- 	SetGravity(Vec(0, 0, 0))
+--- 
+--- 	for p in Players() do
+--- 		-- Spin the player if using zero gravity
+--- 		local base = QuatRotateQuat(GetPlayerOrientation(p), QuatAxisAngle(Vec(1,0,0), dt))
+--- 		SetPlayerOrientation(base, p)
+--- 	end
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function GetPlayerOrientation(playerId) end
+
+--- This function returns the up vector of the player, which is determined by the player's base orientation.
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	local up = GetPlayerUp()
+--- 	DebugPrint("Player up vector: " .. up)
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return TVec up Up vector of the player
+function GetPlayerUp(playerId) return Vec() end
+
+---
+--- Example:
+--- ```lua
+---     local rig = FindRig("myrig")
+---     SetPlayerRig(rig)
+--- ```
+---@param rig number Rig handle
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerRig(rig, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- local rig = GetPlayerRig(rigid)
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return number rig Rig handle
+function GetPlayerRig(playerId) return 0 end
+
+---
+--- Example:
+--- ```lua
+--- local t = GetPlayerRigWorldTransform()
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return TTransform transform World transform, nil if player doesnt have a rig
+function GetPlayerRigWorldTransform(playerId) return Transform() end
+
+--- DEPRECATED_ALERT
+---
+--- Example:
+--- ```lua
+---     ClearPlayerRig(someId)
+--- ```
+---@param rig-id number Unique rig-id, -1 means all rigs
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function ClearPlayerRig(rig_id, playerId) end
+
+--- DEPRECATED_ALERT
+---
+--- Example:
+--- ```lua
+---     local someBody = FindBody("bodyname")
+---     SetPlayerRigLocationLocalTransform(someBody, "ik_foot_l", TransformToLocalTransform(GetBodyTransform(someBody), GetLocationTransform(FindLocation("ik_foot_l"))))
+--- ```
+---@param rig-id number Unique id
+---@param name string Name of location
+---@param location any Rig Local transform of the location
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerRigLocationLocalTransform(rig_id, name, location, playerId) end
+
+--- This will both update the rig identified by the 'id' and make it active
+--- DEPRECATED_ALERT
+---
+--- Example:
+--- ```lua
+---     local someBody = FindBody("bodyname")
+---     SetPlayerRigTransform(someBody, GetBodyTransform(someBody))
+--- ```
+---@param rig-id number Unique id
+---@param location any New world transform
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerRigTransform(rig_id, location, playerId) end
+
+---
+--- Example:
+--- ```lua
+--- local t = GetPlayerRigLocationWorldTransform("ik_hand_l")
+--- DEPRECATED_ALERT
+--- ```
+---@param name string Name of location
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return any location Transform of a location in world space
+function GetPlayerRigLocationWorldTransform(name, playerId) return nil end
+
+--- DEPRECATED_ALERT
+---@param rig-id number Unique id
+---@param tag string Tag
+---@param playerId? number Player ID. On client, zero means client player.
+function SetPlayerRigTags(rig_id, tag, playerId) end
+
+--- DEPRECATED_ALERT
+---@param tag string Tag name
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean exists Returns true if entity has tag
+function GetPlayerRigHasTag(tag, playerId) return false end
+
+--- DEPRECATED_ALERT
+---@param tag string Tag name
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return string value Returns the tag value, if any. Empty string otherwise.
+function GetPlayerRigTagValue(tag, playerId) return "" end
+
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	local inuse, r, g, b = GetPlayerColor()
+--- 	if inuse then
+--- 		DebugPrint("Player color: " .. r .. ", " .. g .. ", " .. b)
+--- 	else
+--- 		DebugPrint("Player color is not set")
+--- 	end
+--- end
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+---@return boolean inuse If color is used or not
+---@return number r Red channel value
+---@return number g Green channel value
+---@return number b Blue channel value
+function GetPlayerColor(playerId) return false, 0, 0, 0 end
+
+---
+--- Example:
+--- ```lua
+--- end
+--- function client.tick()
+--- 	local r, g, b = 1.0, 0.5, 0.2
+--- 	SetPlayerColor(r, g, b)
+--- 	DebugPrint("Set player color to: " .. r .. ", " .. g .. ", " .. b)
+--- end
+--- ```
+---@param r number Red value
+---@param g number Green value
+---@param b number Blue value
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function SetPlayerColor(r, g, b, playerId) end
+
+--- Apply damage to a player. Instigating player ID could be used to correctly
+--- attribute the "score" to a player.
+---
+--- Example:
+--- ```lua
+--- function server.tick(dt)
+--- 
+--- 	for player in Players() do
+--- 		if isOnFire(player) then
+--- 			-- Apply 20% of dt as damage to the player
+--- 			ApplyPlayerDamage(player, 0.2 * dt, "fire")
+--- 		end
+--- 	end
+--- 
+--- 	-- or
+--- 
+--- 	for player in Players() do
+--- 		if InputIsPressed("usetool", player) then
+--- 			for target in Players() do
+--- 				if target ~= player and isInRange(player, target) then
+--- 					-- Apply 50% damage to the target player
+--- 					ApplyPlayerDamage(target, 0.5, "tool", player)
+--- 				end
+--- 			end
+--- 		end
+--- 	end
+--- end
+--- ```
+---@param targetPlayerId number Target player ID
+---@param damage number Damage to apply to target player
+---@param cause? string The cause of damage
+---@param instigatingPlayerId? number Instigating player ID.
+function ApplyPlayerDamage(targetPlayerId, damage, cause, instigatingPlayerId) end
+
+--- Disable input for a player. Should be called from tick.
+---
+--- Example:
+--- ```lua
+--- -- Disable player 2 input as she/he is interacting with something.
+--- DisablePlayerInput(2)
+--- ```
+---@param player any Player to disable input for
+function DisablePlayerInput(player) end
+
+--- Disables the player from any interaction, physics and rendering.
+---
+--- Example:
+--- ```lua
+--- function updateFinalScoreboard()
+--- 	for i=1,#hiddenPlayers do
+--- 		DisablePlayer(hiddenPlayers[i])
+--- 	end
+--- end
+--- ```
+---@param playerId number Player to disable
+function DisablePlayer(playerId) end
+
+--- Check if player is actively disabled
+---
+--- Example:
+--- ```lua
+--- --check if disabled
+--- playerDisabled = IsPlayerDisabled(playerId)
+--- ```
+---@param playerId number Check if player is disabled
+function IsPlayerDisabled(playerId) end
+
+--- Disables the player from any incoming damage, such as explosions, gun shots, or drowning.
+---
+--- Example:
+--- ```lua
+--- function server.tick()
+--- 	for i=1,#invulnerablePlayers do
+--- 		DisablePlayerDamage(invulnerablePlayers[i])
+--- 	end
+--- end
+--- ```
+---@param playerId number Player for which damage should be disabled
+function DisablePlayerDamage(playerId) end
+
+---
+--- Example:
+--- ```lua
+--- function client.init()
 --- 	local snd = LoadSound("warning-beep.ogg")
 --- end
 --- ```
@@ -5464,7 +6642,7 @@ function LoadSound(path, nominalDistance) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local snd = LoadSound("warning-beep.ogg")
 --- 	UnloadSound(snd)
 --- end
@@ -5476,11 +6654,11 @@ function UnloadSound(handle) end
 --- Example:
 --- ```lua
 --- local loop
---- function init()
+--- function client.init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
 --- end
@@ -5494,11 +6672,11 @@ function LoadLoop(path, nominalDistance) return 0 end
 --- Example:
 --- ```lua
 --- local loop = -1
---- function init()
+--- function client.init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if loop ~= -1 then
 --- 		local pos = Vec(0, 0, 0)
 --- 		PlayLoop(loop, pos, 1.0)
@@ -5516,7 +6694,7 @@ function UnloadLoop(handle) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local loop = LoadLoop("radio/jazz.ogg")
 --- 	SetSoundLoopUser(loop, 0)
 --- end
@@ -5531,11 +6709,11 @@ function SetSoundLoopUser(handle, nominalDistance) return false end
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("warning-beep.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		local pos = Vec(0, 0, 0)
 --- 		PlaySound(snd, pos, 0.5)
@@ -5552,12 +6730,12 @@ function SetSoundLoopUser(handle, nominalDistance) return false end
 --- -- ...
 --- --[[
 --- 	local snd
---- 	function init()
+--- 	function client.init()
 --- 		snd = LoadSound("example-sound0.ogg")
 --- 	end
 --- 
 --- 	-- Plays a random sound from the loaded sound series
---- 	function tick()
+--- 	function client.tick()
 --- 		if trigSound then
 --- 			local pos = Vec(100, 0, 0)
 --- 			PlaySound(snd, pos, 0.5)
@@ -5577,11 +6755,11 @@ function PlaySound(handle, pos, volume, registerVolume, pitch) return 0 end
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("warning-beep.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		PlaySoundForUser(snd, 0)
 --- 	end
@@ -5598,12 +6776,12 @@ function PlaySound(handle, pos, volume, registerVolume, pitch) return 0 end
 --- 
 --- --[[
 --- 	local snd
---- 	function init()
+--- 	function client.init()
 --- 		snd = LoadSound("example-sound0.ogg")
 --- 	end
 --- 
 --- 	-- Plays a random sound from the loaded sound series
---- 	function tick()
+--- 	function client.tick()
 --- 		if trigSound then
 --- 			local pos = Vec(100, 0, 0)
 --- 			PlaySoundForUser(snd, 0, pos, 0.5)
@@ -5624,12 +6802,12 @@ function PlaySoundForUser(handle, user, pos, volume, registerVolume, pitch) retu
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
 --- 
 --- local sndPlay
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		if not IsSoundPlaying(sndPlay) then
 --- 			local pos = Vec(0, 0, 0)
@@ -5647,12 +6825,12 @@ function StopSound(handle) end
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
 --- 
 --- local sndPlay
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		if not IsSoundPlaying(sndPlay) then
 --- 			local pos = Vec(0, 0, 0)
@@ -5671,12 +6849,12 @@ function IsSoundPlaying(handle) return false end
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
 --- 
 --- local sndPlay
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		if not IsSoundPlaying(sndPlay) then
 --- 			local pos = Vec(0, 0, 0)
@@ -5695,12 +6873,12 @@ function GetSoundProgress(handle) return 0 end
 --- Example:
 --- ```lua
 --- local snd
---- function init()
+--- function client.init()
 --- 	snd = LoadSound("radio/jazz.ogg")
 --- end
 --- 
 --- local sndPlay
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		if not IsSoundPlaying(sndPlay) then
 --- 			local pos = Vec(0, 0, 0)
@@ -5720,11 +6898,11 @@ function SetSoundProgress(handle, progress) end
 --- Example:
 --- ```lua
 --- local loop
---- function init()
+--- function client.init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
 --- end
@@ -5739,11 +6917,11 @@ function PlayLoop(handle, pos, volume, registerVolume, pitch) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
 --- 	if InputPressed("interact") then
@@ -5758,11 +6936,11 @@ function GetSoundLoopProgress(handle) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	loop = LoadLoop("radio/jazz.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local pos = Vec(0, 0, 0)
 --- 	PlayLoop(loop, pos, 1.0)
 --- 	if InputPressed("interact") then
@@ -5777,7 +6955,7 @@ function SetSoundLoopProgress(handle, progress) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- ```
@@ -5787,11 +6965,11 @@ function PlayMusic(path) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 --- 		StopMusic()
 --- 	end
@@ -5802,11 +6980,11 @@ function StopMusic() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") and IsMusicPlaying() then
 --- 		DebugPrint("music is playing")
 --- 	end
@@ -5818,11 +6996,11 @@ function IsMusicPlaying() return false end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		SetMusicPaused(IsMusicPlaying())
 --- 	end
@@ -5834,11 +7012,11 @@ function SetMusicPaused(paused) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		DebugPrint(GetMusicProgress())
 --- 	end
@@ -5850,11 +7028,11 @@ function GetMusicProgress() return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 ---  		SetMusicProgress(GetMusicProgress() - 1.0)
 --- 	end
@@ -5867,11 +7045,11 @@ function SetMusicProgress(progress) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 ---  		SetMusicVolume(0.3)
 --- 	end
@@ -5884,11 +7062,11 @@ function SetMusicVolume(volume) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	PlayMusic("about.ogg")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputDown("interact") then
 ---  		SetMusicLowPass(0.6)
 --- 	end
@@ -5900,7 +7078,7 @@ function SetMusicLowPass(wet) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	arrow = LoadSprite("gfx/arrowdown.png")
 --- end
 --- ```
@@ -5912,11 +7090,11 @@ function LoadSprite(path) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	arrow = LoadSprite("gfx/arrowdown.png")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	--Draw sprite using transform
 --- 	--Size is two meters in width and height
 --- 	--Color is white, fully opaue
@@ -5945,15 +7123,15 @@ function DrawSprite(handle, transform, width, height, r, g, b, a, depthTest, add
 --- large		-- above debris threshold
 --- small		-- below debris threshold
 --- visible		-- only hit visible shapes
---- animator    -- part of an animator hierachy
---- player      -- part of an player animator hierachy
+--- animator	-- part of an animator hierarchy
+--- player      -- part of an player animator hierarchy
 --- tool        -- part of a tool
 --- ENDTABLE
 ---
 --- Example:
 --- ```lua
 --- --Raycast dynamic, physical objects above debris threshold, but not specific vehicle
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	QueryRequire("physical dynamic large")
 --- 	QueryRejectVehicle(vehicle)
@@ -5974,7 +7152,7 @@ function QueryRequire(layers) end
 --- large		-- above debris threshold
 --- small		-- below debris threshold
 --- visible		-- only hit visible shapes
---- animator    -- part of an animator hierachy
+--- animator    -- part of an animator hierarchy
 --- player      -- part of an player
 --- tool        -- part of a tool
 --- ENDTABLE
@@ -5982,7 +7160,7 @@ function QueryRequire(layers) end
 --- Example:
 --- ```lua
 --- --Raycast all the default layers and include the player layer.
---- function tick()
+--- function client.tick()
 --- 	QueryInclude("player")
 --- 	local hit, dist = QueryRaycast(Vec(0, 0, 0), Vec(1, 0, 0), 10)
 --- 	if hit then
@@ -5993,7 +7171,22 @@ function QueryRequire(layers) end
 ---@param layers string Space separate list of layers
 function QueryInclude(layers) end
 
-function QueryLayerFilter(...) end
+--- Set collision mask filter for the next query. Queries have a mask of 255 by default
+---
+--- Example:
+--- ```lua
+--- --Find the closest point on any shape (within 2 meters) to the player eye that the player can collide with.
+--- function client.tick()
+--- 	QueryRequire("physical")
+--- 	QueryCollisionMask(GetPlayerParam("CollisionMask"))
+--- 	local hit, hitpos = QueryClosestPoint(GetPlayerEyeTransform().pos, 2)
+--- 	if hit then
+--- 		DebugCross(hitpos)
+--- 	end
+--- end
+--- ```
+---@param mask number Mask bits (0-255)
+function QueryCollisionMask(mask) end
 
 --- Exclude animator from the next query
 ---@param handle number Animator handle
@@ -6003,7 +7196,7 @@ function QueryRejectAnimator(handle) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	QueryRequire("physical dynamic large")
 --- 	--Do not include vehicle in next raycast
@@ -6023,7 +7216,7 @@ function QueryRejectVehicle(vehicle) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = FindBody("body")
 --- 	QueryRequire("physical dynamic large")
 --- 	--Do not include body in next raycast
@@ -6041,7 +7234,7 @@ function QueryRejectBody(body) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local body = FindBody("body")
 --- 	QueryRequire("physical dynamic large")
 --- 	local bodies = {body}
@@ -6060,7 +7253,7 @@ function QueryRejectBodies(bodies) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local shape = FindShape("shape")
 --- 	QueryRequire("physical dynamic large")
 --- 	--Do not include shape in next raycast
@@ -6078,7 +7271,7 @@ function QueryRejectShape(shape) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local shape = FindShape("shape")
 --- 	QueryRequire("physical dynamic large")
 --- 	local shapes = {shape}
@@ -6093,13 +7286,24 @@ function QueryRejectShape(shape) end
 ---@param shapes any Array with shapes handles
 function QueryRejectShapes(shapes) end
 
+--- Exclude player from the next query
+---
+--- Example:
+--- ```lua
+--- --Do not include shape in next raycast
+--- QueryRejectPlayer(1)
+--- QueryRaycast(...)
+--- ```
+---@param playerId? number Player ID. On client, zero means client player. On server, zero means server (host) player.
+function QueryRejectPlayer(playerId) end
+
 --- This will perform a raycast or spherecast (if radius is more than zero) query.
 --- If you want to set up a filter for the query you need to do so before every call
 --- to this function.
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	QueryRejectVehicle(vehicle)
 --- 	--Raycast from a high point straight downwards, excluding a specific vehicle
@@ -6125,7 +7329,7 @@ function QueryRaycast(origin, direction, maxDist, radius, rejectTransparent) ret
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local playerCameraTransform = GetPlayerCameraTransform()
 --- 	local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
 --- 
@@ -6145,13 +7349,80 @@ function QueryRaycast(origin, direction, maxDist, radius, rejectTransparent) ret
 ---@return number joint Handle to hit joint of rope type
 function QueryRaycastRope(origin, direction, maxDist, radius) return false, 0, 0 end
 
+--- This will perform a raycast query looking for water.
+---
+--- Example:
+--- ```lua
+--- function client.init()
+--- 	--Raycast from a high point straight downwards, looking for water
+--- 	local hit, d = QueryRaycast(Vec(0, 100, 0), Vec(0, -1, 0), 100)
+--- 	if hit then
+--- 		DebugPrint(d)
+--- 	end
+--- end
+--- ```
+---@param origin TVec Raycast origin as world space vector
+---@param direction TVec Unit length raycast direction as world space vector
+---@param maxDist number Raycast maximum distance. Keep this as low as possible for good performance.
+---@return boolean hit True if raycast hit something
+---@return number dist Hit distance from origin
+---@return TVec hitPos Hit point as world space vector
+function QueryRaycastWater(origin, direction, maxDist) return false, 0, Vec() end
+
+--- 
+--- Test to see if a projectile would hit a shape or a player. It will return either a valid
+--- shape ID, player ID or none.
+---
+--- Example:
+--- ```lua
+--- -- Note: 'shape' and 'player' are IDs/handles (numbers), not object references.
+--- function server.tick()
+--- 
+--- 	for p in Players() do
+--- 		if InputPressed("usetool", p) then
+--- 
+--- 			local pos = GetPlayerEyeTransform(p).pos
+--- 			local dir = TransformToParentVec(GetPlayerEyeTransform(p), Vec(0, 0, -1))
+--- 
+--- 			local hit, dist, shape, player, hitFactor, normal = QueryShot(pos, dir, 100, 0, p)
+--- 			if hit then
+--- 				if player then
+--- 					DebugPrint("Hit player " .. GetPlayerName(player) .. " with damage factor " .. hitFactor)
+--- 					ApplyPlayerDamage(player, 0.2 * hitFactor, "SuperGun", p)
+--- 				elseif shape then
+--- 					DebugPrint("Hit shape " .. shape .. " at distance " .. dist)
+--- 					local body = GetShapeBody(shape)
+--- 					local impPos = VecAdd(pos, VecScale(dir, dist))
+--- 					local imp = Vec(100, 0, 0)
+--- 					ApplyBodyImpulse(body, impPos, imp)
+--- 				end
+--- 			else
+--- 				DebugPrint("No hit")
+--- 			end
+--- 		end
+--- 	end
+--- end
+--- ```
+---@param origin TVec Shot ray origin as world space vector
+---@param direction TVec Unit length direction as world space vector
+---@param maxDist number Shot maximum distance. Keep this as low as possible for good performance.
+---@param radius? number Ray thickness. Default zero.
+---@param playerId? number Instigating player, will be ignored during hit detection.
+---@return boolean didHit If it was a valid hit.
+---@return number dist Distance along direction where the hit was registered.
+---@return number shape Handle to hit shape, zero if it did not hit a shape
+---@return number playerId PlayerId of hit player, zero if it did not hit a player
+---@return number playerDamageFactor 1.0 for a hit on the torso, and less for a lower body hit. Applicable only if a player was hit. Use this to scale the damage.
+---@return any normal Normal vector of the hit
+function QueryShot(origin, direction, maxDist, radius, playerId) return false, 0, 0, 0, 0, nil end
+
 --- This will query the closest point to all shapes in the world. If you
 --- want to set up a filter for the query you need to do so before every call
 --- to this function.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = FindVehicle("vehicle")
 --- 	--Find closest point within 10 meters of {0, 5, 0}, excluding any point on myVehicle
 --- 	QueryRejectVehicle(vehicle)
@@ -6173,7 +7444,7 @@ function QueryClosestPoint(origin, maxDist) return false, Vec(), Vec(), 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local list = QueryAabbShapes(Vec(0, 0, 0), Vec(10, 10, 10))
 --- 	for i=1, #list do
 --- 		local shape = list[i]
@@ -6190,7 +7461,7 @@ function QueryAabbShapes(min, max) return nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local list = QueryAabbBodies(Vec(0, 0, 0), Vec(10, 10, 10))
 --- 	for i=1, #list do
 --- 		local body = list[i]
@@ -6211,7 +7482,7 @@ function QueryAabbBodies(min, max) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
 --- ```
@@ -6231,7 +7502,7 @@ function QueryPath(start, _end, maxDist, targetRadius, type) end
 --- ```lua
 --- local paths = {}
 --- 
---- function init()
+--- function server.init()
 --- 	paths[1] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc1", true), "transform").pos,
@@ -6257,7 +7528,7 @@ function CreatePathPlanner() return 0 end
 --- ```lua
 --- local paths = {}
 --- 
---- function init()
+--- function server.init()
 --- 	local id = CreatePathPlanner()
 --- 	DeletePathPlanner(id)
 --- 	-- now calling PathPlannerQuery for 'id' will result in an error
@@ -6273,7 +7544,7 @@ function DeletePathPlanner(id) end
 --- ```lua
 --- local paths = {}
 --- 
---- function init()
+--- function server.init()
 --- 	paths[1] = {
 --- 		id = CreatePathPlanner(),
 --- 		location = GetProperty(FindEntity("loc1", true), "transform").pos,
@@ -6302,7 +7573,7 @@ function PathPlannerQuery(id, start, _end, maxDist, targetRadius, type) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- 	AbortPath()
 --- end
@@ -6320,11 +7591,11 @@ function AbortPath(id) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
 --- 
---- function tick()
+--- function server.tick()
 --- 	local s = GetPathState()
 --- 	if s == "done" then
 --- 		DebugPrint("done")
@@ -6341,11 +7612,11 @@ function GetPathState(id) return "" end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
 --- 
---- function tick()
+--- function server.tick()
 --- 	local s = GetPathState()
 --- 	if s == "done" then
 --- 		DebugPrint("done " .. GetPathLength())
@@ -6362,11 +7633,11 @@ function GetPathLength(id) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	QueryPath(Vec(-10, 0, 0), Vec(10, 0, 0))
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	local d = 0
 --- 	local l = GetPathLength()
 --- 	while d < l do
@@ -6383,7 +7654,7 @@ function GetPathPoint(dist, id) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vol, pos = GetLastSound()
 --- 	if vol > 0 then
 --- 		DebugPrint(vol .. " " .. VecStr(pos))
@@ -6397,7 +7668,7 @@ function GetLastSound() return 0, Vec() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local wet, d = IsPointInWater(Vec(10, 0, 0))
 --- 	if wet then
 --- 		DebugPrint("point" .. d .. " meters into water")
@@ -6414,7 +7685,7 @@ function IsPointInWater(point) return false, 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local v = GetWindVelocity(Vec(0, 10, 0))
 --- 	DebugPrint(VecStr(v))
 --- end
@@ -6428,7 +7699,7 @@ function GetWindVelocity(point) return Vec() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	ParticleReset()
 --- end
 --- ```
@@ -6438,7 +7709,7 @@ function ParticleReset() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	ParticleType("smoke")
 --- end
 --- ```
@@ -6448,7 +7719,7 @@ function ParticleType(type) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Smoke particle
 --- 	ParticleTile(0)
 --- 
@@ -6463,7 +7734,7 @@ function ParticleTile(type) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Constant red
 --- 	ParticleColor(1,0,0)
 --- 
@@ -6483,7 +7754,7 @@ function ParticleColor(r0, g0, b0, r1, g1, b1) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Constant radius 0.4 meters
 --- 	ParticleRadius(0.4)
 --- 
@@ -6502,7 +7773,7 @@ function ParticleRadius(r0, r1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Interpolate from opaque to transparent
 --- 	ParticleAlpha(1.0, 0.0)
 --- end
@@ -6518,7 +7789,7 @@ function ParticleAlpha(a0, a1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Move particles slowly upwards
 --- 	ParticleGravity(2)
 --- end
@@ -6535,7 +7806,7 @@ function ParticleGravity(g0, g1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Slow down fast moving particles
 --- 	ParticleDrag(0.5)
 --- end
@@ -6551,7 +7822,7 @@ function ParticleDrag(d0, d1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Highly emissive at start, not emissive at end
 --- 	ParticleEmissive(5, 0)
 --- end
@@ -6567,7 +7838,7 @@ function ParticleEmissive(d0, d1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Rotate fast at start and slow at end
 --- 	ParticleRotation(10, 1)
 --- end
@@ -6584,7 +7855,7 @@ function ParticleRotation(r0, r1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Stretch particle along direction of motion
 --- 	ParticleStretch(1.0)
 --- end
@@ -6600,7 +7871,7 @@ function ParticleStretch(s0, s1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Make particles stick to objects
 --- 	ParticleSticky(0.5)
 --- end
@@ -6618,7 +7889,7 @@ function ParticleSticky(s0, s1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	--Disable collisions
 --- 	ParticleCollide(0)
 --- 
@@ -6641,7 +7912,7 @@ function ParticleCollide(c0, c1, interpolation, fadein, fadeout) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	--Fire extinguishing particle
 --- 	ParticleFlags(256)
 --- 	SpawnParticle(Vec(0, 10, 0), -0.1, math.random() + 1)
@@ -6658,7 +7929,7 @@ function ParticleFlags(bitmask) end
 --- local q = 1.0
 --- local w = 1.0
 --- 
---- function tick()
+--- function client.tick()
 --- 	ParticleRadius(0.02+q*0.05, 0.01, "linear", 0.02, 0.1)
 --- 	ParticleStretch(2)
 --- 	ParticleSticky(0.02)
@@ -6678,7 +7949,7 @@ function ParticleOrientation(flags) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	ParticleReset()
 --- 	ParticleType("smoke")
 --- 	ParticleColor(0.7, 0.6, 0.5)
@@ -6697,7 +7968,7 @@ function SpawnParticle(pos, velocity, lifetime) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	Spawn("MOD/prefab/mycar.xml", Transform(Vec(0, 5, 0)))
 --- 	Spawn("&lt;voxbox size='10 10 10' prop='true' material='wood'/&gt;", Transform(Vec(0, 10, 0)))
 --- end
@@ -6713,7 +7984,7 @@ function Spawn(xml, transform, allowStatic, jointExisting) return nil end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	Spawn("MOD/prefab/mycar.xml", "some_vox_layer", Transform(Vec(0, 5, 0)))
 --- 	Spawn("&lt;voxbox size='10 10 10' prop='true' material='wood'/&gt;", "some_vox_layer", Transform(Vec(0, 10, 0)))
 --- end
@@ -6726,14 +7997,65 @@ function Spawn(xml, transform, allowStatic, jointExisting) return nil end
 ---@return any entities Indexed table with handles to all spawned entities
 function SpawnLayer(xml, layer, transform, allowStatic, jointExisting) return nil end
 
---- Fire projectile. Type can be one of "bullet", "rocket", "gun" or "shotgun".
---- For backwards compatilbility, type also accept a number, where 1 is same as "rocket" and anything else "bullet"
---- Note that this function will only spawn the projectile, not make any sound
---- Also note that "bullet" and "rocket" are the only projectiles that can hurt the player.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.init()
+--- 	SpawnTool("sledge", Transform(Vec(0, 5, 0)))
+--- end
+--- ```
+---@param id string Tool ID
+---@param transform TTransform Spawn transform
+---@param allowStatic? boolean Allow spawning static shapes and bodies (default false)
+---@param voxScale? number Applies a scale to voxels (default 1.0)
+---@return any entities Indexed table with handles to all spawned entities
+function SpawnTool(id, transform, allowStatic, voxScale) return nil end
+
+--- 
+--- Adds a marker on the map with the provided info.
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	AddMapMarker(1, "bonusTarget", "Bonus Target", "One of a kind", Vec(30, 40, 50), Vec(1,0,0), "MOD/gfx/bonus_info.png", "MOD/gfx/bonus_icon.png")
+--- end
+--- ```
+---@param id number An id to identify the marker, typically player ID or body ID.
+---@param tag string A tag to help distinguish markers.
+---@param name string Name of the marker.
+---@param category string Used to group markers together in map target list.
+---@param showLabelOnMap boolean name label will be shown on map if true
+---@param info string Additional information about the marker, displayed when selected.
+---@param pos any The world position of the marker.
+---@param color any The color of the marker, as a Vec table (e.g. Vec(1, 0, 0) for red)
+---@param infoImage? string Path to the image to be displayed in the info section.
+---@param dotIcon? string Path to the image used to represent the marker on map.
+function AddMapMarker(id, tag, name, category, showLabelOnMap, info, pos, color, infoImage, dotIcon) end
+
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	AddMapMarker(1, "bonusTarget", "Bonus Target", "One of a kind", Vec(30, 40, 50), Vec(1,0,0), "MOD/gfx/bonus_info.png", "MOD/gfx/bonus_icon.png")
+--- 
+--- 	local id, tag = SelectedMapMarker()
+--- 
+--- 	if id == 1 and tag == "bonusTarget" then
+--- 		DebugPrint("You selected the Bonus Target on the map!")
+--- 	end
+--- end
+--- ```
+---@return number id id of map marker that was selected this tick.
+---@return string tag the corresponding tag.
+function SelectedMapMarker() return 0, "" end
+
+--- Fire projectile. Type can be one of "bullet", "rocket", "gun" or "shotgun".
+--- For backwards compatilbility, type also accept a number, where 1 is same as "rocket" and anything else "bullet"
+--- Note that this function will only spawn the projectile, not make any sound.
+---
+--- Example:
+--- ```lua
+--- function server.tick()
 --- 	Shoot(Vec(0, 10, 0), Vec(0, -1, 0), "shotgun")
 --- end
 --- ```
@@ -6742,13 +8064,14 @@ function SpawnLayer(xml, layer, transform, allowStatic, jointExisting) return ni
 ---@param type? string Shot type, see description, default is "bullet"
 ---@param strength? number Strength scaling, default is 1.0
 ---@param maxDist? number Maximum distance, default is 100.0
-function Shoot(origin, direction, type, strength, maxDist) end
+---@param playerId? number Instigating player. Can be skipped for non-player shots (helicopters etc.)
+function Shoot(origin, direction, type, strength, maxDist, playerId) end
 
 --- Tint the color of objects within radius to either black or yellow.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	Paint(Vec(0, 2, 0), 5.0, "spraycan")
 --- end
 --- ```
@@ -6762,7 +8085,7 @@ function Paint(origin, radius, type, probability) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	PaintRGBA(Vec(0, 5, 0), 5.5, 1.0, 0.0, 0.0)
 --- end
 --- ```
@@ -6780,7 +8103,7 @@ function PaintRGBA(origin, radius, red, green, blue, alpha, probability) end
 ---
 --- Example:
 --- ```lua
---- function update()
+--- function server.update()
 --- 	local body = FindBody("body")
 --- 	local pos = GetBodyTransform(body).pos
 --- 	local hit, point, normal, shape = QueryClosestPoint(pos, 0.3)
@@ -6800,7 +8123,7 @@ function AddSnow(shape, point, size) return false end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	MakeHole(Vec(0, 0, 0), 5.0, 1.0)
 --- end
 --- ```
@@ -6815,7 +8138,7 @@ function MakeHole(position, r0, r1, r2, silent) return 0 end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	Explosion(Vec(0, 5, 0), 1)
 --- end
 --- ```
@@ -6826,7 +8149,7 @@ function Explosion(pos, size) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	SpawnFire(Vec(0, 2, 0))
 --- end
 --- ```
@@ -6836,7 +8159,7 @@ function SpawnFire(pos) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local c = GetFireCount()
 --- 	DebugPrint("Fire count " .. c)
 --- end
@@ -6847,7 +8170,7 @@ function GetFireCount() return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local hit, pos = QueryClosestFire(GetPlayerTransform().pos, 5.0)
 --- 	if hit then
 --- 		--There is a fire within 5 meters to the player. Mark it with a debug cross.
@@ -6864,7 +8187,7 @@ function QueryClosestFire(origin, maxDist) return false, Vec() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local count = QueryAabbFireCount(Vec(0,0,0), Vec(10,10,10))
 --- 	DebugPrint(count)
 --- end
@@ -6877,7 +8200,7 @@ function QueryAabbFireCount(min, max) return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	local removedCount= RemoveAabbFires(Vec(0,0,0), Vec(10,10,10))
 --- 	DebugPrint(removedCount)
 --- end
@@ -6890,7 +8213,7 @@ function RemoveAabbFires(min, max) return 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local t = GetCameraTransform()
 --- 	DebugPrint(TransformStr(t))
 --- end
@@ -6905,7 +8228,7 @@ function GetCameraTransform() return Transform() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	SetCameraTransform(Transform(Vec(0, 10, 0), QuatEuler(0, 90, 0)))
 --- end
 --- ```
@@ -6919,13 +8242,13 @@ function SetCameraTransform(transform, fov) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if useViewFinder then
 --- 		RequestFirstPerson(true)
 --- 	end
 --- end
 --- 
---- function draw()
+--- function client.draw()
 --- 	if useViewFinder and !GetBool("game.thirdperson") then
 --- 		-- Draw view finder overlay
 --- 	end
@@ -6939,7 +8262,7 @@ function RequestFirstPerson(transition) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	if useThirdPerson then
 --- 		RequestThirdPerson(true)
 --- 	end
@@ -6957,7 +8280,7 @@ function SaveCameraOverrideTransform() end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local tPosX = Transform(Vec(math.sin(GetTime()*3.0) * 0.2, 0, 0))
 --- 	local tPosY = Transform(Vec(0, math.cos(GetTime()*3.0) * 0.2, 0), QuatAxisAngle(Vec(0, 0, 0)))
 --- 
@@ -6976,7 +8299,7 @@ function SetCameraOffsetTransform(transform, stackable) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	local vehicle = GetPlayerVehicle()
 --- 	if vehicle ~= 0 then
 --- 		AttachCameraTo(GetVehicleBody(vehicle))
@@ -6998,12 +8321,12 @@ function AttachCameraTo(handle, ignoreRotation) end
 --- ```lua
 --- local body_1 = 0
 --- local body_2 = 0
---- function init()
+--- function client.init()
 --- 	body_1 = FindBody("body_1")
 --- 	body_2 = FindBody("body_2")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	SetPivotClipBody(body_1, 0) -- this overload should be called once and
 --- 	-- only once per frame to take effect
 --- 	SetPivotClipBody(body_2)
@@ -7017,7 +8340,7 @@ function SetPivotClipBody(bodyHandle, mainShapeIdx) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	ShakeCamera(0.5)
 --- end
 --- ```
@@ -7028,7 +8351,7 @@ function ShakeCamera(strength) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	SetCameraFov(60)
 --- end
 --- ```
@@ -7039,7 +8362,7 @@ function SetCameraFov(degrees) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	--Set depth of field to 10 meters
 --- 	SetCameraDof(10)
 --- end
@@ -7048,12 +8371,24 @@ function SetCameraFov(degrees) end
 ---@param amount? number Optional amount of blur (default 1.0)
 function SetCameraDof(distance, amount) end
 
+--- Must be called every frame that one would like to alter this effect. Client-side only
+---
+--- Example:
+--- ```lua
+--- function client.tick()
+--- 	-- Don't show the blurry vision until the player's health drops below 0.4
+--- 	SetLowHealthBlurThreshold(0.4)
+--- end
+--- ```
+---@param health number health value where anything lower results in blurred vision
+function SetLowHealthBlurThreshold(health) end
+
 --- Add a temporary point light to the world for this frame. Call continuously
 --- for a steady light.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	--Pulsating, yellow light above world origo
 --- 	local intensity = 3 + math.sin(GetTime())
 --- 	PointLight(Vec(0, 5, 0), 1, 1, 0, intensity)
@@ -7075,9 +8410,9 @@ function PointLight(pos, r, g, b, intensity) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
 --- 	--Slow down time when holding down a key
---- 	if InputDown('t') then
+--- 	if InputDown('t', hostPlayerId) then
 --- 		SetTimeScale(0.2)
 --- 	end
 --- end
@@ -7090,7 +8425,7 @@ function SetTimeScale(scale) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetEnvironmentDefault()
 --- end
 --- ```
@@ -7101,7 +8436,7 @@ function SetEnvironmentDefault() end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function server.init()
 --- 	SetEnvironmentDefault()
 --- 	SetEnvironmentProperty("skybox", "cloudy.dds")
 --- 	SetEnvironmentProperty("rain", 0.7)
@@ -7121,7 +8456,7 @@ function SetEnvironmentProperty(name, value0, value1, value2, value3) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	local skyboxPath = GetEnvironmentProperty("skybox")
 --- 	local rainValue = GetEnvironmentProperty("rain")
 --- 	local r,g,b = GetEnvironmentProperty("fogcolor")
@@ -7144,7 +8479,7 @@ function GetEnvironmentProperty(name) return nil, nil, nil, nil, nil end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	SetPostProcessingProperty("saturation", 0.4)
 --- 	SetPostProcessingProperty("colorbalance", 1.3, 1.0, 0.7)
 --- 	SetPostProcessingDefault()
@@ -7158,7 +8493,7 @@ function SetPostProcessingDefault() end
 --- Example:
 --- ```lua
 --- --Sepia post processing
---- function tick()
+--- function client.tick()
 --- 	SetPostProcessingProperty("saturation", 0.4)
 --- 	SetPostProcessingProperty("colorbalance", 1.3, 1.0, 0.7)
 --- end
@@ -7174,7 +8509,7 @@ function SetPostProcessingProperty(name, value0, value1, value2) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	SetPostProcessingProperty("saturation", 0.4)
 --- 	SetPostProcessingProperty("colorbalance", 1.3, 1.0, 0.7)
 --- 	local saturation = GetPostProcessingProperty("saturation")
@@ -7193,7 +8528,18 @@ function GetPostProcessingProperty(name) return 0, 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- 
+--- function server.tick()
+--- 	--Draw white debug line
+--- 	DrawLine(Vec(0, 0, 0), Vec(-10, 5, -10))
+--- 
+--- 	--Draw red debug line
+--- 	DrawLine(Vec(0, 0, 0), Vec(10, 5, 10), 1, 0, 0)
+--- end
+--- 
+--- -- Or
+--- 
+--- function client.tick()
 --- 	--Draw white debug line
 --- 	DrawLine(Vec(0, 0, 0), Vec(-10, 5, -10))
 --- 
@@ -7213,13 +8559,25 @@ function DrawLine(p0, p1, r, g, b, a) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- 
+--- function server.tick()
 --- 	--Draw white debug line
 --- 	DebugLine(Vec(0, 0, 0), Vec(-10, 5, -10))
 --- 
 --- 	--Draw red debug line
 --- 	DebugLine(Vec(0, 0, 0), Vec(10, 5, 10), 1, 0, 0)
 --- end
+--- 
+--- -- Or
+--- 
+--- function client.tick()
+--- 	--Draw white debug line
+--- 	DebugLine(Vec(0, 0, 0), Vec(-10, 5, -10))
+--- 
+--- 	--Draw red debug line
+--- 	DebugLine(Vec(0, 0, 0), Vec(10, 5, 10), 1, 0, 0)
+--- end
+--- 
 --- ```
 ---@param p0 TVec World space point as vector
 ---@param p1 TVec World space point as vector
@@ -7233,7 +8591,11 @@ function DebugLine(p0, p1, r, g, b, a) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
+--- 	DebugCross(Vec(10, 5, 5))
+--- end
+--- -- Or
+--- function client.tick()
 --- 	DebugCross(Vec(10, 5, 5))
 --- end
 --- ```
@@ -7248,7 +8610,11 @@ function DebugCross(p0, r, g, b, a) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function server.tick()
+--- 	DebugTransform(GetPlayerCameraTransform(), 0.5)
+--- end
+--- -- Or
+--- function client.tick()
 --- 	DebugTransform(GetPlayerCameraTransform(), 0.5)
 --- end
 --- ```
@@ -7264,7 +8630,7 @@ function DebugTransform(transform, scale) end
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugWatch("Player camera transform", GetPlayerCameraTransform())
 --- 
 --- 	local anyTable = {
@@ -7282,7 +8648,7 @@ function DebugTransform(transform, scale) end
 --- end
 --- ```
 ---@param name string Name
----@param value string Value
+---@param value any Value
 ---@param lineWrapping? boolean True if you need to wrap Table lines. Works only with tables.
 function DebugWatch(name, value, lineWrapping) end
 
@@ -7291,7 +8657,7 @@ function DebugWatch(name, value, lineWrapping) end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	DebugPrint("time")
 --- 
 --- 	DebugPrint(GetPlayerCameraTransform())
@@ -7314,7 +8680,11 @@ function DebugWatch(name, value, lineWrapping) end
 ---@param lineWrapping? boolean True if you need to wrap Table lines. Works only with tables.
 function DebugPrint(message, lineWrapping) end
 
+function IsRunningOnClient(...) end
+
 --- Binds the callback function on the event
+--- This function is deprecated. Use the event system instead.
+--- DEPRECATED_ALERT
 ---
 --- Example:
 --- ```lua
@@ -7322,7 +8692,7 @@ function DebugPrint(message, lineWrapping) end
 --- 	DebugPrint("langauageChanged")
 --- end
 --- 
---- function init()
+--- function client.init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	TriggerEvent("LanguageChanged")
 --- end
@@ -7332,6 +8702,8 @@ function DebugPrint(message, lineWrapping) end
 function RegisterListenerTo(eventName, listenerFunction) end
 
 --- Unbinds the callback function from the event
+--- This function is deprecated. Use the event system instead.
+--- DEPRECATED_ALERT
 ---
 --- Example:
 --- ```lua
@@ -7339,7 +8711,7 @@ function RegisterListenerTo(eventName, listenerFunction) end
 --- 	DebugPrint("langauageChanged")
 --- end
 --- 
---- function init()
+--- function client.init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	UnregisterListener("LanguageChanged", "onLangauageChanged")
 --- 	TriggerEvent("LanguageChanged")
@@ -7350,6 +8722,8 @@ function RegisterListenerTo(eventName, listenerFunction) end
 function UnregisterListener(eventName, listenerFunction) end
 
 --- Triggers an event for all registered listeners
+--- This function is deprecated. Use the event system instead.
+--- DEPRECATED_ALERT
 ---
 --- Example:
 --- ```lua
@@ -7357,7 +8731,7 @@ function UnregisterListener(eventName, listenerFunction) end
 --- 	DebugPrint("langauageChanged")
 --- end
 --- 
---- function init()
+--- function client.init()
 --- 	RegisterListenerTo("LanguageChanged", "onLangauageChanged")
 --- 	UnregisterListener("LanguageChanged", "onLangauageChanged")
 --- 	TriggerEvent("LanguageChanged")
@@ -7371,11 +8745,11 @@ function TriggerEvent(eventName, args) end
 --- Example:
 --- ```lua
 --- -- Rumble with gun Haptic effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
 --- 	end
@@ -7389,11 +8763,11 @@ function LoadHaptic(filepath) return "" end
 --- Example:
 --- ```lua
 --- -- Rumble with gun Haptic effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = CreateHaptic(1, 1, 0, 0)
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
 --- 	end
@@ -7411,11 +8785,11 @@ function CreateHaptic(leftMotorRumble, rightMotorRumble, leftTriggerRumble, righ
 --- Example:
 --- ```lua
 --- -- Rumble with gun Haptic effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if trigHaptic then
 --- 		PlayHaptic(haptic_effect, 1)
 --- 	end
@@ -7431,11 +8805,11 @@ function PlayHaptic(handle, amplitude) end
 --- ```lua
 --- -- Rumble with gun Haptic effect
 --- local haptic_effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if InputPressed("interact") then
 --- 		PlayHapticDirectional(haptic_effect, Vec(-1, 0, 0), 1)
 --- 	end
@@ -7451,11 +8825,11 @@ function PlayHapticDirectional(handle, direction, amplitude) end
 --- ```lua
 --- -- Rumble infinitely
 --- local haptic_effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 --- 	if not HapticIsPlaying(haptic_effect) then
 --- 		PlayHaptic(haptic_effect, 1)
 --- 	end
@@ -7471,7 +8845,7 @@ function HapticIsPlaying(handle) return false end
 ---
 --- Example:
 --- ```lua
---- function init()
+--- function client.init()
 --- 	RegisterTool("minigun", "loc@MINIGUN", "MOD/vox/minigun.vox")
 --- 	toolHaptic = LoadHaptic("MOD/haptic/tool.xml")
 --- 	SetToolHaptic("minigun", toolHaptic)
@@ -7487,11 +8861,11 @@ function SetToolHaptic(id, handle, amplitude) end
 --- ```lua
 --- -- Rumble infinitely
 --- local haptic_effect
---- function init()
+--- function client.init()
 --- 	haptic_effect = LoadHaptic("haptic/gun_fire.xml")
 --- end
 --- 
---- function tick()
+--- function client.tick()
 ---     if InputDown("interact") then
 ---         StopHaptic(haptic_effect)
 ---     elseif not HapticIsPlaying(haptic_effect) then
@@ -7503,21 +8877,6 @@ function SetToolHaptic(id, handle, amplitude) end
 function StopHaptic(handle) end
 
 function GetScriptId(...) end
-
---- Works only for vehicles with 'customhealth' tag. 'customhealth' disables the common vehicles damage system.
---- So this function needed for custom vehicle damage systems.
----
---- Example:
---- ```lua
---- function tick()
---- 	if InputPressed("usetool") then
---- 		SetVehicleHealth(FindVehicle("car", true), 0.0)
---- 	end
---- end
---- ```
----@param vehicle number Vehicle handle
----@param health number Set vehicle health (between zero and one)
-function SetVehicleHealth(vehicle, health) end
 
 ---@param trail any trail structure
 ---@param dt number delta time
@@ -7551,26 +8910,6 @@ function GetActionByButton(...) end
 function GetButtonsByAction(...) end
 
 function GetKeyByAction(...) end
-
---- This will perform a raycast query looking for water.
----
---- Example:
---- ```lua
---- function init()
---- 	--Raycast from a high point straight downwards, looking for water
---- 	local hit, d = QueryRaycast(Vec(0, 100, 0), Vec(0, -1, 0), 100)
---- 	if hit then
---- 		DebugPrint(d)
---- 	end
---- end
---- ```
----@param origin TVec Raycast origin as world space vector
----@param direction TVec Unit length raycast direction as world space vector
----@param maxDist number Raycast maximum distance. Keep this as low as possible for good performance.
----@return boolean hit True if raycast hit something
----@return number dist Hit distance from origin
----@return TVec hitPos Hit point as world space vector
-function QueryRaycastWater(origin, direction, maxDist) return false, 0, Vec() end
 
 function TornadoSpawnParticlesCPP(...) end
 
@@ -7613,7 +8952,7 @@ function FxEmitSmokeCPP(...) end
 ---
 --- Example:
 --- ```lua
---- function tick(dt)
+--- function server.tick(dt)
 --- 	if InputDown("usetool") then
 --- 		local playerCameraTransform = GetPlayerCameraTransform()
 --- 		local dir = TransformToParentVec(playerCameraTransform, Vec(0, 0, -1))
@@ -7635,11 +8974,40 @@ function FxEmitSmokeCPP(...) end
 ---@param amount number amount of heat
 function AddHeat(shape, pos, amount) end
 
+--- Returns the area of the boundary if present, otherwise the xz-area of the world body aabb.
+---
+--- Example:
+--- ```lua
+--- function GenerateRandomPointInLevel()
+--- 	aabbMin, aabbMax = GetBoundaryBounds()
+--- 	local x = GetRandomFloat(aabbMin[1], aabbMax[1])
+--- 	local z = GetRandomFloat(aabbMin[3], aabbMax[3])
+--- 	return x,z
+--- end
+--- ```
+---@return any area Number representing the area of the boundary.
+function GetBoundaryArea() return nil end
+
+--- return the aabb bounds for the boundary if present, otherwise the boundary for the world body.
+---
+--- Example:
+--- ```lua
+--- function GenerateRandomPointInLevel()
+--- 	aabbMin, aabbMax = GetBoundaryBounds()
+--- 	local x = GetRandomFloat(aabbMin[1], aabbMax[1])
+--- 	local z = GetRandomFloat(aabbMin[3], aabbMax[3])
+--- 	return x,z
+--- end
+--- ```
+---@return any min Vector representing the AABB lower bound
+---@return any max Vector representing the AABB upper bound
+function GetBoundaryBounds() return nil, nil end
+
 --- Returns the gravity value on the scene.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugPrint(VecStr(GetGravity()))
 --- end
 --- ```
@@ -7653,8 +9021,8 @@ function GetGravity() return Vec() end
 --- ```lua
 --- local isMoonGravityEnabled = false
 --- 
---- function tick()
---- 	if InputPressed("g") then
+--- function server.tick()
+--- 	if InputPressed("g", hostPlayerId) then
 --- 		isMoonGravityEnabled = not isMoonGravityEnabled
 --- 		if isMoonGravityEnabled then
 --- 			SetGravity(Vec(0, -1.6, 0))
@@ -7667,63 +9035,25 @@ function GetGravity() return Vec() end
 ---@param vec TVec Gravity vector
 function SetGravity(vec) end
 
---- Sets the base orientation when gravity is disabled with SetGravity.
---- This will determine what direction is "up", "right" and "forward" as
---- gravity is completely turned off.
----
---- Example:
---- ```lua
---- function tick()
---- 	SetGravity(Vec(0, 0, 0))
---- 
---- 	-- Turn player upside-down.
---- 	local base = QuatAxisAngle(Vec(1,0,0), 180)
---- 	SetPlayerOrientation(base)
---- end
---- ```
----@param orientation any Base orientation
-function SetPlayerOrientation(orientation) end
-
---- Gets the base orientation of the player.
---- This can be used to retrieve the base orientation of the player when using a custom gravity vector.
----
---- Example:
---- ```lua
---- function tick(dt)
---- 	SetGravity(Vec(0, 0, 0))
---- 	-- Spin the player if using zero gravity
---- 	local base = QuatRotateQuat(GetPlayerOrientation(), QuatAxisAngle(Vec(1,0,0), dt))
---- 	SetPlayerOrientation(base)
---- end
---- ```
----@return TQuat orientation Player base orientation
-function GetPlayerOrientation() return Quat() end
-
 function SetMapOrientation(...) end
-
---- Returns the current "up" vector derived from the player's base orientation.
---- This can be used to retrieve the player's up vector when using a custom gravity vector.
----
---- Example:
---- ```lua
---- function tick(dt)
---- 	local up = GetPlayerUp()
---- end
---- ```
----@return TVec up Player up vector
-function GetPlayerUp() return Vec() end
 
 --- Returns the fps value based on general game timestep.
 --- It doesn't depend on whether it is called from tick or update.
 ---
 --- Example:
 --- ```lua
---- function tick()
+--- function client.tick()
 --- 	DebugWatch("fps", GetFps())
 --- end
 --- ```
 ---@return number fps Frames per second
 function GetFps() return 0 end
+
+function IsTestingMp(...) end
+
+function KillClient(...) end
+
+function RejoinClient(...) end
 --- Calling this function will disable game input, bring up the mouse pointer
 --- and allow Ui interaction with the calling script without pausing the game.
 --- This can be useful to make interactive user interfaces from scripts while
@@ -7839,7 +9169,7 @@ function UiColorFilter(r, g, b, a) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 ---         UiFont("bold.ttf", 44)
 --- 		UiTranslate(100, 100)
@@ -7895,7 +9225,7 @@ function UiScale(x, y) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		UiScale(2)
 --- 		x, y = UiGetScale()
@@ -7912,7 +9242,7 @@ function UiGetScale() return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiTranslate(200, 200)
 ---     UiPush()
 ---         UiClipRect(100, 50)
@@ -7951,7 +9281,7 @@ function UiWindow(width, height, clip, inherit) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		UiWindow(400, 200)
 --- 		tl_x, tl_y, br_x, br_y = UiGetCurrentWindow()
@@ -7969,7 +9299,7 @@ function UiGetCurrentWindow() return 0, 0, 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		UiWindow(400, 200)
 --- 		DebugPrint("point 1: " .. tostring(UiIsInCurrentWindow(200, 100)))
@@ -7986,7 +9316,7 @@ function UiIsInCurrentWindow(x, y) return false end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiTranslate(200, 200)
 ---     UiPush()
 ---         UiClipRect(150, 150)
@@ -8010,7 +9340,7 @@ function UiIsRectFullyClipped(w, h) return false end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiPush()
 ---         UiTranslate(200, 200)
 ---         UiClipRect(150, 150)
@@ -8032,7 +9362,7 @@ function UiIsInClipRegion(x, y) return false end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiPush()
 ---         UiTranslate(200, 200)
 ---         UiClipRect(150, 150)
@@ -8057,7 +9387,7 @@ function UiIsFullyClipped(w, h) return false end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	local x0, y0, x1, y1 = UiSafeMargins()
 --- 	UiTranslate(x0, y0)
 --- 	UiWindow(x1-x0, y1-y0, true)
@@ -8075,7 +9405,7 @@ function UiSafeMargins() return 0, 0, 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 ---         local canvas = UiCanvasSize()
 ---         UiWindow(canvas.w, canvas.h)
@@ -8232,7 +9562,7 @@ function UiGetMousePos() return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	local x, y = UiGetCanvasMousePos()
 --- 	DebugPrint("x :" .. x .. " y:" .. y)
 --- end
@@ -8298,7 +9628,7 @@ function UiGetRelativePos(...) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiTranslate(100, 50)
 ---     x, y = UiGetCursorPos()
 ---     DebugPrint("x: " .. x .. "; y: " .. y)
@@ -8443,7 +9773,7 @@ function UiTextDisableWildcards(disable) end
 ---     end
 --- end
 --- 
---- function draw()
+--- function client.draw()
 ---     UiFont("regular.ttf", 22)
 ---     UiTranslate(100, 100)
 --- 
@@ -8506,7 +9836,7 @@ function UiMeasureText(space, text_locale) return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     DebugPrint(UiGetSymbolsCount("Hello world!"))
 --- end
 --- ```
@@ -8518,7 +9848,7 @@ function UiGetSymbolsCount(text) return 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     DebugPrint(UiTextSymbolsSub("Hello world", 1, 5))
 --- end
 --- ```
@@ -8549,7 +9879,7 @@ function UiWordWrap(width) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiTextLineSpacing(10)
 --- 	UiWordWrap(200)
 --- 	UiText("TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT")
@@ -8706,7 +10036,16 @@ function UiCircleOutline(radius, thickness) end
 ---@param path string Path to image (PNG or JPG format)
 function UiFillImage(path) end
 
-function UiRectBgBlur(...) end
+--- Perform a gaussian blur on the background and applies the blur to any following calls to UiRect,
+--- UiRectOutline, UiRoundedRect, UiCircle, UiCircleOutline, UiRoundedRectOutline.
+---
+--- Example:
+--- ```lua
+--- UiBackgroundBlur(1.0)
+--- UiRect(300, 300)
+--- ```
+---@param amount number Blur amount (0.0 to 1.0)
+function UiBackgroundBlur(amount) end
 
 --- Draw image at cursor position. If x0, y0, x1, y1 is provided a cropped version
 --- will be drawn in that coordinate range.
@@ -8739,7 +10078,7 @@ function UiImageOverlayAlpha(...) end
 --- ```lua
 --- local image = "gfx/cursor.png"
 --- 
---- function draw()
+--- function client.draw()
 ---     UiTranslate(300, 300)
 --- 	if UiHasImage(image) then
 --- 		if InputDown("interact") then
@@ -8758,7 +10097,7 @@ function UiUnloadImage(path) end
 --- ```lua
 --- local image = "gfx/circle.png"
 --- 
---- function draw()
+--- function client.draw()
 --- 	if UiHasImage(image) then
 --- 		DebugPrint("image " .. image .. " exists")
 --- 	end
@@ -8984,7 +10323,7 @@ function UiSlider(path, axis, current, min, max) return 0, false end
 --- ```lua
 --- local slider = 0
 --- 
---- function draw()
+--- function client.draw()
 ---     local thumbPath = "common/thumb_I218_249_2430_49029.png"
 ---     UiTranslate(200, 200)
 ---     UiPush()
@@ -9020,7 +10359,7 @@ function UiSliderHoverColorFilter(r, g, b, a) end
 --- ```lua
 --- local slider = 0
 --- 
---- function draw()
+--- function client.draw()
 ---     local thumbPath = "common/thumb_I218_249_2430_49029.png"
 ---     UiTranslate(200, 200)
 ---     UiPush()
@@ -9053,7 +10392,7 @@ function UiSliderThumbSize(width, height) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiMakeInteractive()
 --- 	UiPush()
 ---         local tw = 500
@@ -9117,7 +10456,7 @@ function GetDisplayName(...) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	DebugWatch("val", GetDisplayResolutionCount(0, 0))
 --- end
 --- ```
@@ -9135,14 +10474,14 @@ function UiAddDrawObject(...) end
 function UiRemoveDrawObject(...) end
 
 --- Declares a navigation component which participates in navigation using dpad buttons of a gamepad.
---- It's an abstract entity which can be focused. It has it's own size and position on screen accroding to
+--- It's an abstract entity which can be focused. It has it's own size and position on screen according to
 --- UI cursor and passed arguments, but it won't be drawn on the screen.
 --- Note that all navigation components which are located outside of UiWindow borders won't participate
 --- in the navigation and will be considered as inactive
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9171,7 +10510,7 @@ function UiNavComponent(w, h) return "" end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9199,7 +10538,7 @@ function UiIgnoreNavigation(ignore) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9226,7 +10565,7 @@ function UiResetNavigation() end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9255,7 +10594,7 @@ function UiNavSkipUpdate() end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9299,7 +10638,7 @@ function UiIsComponentInFocus(id) return false end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9336,7 +10675,7 @@ function UiNavGroupBegin(id) return "" end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9372,7 +10711,7 @@ function UiNavGroupEnd() end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9410,7 +10749,7 @@ function UiNavGroupSize(w, h) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9451,7 +10790,7 @@ function UiForceFocus(id) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9496,7 +10835,7 @@ function UiFocusedComponentId() return "" end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     -- window declaration is necessary for navigation to work
 ---     UiWindow(1920, 1080)
 ---     if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9530,14 +10869,6 @@ function UiFocusedComponentId() return "" end
 ---@return any rect Rect object with info about the component bounding rectangle
 function UiFocusedComponentRect(n) return nil end
 
-function ProsHasActiveQRCode(...) end
-
-function ProsRequestQRCode(...) end
-
-function ProsIsAccountLinked(...) end
-
-function ProsBrowseToQRLink(...) end
-
 function ProhibitScreenRecord(...) end
 
 function PermitScreenRecord(...) end
@@ -9546,7 +10877,7 @@ function PermitScreenRecord(...) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiTranslate(200, 200)
 ---     UiPush()
 ---         UiBeginFrame()
@@ -9566,7 +10897,7 @@ function UiGetItemSize() return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiPush()
 ---         UiBeginFrame()
 ---             if InputDown("interact") then
@@ -9591,7 +10922,7 @@ function UiAutoTranslate(value) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 ---         UiBeginFrame()
 ---             UiColor(1.0, 1.0, 0.8)
@@ -9609,7 +10940,7 @@ function UiBeginFrame() end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 ---     UiPush()
 ---         UiTranslate(UiCenter(), 300)
 ---         UiFont("bold.ttf", 40)
@@ -9629,7 +10960,7 @@ function UiResetFrame() end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 ---         UiBeginFrame()
 ---             UiColor(1.0, 1.0, 0.8)
@@ -9648,7 +10979,7 @@ function UiFrameOccupy(width, height) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 ---         UiBeginFrame()
 ---             UiColor(1.0, 1.0, 0.8)
@@ -9667,7 +10998,7 @@ function UiEndFrame() return 0, 0 end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		UiBeginFrame()
 --- 			UiFrameSkipItem(true)
@@ -9684,7 +11015,7 @@ function UiFrameSkipItem(skip) end
 ---
 --- Example:
 --- ```lua
---- function draw()
+--- function client.draw()
 --- 	local fNo = GetFrame()
 --- 	DebugPrint(fNo)
 --- end
@@ -9700,33 +11031,9 @@ function UiGetFrameNo() return 0 end
 ---@return number index Language index
 function UiGetLanguage() return 0 end
 
-function UiSetProsModFilter(...) end
-
-function UiGetProsModNumber(...) end
-
-function UiGetModsNumber(...) end
-
-function UiGetProsModAt(...) end
-
 function UiGetModsList(...) end
 
-function UiGetProsModRange(...) end
-
 function UiGetModById(...) end
-
-function UiSelectProsMod(...) end
-
-function UiSelectedProsModInfo(...) end
-
-function UiProsIsPreviewReady(...) end
-
-function UiSubscribeToProsMod(...) end
-
-function UiUnsubscribeFromProsMod(...) end
-
-function UiLikeProsMod(...) end
-
-function UiDislikeProsMod(...) end
 
 --- Possible values are: <br> 0 - show cursor (UI_CURSOR_SHOW) <br> 1 - hide cursor (UI_CURSOR_HIDE) <br> 2 - hide & lock cursor (UI_CURSOR_HIDE_AND_LOCK)<br><br>
 --- Allows you to force visibilty of cursor for next frame. If the cursor is hidden, gamepad navigation methods are used.<br>
@@ -9737,7 +11044,7 @@ function UiDislikeProsMod(...) end
 --- ```lua
 --- #include "ui/ui_helpers.lua"
 --- 
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		-- If the last input device was a gamepad, hide the cursor and proceed to control through D-pad navigation
 --- 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -9777,7 +11084,7 @@ function UiSetCursorState(state) end
 --- ```lua
 --- #include "ui/ui_helpers.lua"
 --- 
---- function draw()
+--- function client.draw()
 --- 	UiPush()
 --- 		-- If the last input device was a gamepad, hide the cursor and proceed to control through D-pad navigation
 --- 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
@@ -10038,6 +11345,16 @@ function UiGetScreenInitialTouchPos(touchId) return 0, 0 end
 ---@return number x X coordinate
 ---@return number y Y coordinate
 function UiGetScreenTouchDiff(touchId) return 0, 0 end
+
+function UiEnableMenuSync(...) end
+
+function UiIsMenuSyncEnabled(...) end
+
+function UiReplicate(...) end
+
+function UiIsReplicating(...) end
+
+function UiRecieveStream(...) end
 
 --- Get difference betwen current and initial positions for given touchId.
 ---
