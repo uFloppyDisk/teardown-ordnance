@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.2](https://github.com/uFloppyDisk/teardown-ordnance/compare/v0.6.1...v0.6.2) (2026-03-12)
+
+
+### Bug Fixes
+
+* empty commit to bump patch version ([c386ee3](https://github.com/uFloppyDisk/teardown-ordnance/commit/c386ee3bc1af7a2e42540bc22f466ec4ab19be49))
+* update calls to support API v2; ([#42](https://github.com/uFloppyDisk/teardown-ordnance/issues/42)) ([643ee08](https://github.com/uFloppyDisk/teardown-ordnance/commit/643ee08b619e6a7533c2220616a3820b1ca73ebe))
+
 ## [0.6.1](https://github.com/uFloppyDisk/teardown-ordnance/compare/v0.6.0...v0.6.1) (2025-08-28)
 
 
