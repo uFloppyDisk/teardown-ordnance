@@ -109,7 +109,7 @@ function FdLog(...)
         return
     end
 
-    DebugPrint(table.concat(arg, " "))
+    DebugPrint("fd-ordnance::" .. table.concat(arg, " "))
 end
 
 ---@param name string
