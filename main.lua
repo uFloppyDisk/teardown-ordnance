@@ -76,45 +76,6 @@ function tick(delta)
             end
         end
     end
-
-
-    -- -------------------------------
-    -- User has pressed the fire button
-    -- -------------------------------
-
-    local values = SHELL_VALUES[STATES.selected_shell]
-    local variant = values.variants[STATES.selected_variant]
-
-    local shell_whistle = values.sounds.whistle;
-    if type(values.sounds.whistle) == "table" then
-        local rand = math.random(#values.sounds.whistle)
-        shell_whistle = values.sounds.whistle[rand]
-    end
-
-    local shell_sprite = values.sprite
-    if FdAssertTableKeys(variant, "sprite") then
-        shell_sprite = variant.sprite
-    end
-
-    -- Instantiate shell
-    ---@type Shell
-    local shell = FdObjectNew({
-        type = STATES.selected_shell,
-        variant = STATES.selected_variant,
-        inaccuracy = STATES.shell_inaccuracy,
-        pitch = STATES.selected_attack_angle,
-        heading = STATES.selected_attack_heading,
-        sprite = shell_sprite,
-        snd_whistle = LoadLoop("MOD/assets/snd/" .. shell_whistle .. ".ogg")
-    }, DEFAULT_SHELL)
-
-    shell.destination = aim_pos
-
-    -- Fire shell manually
-    if not STATES.quicksalvo.enabled then
-        ShellInit(shell)
-        return
-    end
 end
 
 ---@diagnostic disable-next-line: lowercase-global
