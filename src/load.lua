@@ -5,10 +5,10 @@
 #include "src/utils.lua"
 #include "src/configmanager.lua"
 
-#include "src/constants.lua"
+#include "src/common/load.lua"
 #include "src/state.lua"
 
-#include "src/ui/load.lua"
+#include "src/client/load.lua"
 
 #include "src/shell/type/60mm/flare.lua"
 #include "src/shell/type/60mm/smoke.lua"

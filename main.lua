@@ -4,7 +4,6 @@
 ---
 #include "src/load.lua"
 #include "src/server/load.lua"
-#include "src/client/load.lua"
 ---
 ---@diagnostic enable:exp-in-action
 ---@diagnostic enable:undefined-global
@@ -56,13 +55,8 @@ end
 -- #endregion functions
 
 -- #region Main
-function server.init()
-    OrdServer.init()
-end
 
-function client.init()
-    OrdClient.init()
-end
+G_DEV = CfgGetValue("G_DEBUG_MODE") or false
 
 ---@diagnostic disable-next-line: lowercase-global
 function init()
@@ -76,7 +70,6 @@ function init()
         FdLog("Config exists and is complete.")
     end
 
-    G_DEV                    = CfgGetValue("G_DEBUG_MODE") or false
     G_QUICK_SALVO_DELAY      = CfgGetValue("G_QUICK_SALVO_DELAY") or 0.5
     G_PHYSICS_ITERATIONS     = 2 ^ (CfgGetValue("G_PHYSICS_ITERATIONS") or 4)
     DEFAULT_SHELL.eta        = CfgGetValue("G_TIME_OF_FLIGHT")

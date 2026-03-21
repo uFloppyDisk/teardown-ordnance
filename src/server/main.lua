@@ -1,6 +1,4 @@
-OrdServer = {}
-
-function OrdServer.init()
+function server.init()
     FdLog("Server Init")
 
     RegisterTool("ordnance", "Ordnance [FD]", "MOD/assets/vox/radio.xml")

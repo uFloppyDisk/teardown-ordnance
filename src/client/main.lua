@@ -1,5 +1,3 @@
-OrdClient = {}
-
-function OrdClient.init()
+function client.init()
     FdLog("Client Init")
 end
