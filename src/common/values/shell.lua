@@ -327,12 +327,13 @@ SHELL_VALUES = {
 ---@field variant number
 ---@field flight_time number
 ---@field inaccuracy number
----@field destination TVec|nil
+---@field destination TVec
 ---@field pitch number
 ---@field heading number
 ---@field delay? number
 
 ---@class Shell: ShellDefinition
+---@field _id number
 ---@field ownerId number
 ---@field state SHELL_STATE
 ---@field secondary { active: boolean, timer: number, intensity: number, particle_spread: TVec, inertia: TVec, submunitions: Submunition[]?, [any]: any }
@@ -345,9 +346,10 @@ SHELL_VALUES = {
 ---@field sprite number|nil
 ---@field snd_whistle number|nil
 DEFAULT_SHELL = {
-    state = SHELL_STATE.NONE,
-
+    _id = 0,
     ownerId = -1,
+
+    state = SHELL_STATE.NONE,
 
     secondary = {
         active = false,

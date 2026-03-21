@@ -1,3 +1,7 @@
+function client.debug()
+    FdWatch("CLIENT Value test", shared.state.shells[shared.debug._target].position)
+end
+
 ---@param display DISPLAY_STATE
 local function drawQuicksalvoMarkers(display)
     if display == DISPLAY_STATE.HIDDEN then
@@ -76,6 +80,7 @@ function client.tick(delta)
     client.state.elapsedTime = client.state.elapsedTime + delta
 
     FdWatch("CLIENT Elapsed Time", client.state.elapsedTime)
+    FdWatch("CLIENT Shells", #shared.state.shells)
 
     -- Draw HUD markers for quick salvo shell targets
     drawQuicksalvoMarkers(STATES.quicksalvo.markers)

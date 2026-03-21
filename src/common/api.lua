@@ -16,19 +16,26 @@ function server.requestFireShell(playerId, shellDef)
         shell_sprite = variant.sprite
     end
 
+    server.state.shells.nextId = server.state.shells.nextId + 1
     ---@type Shell
     local shell = FdObjectNew({
-        ownerId = playerId,
         type = shellDef.type,
         variant = shellDef.variant,
-        inaccuracy = shellDef.inaccuracy,
-        pitch = shellDef.pitch,
+        flight_time = shellDef.flight_time,
         heading = shellDef.heading,
+        pitch = shellDef.pitch,
+        destination = shellDef.destination,
+
+        _id = server.state.shells.nextId,
+        ownerId = playerId,
+        eta = 4,
         sprite = shell_sprite,
         snd_whistle = LoadLoop("MOD/assets/snd/" .. shell_whistle .. ".ogg"),
     }, DEFAULT_SHELL)
 
-    FdLog("TODO: Fire shell")
+    table.insert(server.state.shells._shells, shell)
+    ShellInit(shell)
+    shared.state.shells[shell._id] = FdObjectCopy(shell)
 end
 
 ---Send request to server to fire shell

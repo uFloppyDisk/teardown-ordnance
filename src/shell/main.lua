@@ -356,7 +356,7 @@ local function tickActive(self, delta)
 
     -- Provide default behaviours until secondary is active
     if (self.secondary.active and variant.secondary.draw) or not self.secondary.active then
-        local physics_iterations = G_PHYSICS_ITERATIONS
+        local physics_iterations = shared.config.physicsIterations
         local iter_delta = delta / physics_iterations
 
         -- Calculation of gravity's effect on shell velocity and position over N iterations
@@ -367,18 +367,18 @@ local function tickActive(self, delta)
 
         self.vel_current = VecCopy(velocity_new)
 
-        if math.abs(VecLength(VecSub(self.position, GetCameraTransform().pos))) < 100 then
-            ParticleReset()
-            ParticleRadius(0.2, 0)
-            ParticleAlpha(0.2)
-            ParticleStretch(1.0)
-
-            local iterations = 16
-            for i = 1, iterations, 1 do
-                local spawn_pos = VecLerp(self.position, position_new, i / iterations)
-                SpawnParticle(spawn_pos, G_VEC_WIND, 0.1)
-            end
-        end
+        -- if math.abs(VecLength(VecSub(self.position, GetCameraTransform().pos))) < 100 then
+        --     ParticleReset()
+        --     ParticleRadius(0.2, 0)
+        --     ParticleAlpha(0.2)
+        --     ParticleStretch(1.0)
+        --
+        --     local iterations = 16
+        --     for i = 1, iterations, 1 do
+        --         local spawn_pos = VecLerp(self.position, position_new, i / iterations)
+        --         SpawnParticle(spawn_pos, G_VEC_WIND, 0.1)
+        --     end
+        -- end
     end
 
     -- Stop increasing kinetic energy after first hit
@@ -623,19 +623,18 @@ local function fire(self)
 
     if self.flight_time <= 0 then
         self.state = SHELL_STATE.ACTIVE
-        playFireSound(self)
+        FdLog("TODO: Play firing sound on client")
         return
     end
 
     self.state = SHELL_STATE.IN_FLIGHT
 
-    playFireSound(self)
+    FdLog("TODO: Play firing sound on client")
 end
 
 -- #region Shell Control
 
 function ShellInit(shell)
-    table.insert(SHELLS, shell)
     fire(shell)
 end
 
