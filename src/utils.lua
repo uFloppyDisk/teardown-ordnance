@@ -103,13 +103,29 @@ function FdAddToDebugTable(target, value)
     table.insert(target, value)
 end
 
+local function _debugPrintWithLineNo(err, msg)
+    local file = nil
+    local lineno = nil
+    local trace = nil
+
+    _, _, trace = string.find(err, "^(.+): ")
+
+    if trace ~= nil then
+        _, _, file = string.find(trace, ".../[^/]+/([%w-_/.]+)")
+        _, _, lineno = string.find(trace, ":(%d+)$")
+    end
+
+    DebugPrint("fd-ordnance::" .. table.concat({ file, lineno }, ":") .. ": " .. msg)
+end
+
 ---@vararg any
 function FdLog(...)
     if not G_DEV then
         return
     end
 
-    DebugPrint("fd-ordnance::" .. table.concat(arg, " "))
+    local _, line = pcall(error, "-", 3)
+    _debugPrintWithLineNo(line, table.concat(arg, " "))
 end
 
 ---@param name string
