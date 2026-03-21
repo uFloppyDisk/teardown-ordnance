@@ -63,12 +63,20 @@ function client.init()
     SND_UI["cancel"] = LoadSound("MOD/assets/snd/menu_cancel.ogg")
     SND_UI["salvo_mark"] = LoadSound("MOD/assets/snd/salvo_mark.ogg")
 
+    client.state = {
+        elapsedTime = 0,
+    }
+
     FdUiLoadImageMetadata()
 
     ResetToDefaultState()
 end
 
 function client.tick(delta)
+    client.state.elapsedTime = client.state.elapsedTime + delta
+
+    FdWatch("CLIENT Elapsed Time", client.state.elapsedTime)
+
     -- Draw HUD markers for quick salvo shell targets
     drawQuicksalvoMarkers(STATES.quicksalvo.markers)
 

@@ -46,14 +46,6 @@ end
 function tick(delta)
     ELAPSED_TIME = ELAPSED_TIME + delta
 
-    FdWatch("state(ENABLED)", STATES.enabled)
-    FdWatch("state(QUICK SALVO)", STATES.quicksalvo.enabled)
-    FdWatch("option(FLIGHT_TIME)", CfgGetValue("G_TIME_OF_FLIGHT"))
-    FdWatch("option(PHYSICS ITERATIONS)", G_PHYSICS_ITERATIONS)
-    FdWatch("Shells", #SHELLS)
-    FdWatch("Salvo", #QUICK_SALVO)
-    FdWatch("BODIES", #BODIES)
-
     for i, body in ipairs(BODIES) do
         if body.valid == true and PhysBodyTick(body) then
             body.valid = false
