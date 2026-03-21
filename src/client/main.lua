@@ -78,7 +78,7 @@ function client.tick(delta)
 
         if DELAYS.quick_salvo < 0 then
             local salvo_shell = table.remove(QUICK_SALVO, 1)
-            FdLog("TODO: Launch quick salvo shell")
+            client.requestFireShell(salvo_shell)
 
             local next_shell = QUICK_SALVO[1]
             if next_shell ~= nil then
@@ -306,6 +306,7 @@ function client.tick(delta)
         }, STATES.shell_inaccuracy, 64, COLOUR["yellow_dark"], 6)
 
     if InputPressed(CfgGetValue("KEYBIND_PRIMARY_FIRE")) then
+        ---@type ShellDefinition
         local shell = FdObjectNew({
             type = STATES.selected_shell,
             variant = STATES.selected_variant,
@@ -317,10 +318,9 @@ function client.tick(delta)
         shell.destination = aim_pos
 
         if not STATES.quicksalvo.enabled then
-            FdLog("TODO: Request shell launch via ServerCall")
+            client.requestFireShell(shell)
         else
             -- Queue shell in quick salvo
-            shell.state = SHELL_STATE.QUEUED
             shell.delay = G_QUICK_SALVO_DELAY
             table.insert(QUICK_SALVO, shell)
 

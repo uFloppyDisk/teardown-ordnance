@@ -322,17 +322,21 @@ SHELL_VALUES = {
     },
 }
 
----@class (exact) Shell
----@field state SHELL_STATE
----@field secondary { active: boolean, timer: number, intensity: number, particle_spread: TVec, inertia: TVec, submunitions: Submunition[]?, [any]: any }
+---@class (exact) ShellDefinition
 ---@field type number
 ---@field variant number
 ---@field flight_time number
 ---@field inaccuracy number
 ---@field destination TVec|nil
----@field eta TVec|nil
 ---@field pitch number
 ---@field heading number
+---@field delay? number
+
+---@class Shell: ShellDefinition
+---@field ownerId number
+---@field state SHELL_STATE
+---@field secondary { active: boolean, timer: number, intensity: number, particle_spread: TVec, inertia: TVec, submunitions: Submunition[]?, [any]: any }
+---@field eta TVec|nil
 ---@field position TVec|nil
 ---@field vel_previous TVec|nil
 ---@field vel_current TVec|nil
@@ -340,9 +344,10 @@ SHELL_VALUES = {
 ---@field hit_once boolean
 ---@field sprite number|nil
 ---@field snd_whistle number|nil
----@field delay? number
 DEFAULT_SHELL = {
     state = SHELL_STATE.NONE,
+
+    ownerId = -1,
 
     secondary = {
         active = false,
