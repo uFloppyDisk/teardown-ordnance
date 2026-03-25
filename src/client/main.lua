@@ -82,6 +82,23 @@ function client.tick(delta)
     FdWatch("CLIENT Elapsed Time", client.state.elapsedTime)
     FdWatch("CLIENT Shells", #shared.state.shells)
 
+    for _, shell in pairs(shared.state.shells) do
+        local values = SHELL_VALUES[shell.type]
+        local variant = values.variants[shell.variant]
+
+        if (shell.secondary.active and variant.secondary.draw) or not shell.secondary.active then
+            -- TODO: Draw sprites after LoadSprite on client.init
+            -- ShellDrawSprite(shell)
+            DebugCross(shell.position, 1, 0, 0, 255)
+        end
+
+        if variant.id == "PF" then
+            if shell.secondary.active then
+                PointLight(shell.position, 1, 1, 1, shell.secondary.intensity)
+            end
+        end
+    end
+
     -- Draw HUD markers for quick salvo shell targets
     drawQuicksalvoMarkers(STATES.quicksalvo.markers)
 
