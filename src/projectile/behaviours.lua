@@ -2,6 +2,8 @@
 ProjectileBehaviour = {}
 
 ProjectileBehaviour.HasPhysics = {
+    id = "HasPhysics",
+
     afterInit = function(projectile)
         if not projectile.transform then
             projectile.transform = Transform(projectile.destination, Quat())
@@ -36,6 +38,8 @@ ProjectileBehaviour.HasPhysics = {
 }
 
 ProjectileBehaviour.Expires = {
+    id = "Expires",
+
     afterUpdate = function(projectile)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -49,6 +53,8 @@ ProjectileBehaviour.Expires = {
 }
 
 ProjectileBehaviour.HasBallistics = {
+    id = "HasBallistics",
+
     onInit = function(projectile, props)
         local destination = projectile.destination
         local velocity = props.muzzle_velocity or PROJECTILE_DEFAULT_MUZZLE_VELOCITY
@@ -87,6 +93,9 @@ ProjectileBehaviour.HasBallistics = {
 }
 
 ProjectileBehaviour.HasImpactFuze = {
+    id = "HasImpactFuze",
+    requires = { "HasPhysics" },
+
     onUpdate = function(projectile, props)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -106,6 +115,9 @@ ProjectileBehaviour.HasImpactFuze = {
 }
 
 ProjectileBehaviour.HasSprite = {
+    id = "HasSprite",
+    requires = { "HasPhysics" },
+
     onTick = function(projectile, props)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
@@ -136,8 +148,11 @@ ProjectileBehaviour.HasSounds = function()
         projectile._cache.sounds[event_name] = value
     end
 
-    ---@type ProjectileBehaviourFuncs
+    ---@type ProjectileBehaviourDefinition
     return {
+        id = "HasSounds",
+        requires = { "HasPhysics" },
+
         onInit = function(projectile, props)
             projectile._cache.sounds = {}
 
@@ -189,8 +204,10 @@ ProjectileBehaviour.IsQueueable = function()
         projectile._cache.queue[event_name] = value
     end
 
-    ---@type ProjectileBehaviourFuncs
+    ---@type ProjectileBehaviourDefinition
     return {
+        id = "IsQueueable",
+
         onInit = function(projectile)
             projectile._cache.queue = {}
             setValue(projectile, "wait", true)

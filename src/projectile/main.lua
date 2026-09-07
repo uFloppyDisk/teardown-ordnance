@@ -19,6 +19,110 @@ local HOOK_TYPES = {
     "onUpdate",
 }
 
+---@type { [string]: boolean }
+local HOOK_TYPE_SET = {}
+
+for _, hook_name in ipairs(HOOK_TYPES) do
+    HOOK_TYPE_SET[hook_name] = true
+end
+
+---Insert an id into the ready queue while preserving the original behaviour order.
+---@param queue string[]
+---@param id string
+---@param order_index { [string]: integer }
+local function insertByOriginalOrder(queue, id, order_index)
+    for index, queued_id in ipairs(queue) do
+        if order_index[id] < order_index[queued_id] then
+            table.insert(queue, index, id)
+            return
+        end
+    end
+
+    table.insert(queue, id)
+end
+
+---Resolve behaviour dependencies using Kahn's topological sorting algorithm.
+---@param behaviours ProjectileBehaviourDefinition[]
+---@return ProjectileBehaviourDefinition[]
+local function topologicalSortBehaviours(behaviours)
+    ---@type { [string]: ProjectileBehaviourDefinition }
+    local behaviours_by_id = {}
+    ---@type { [string]: integer }
+    local order_index = {}
+    ---@type { [string]: string[] }
+    local dependants_by_id = {}
+    ---@type { [string]: integer }
+    local dependency_count = {}
+
+    for index, behaviour in ipairs(behaviours) do
+        local id = behaviour.id
+
+        if type(id) ~= "string" then
+            error(string.format("Projectile behaviour at index %d has no id", index))
+        end
+
+        if behaviours_by_id[id] ~= nil then
+            error(string.format("Duplicate projectile behaviour id '%s'", id))
+        end
+
+        behaviours_by_id[id] = behaviour
+        order_index[id] = index
+        dependants_by_id[id] = {}
+        dependency_count[id] = 0
+    end
+
+    for _, behaviour in ipairs(behaviours) do
+        local id = behaviour.id --[[@as string]]
+        local seen_dependencies = {}
+
+        for _, required_id in ipairs(behaviour.requires or {}) do
+            if seen_dependencies[required_id] then
+                error(string.format("Behaviour '%s' lists dependency '%s' more than once", id, required_id))
+            end
+
+            seen_dependencies[required_id] = true
+
+            if behaviours_by_id[required_id] == nil then
+                error(string.format("Behaviour '%s' requires missing behaviour '%s'", id, required_id))
+            end
+
+            table.insert(dependants_by_id[required_id], id)
+            dependency_count[id] = dependency_count[id] + 1
+        end
+    end
+
+    local ready = {}
+
+    for _, behaviour in ipairs(behaviours) do
+        local id = behaviour.id --[[@as string]]
+
+        if dependency_count[id] == 0 then
+            insertByOriginalOrder(ready, id, order_index)
+        end
+    end
+
+    local sorted = {}
+
+    while #ready > 0 do
+        local id = table.remove(ready, 1)
+        table.insert(sorted, behaviours_by_id[id])
+
+        for _, dependant_id in ipairs(dependants_by_id[id]) do
+            dependency_count[dependant_id] = dependency_count[dependant_id] - 1
+
+            if dependency_count[dependant_id] == 0 then
+                insertByOriginalOrder(ready, dependant_id, order_index)
+            end
+        end
+    end
+
+    if #sorted ~= #behaviours then
+        error("Circular dependency detected between projectile behaviours")
+    end
+
+    return sorted
+end
+
 ---@type { [string]: integer }
 local shell_values_class_lookup = {}
 
@@ -107,6 +211,9 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
     ---@type { [string]: function[] }
     local hooks_by_type = {}
 
+    ---@type ProjectileBehaviourDefinition[]
+    local resolved_behaviours = {}
+
     for _, behaviour in ipairs(behaviours) do
         ---@type ProjectileBehaviour
         local resolved = behaviour
@@ -114,12 +221,18 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
             resolved = resolved(def.props)
         end
 
-        for name, handler in pairs(resolved) do
-            if type(hooks_by_type[name]) ~= "table" then
-                hooks_by_type[name] = {}
-            end
+        table.insert(resolved_behaviours, resolved)
+    end
 
-            table.insert(hooks_by_type[name], handler)
+    for _, behaviour in ipairs(topologicalSortBehaviours(resolved_behaviours)) do
+        for name, handler in pairs(behaviour) do
+            if HOOK_TYPE_SET[name] then
+                if type(hooks_by_type[name]) ~= "table" then
+                    hooks_by_type[name] = {}
+                end
+
+                table.insert(hooks_by_type[name], handler)
+            end
         end
     end
 

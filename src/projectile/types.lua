@@ -50,7 +50,7 @@
 ---@field explosive_yield? number Size of projectile explosion if applicable [0, 4]
 ---@field hole_sizes? ProjectileMakeHoleSizes
 ---
----@class (exact) ProjectileBehaviourFuncs
+---@class (exact) ProjectileBehaviourLifecycleFunctions
 ---@field afterInit? ProjectileAfterInitFn
 ---@field afterTick? ProjectileAfterTickFn
 ---@field afterUpdate? ProjectileAfterUpdateFn
@@ -62,7 +62,11 @@
 ---@field onTick? ProjectileTickFn
 ---@field onUpdate? ProjectileUpdateFn
 ---
----@class (exact) ProjectileDefinition : ProjectileBehaviourFuncs
+---@class (exact) ProjectileBehaviourDefinition : ProjectileBehaviourLifecycleFunctions
+---@field id string Behaviour identity used for dependency resolution
+---@field requires? string[] Behaviour ids that must run before this behaviour
+---
+---@class (exact) ProjectileDefinition : ProjectileBehaviourLifecycleFunctions
 ---@field props ProjectileProps
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
@@ -93,5 +97,5 @@
 ---
 ---@alias ProjectileDefinitionGenerator fun(typeName: string): ProjectileDefinition
 ---
----@alias ProjectileBehaviourGenerator fun(props: ProjectileProps): ProjectileBehaviourFuncs
----@alias ProjectileBehaviour ProjectileBehaviourFuncs|ProjectileBehaviourGenerator
+---@alias ProjectileBehaviourGenerator fun(props: ProjectileProps): ProjectileBehaviourDefinition
+---@alias ProjectileBehaviour ProjectileBehaviourDefinition|ProjectileBehaviourGenerator
