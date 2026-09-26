@@ -226,3 +226,64 @@ function ProjectileUtil.drawSalvoInfo(props, world_pos, delay_seconds, options)
     UiRect(rect_size, rect_size)
     UiPop()
 end
+
+---comment
+---@param behaviour_name string
+---@return ProjectileBehaviourHelpers
+function CreateProjectileBehaviourHelpers(behaviour_name)
+    local helpers = {
+        registerProjectileCache = function(projectile, cache_key)
+            if projectile._cache[cache_key] ~= nil then
+                local existing_cache_owner = projectile._cache[cache_key]._owner
+                error(
+                    string.format(
+                        "Cannot register projectile cache '%s'; Already registered by %s",
+                        cache_key,
+                        existing_cache_owner or "unknown"
+                    )
+                )
+            end
+
+            projectile._cache[cache_key] = {
+                _owner = behaviour_name,
+            }
+        end,
+        getProjectileCache = function(projectile, cache_key, ...)
+            local cache = projectile._cache[cache_key]
+            if not FdAssertTableKeys(cache, ...) then
+                local path = { ... }
+                error(
+                    string.format(
+                        "Projectile cache '%s' does not contain value with key '%s'",
+                        cache_key,
+                        table.concat(path, ".")
+                    )
+                )
+            end
+
+            return FdTableDeepGet(cache, ...)
+        end,
+        setProjectileCache = function(projectile, cache_key, value, ...)
+            local cache = projectile._cache[cache_key]
+            return FdTableDeepSet(cache, value, ...)
+        end,
+        initBehaviourCache = function(projectile)
+            projectile._cache._behaviours[behaviour_name] = {}
+        end,
+        getValue = function(projectile, ...)
+            local cache = projectile._cache._behaviours[behaviour_name]
+            -- if not FdAssertTableKeys(cache, ...) then
+            --     local path = { ... }
+            --     error(string.format("Behaviour cache does not contain value with key '%s'", table.concat(path, ".")))
+            -- end
+
+            return FdTableDeepGet(cache, ...)
+        end,
+        setValue = function(projectile, value, ...)
+            local cache = projectile._cache._behaviours[behaviour_name]
+            return FdTableDeepSet(cache, value, ...)
+        end,
+    }
+
+    return helpers
+end

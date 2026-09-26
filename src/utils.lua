@@ -78,12 +78,52 @@ end
 ---@param ... string Path to traverse.
 ---@return boolean # True if path exists.
 function FdAssertTableKeys(root, ...)
-    for _, key in ipairs { ... } do
-        if root[key] == nil then return false end
+    for _, key in ipairs({ ... }) do
+        if type(root) ~= "table" or root[key] == nil then
+            return false
+        end
 
         root = root[key]
     end
 
+    return true
+end
+
+---@param root table
+---@param ... string Path to traverse.
+---@return any
+function FdTableDeepGet(root, ...)
+    for _, key in ipairs({ ... }) do
+        if type(root) ~= "table" or root[key] == nil then
+            return nil
+        end
+
+        root = root[key]
+    end
+
+    return root
+end
+
+---@param root table
+---@param value any
+---@param ... string Path to traverse.
+---@return boolean Value was set
+function FdTableDeepSet(root, value, ...)
+    local path = { ... }
+    if #path == 0 then
+        return false
+    end
+
+    for index = 1, #path - 1 do
+        local key = path[index]
+        if type(root[key]) ~= "table" then
+            root[key] = {}
+        end
+
+        root = root[key]
+    end
+
+    root[path[#path]] = value
     return true
 end
 

@@ -134,6 +134,16 @@ local function generateHandlerId(type_name, hook_name)
     return type_name .. ":" .. hook_name
 end
 
+---Bind a behaviour's scoped helpers to one of its lifecycle handlers.
+---@param handler function
+---@param helpers ProjectileBehaviourHelpers
+---@return function
+local function createBehaviourHandler(handler, helpers)
+    return function(projectile, props, ...)
+        return handler(projectile, props, helpers, ...)
+    end
+end
+
 Projectiles = {}
 
 function Projectiles.getTypes()
@@ -225,13 +235,15 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
     end
 
     for _, behaviour in ipairs(topologicalSortBehaviours(resolved_behaviours)) do
+        local helpers = CreateProjectileBehaviourHelpers(behaviour.id)
+
         for name, handler in pairs(behaviour) do
             if HOOK_TYPE_SET[name] then
                 if type(hooks_by_type[name]) ~= "table" then
                     hooks_by_type[name] = {}
                 end
 
-                table.insert(hooks_by_type[name], handler)
+                table.insert(hooks_by_type[name], createBehaviourHandler(handler, helpers))
             end
         end
     end
@@ -307,7 +319,9 @@ function Projectiles.init(type_name, initial_values)
 
     local projectile = {
         _initial = initial_values,
-        _cache = {},
+        _cache = {
+            _behaviours = {},
+        },
         type = type_name,
     }
 

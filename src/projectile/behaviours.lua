@@ -16,7 +16,7 @@ ProjectileBehaviour.HasPhysics = {
     beforeUpdate = function(projectile)
         projectile._cache.previous_transform = TransformCopy(projectile.transform)
     end,
-    onUpdate = function(projectile, _, dt)
+    onUpdate = function(projectile, _, _, dt)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
         end
@@ -140,21 +140,13 @@ ProjectileBehaviour.HasSounds = function()
     local WHISTLE_MIN_VELOCITY = 100
     local WHISTLE_MAX_DISTANCE_TO_GROUND = 500
 
-    local function getValue(projectile, event_name)
-        return projectile._cache.sounds[event_name]
-    end
-
-    local function setValue(projectile, event_name, value)
-        projectile._cache.sounds[event_name] = value
-    end
-
     ---@type ProjectileBehaviourDefinition
     return {
         id = "HasSounds",
         requires = { "HasPhysics" },
 
-        onInit = function(projectile, props)
-            projectile._cache.sounds = {}
+        onInit = function(projectile, props, helpers)
+            helpers.initBehaviourCache(projectile)
 
             local elected_whistle = props.sounds.whistle
             if elected_whistle ~= nil then
@@ -162,25 +154,25 @@ ProjectileBehaviour.HasSounds = function()
                     elected_whistle = elected_whistle[math.random(1, #elected_whistle)]
                 end
 
-                setValue(projectile, "elected_whistle", elected_whistle)
+                helpers.setValue(projectile, elected_whistle, "elected_whistle")
                 DebugPrint(string.format("Elected whistle sound %d", elected_whistle))
             end
         end,
-        onTick = function(projectile, props)
+        onTick = function(projectile, props, helpers)
             if projectile.state ~= SHELL_STATE.ACTIVE then
                 return
             end
 
-            if not getValue(projectile, "fire") and FdAssertTableKeys(props, "sounds", "fire") then
+            if not helpers.getValue(projectile, "fire") and FdAssertTableKeys(props, "sounds", "fire") then
                 FdPlayDistantSound(props.sounds.fire, {
                     heading = projectile._initial.attack.heading,
                     use_random_pitch = true,
                 })
 
-                setValue(projectile, "fire", true)
+                helpers.setValue(projectile, true, "fire")
             end
 
-            local elected_whistle = getValue(projectile, "elected_whistle")
+            local elected_whistle = helpers.getValue(projectile, "elected_whistle")
             if elected_whistle and VecLength(projectile.velocity) > WHISTLE_MIN_VELOCITY then
                 local distance_ground = VecLength(VecSub(projectile.transform.pos, projectile.destination))
 
@@ -195,80 +187,68 @@ ProjectileBehaviour.HasSounds = function()
     }
 end
 
-ProjectileBehaviour.IsQueueable = function()
-    local function getValue(projectile, event_name)
-        return projectile._cache.queue[event_name]
-    end
+ProjectileBehaviour.IsQueueable = {
+    id = "IsQueueable",
 
-    local function setValue(projectile, event_name, value)
-        projectile._cache.queue[event_name] = value
-    end
+    onInit = function(projectile, _, helpers)
+        helpers.initBehaviourCache(projectile)
 
-    ---@type ProjectileBehaviourDefinition
-    return {
-        id = "IsQueueable",
+        helpers.setValue(projectile, true, "wait")
+        helpers.setValue(projectile, projectile._initial.delay, "delay")
+    end,
+    beforeTick = function(projectile, _, helpers, dt)
+        if projectile.state ~= SHELL_STATE.QUEUED then
+            return
+        end
 
-        onInit = function(projectile)
-            projectile._cache.queue = {}
-            setValue(projectile, "wait", true)
-            setValue(projectile, "delay", projectile._initial.delay)
-        end,
-        beforeTick = function(projectile, _, dt)
-            if projectile.state ~= SHELL_STATE.QUEUED then
-                return
-            end
-
-            if InputPressed(CfgGetValue("KEYBIND_GENERAL_CANCEL")) and STATES.quicksalvo.enabled then
-                projectile.state = SHELL_STATE.NONE
-                return true
-            end
-
-            local wait = getValue(projectile, "wait")
-            if STATES.quicksalvo.enabled and wait then
-                return
-            end
-
-            setValue(projectile, "wait", false)
-            setValue(projectile, "delay", getValue(projectile, "delay") - dt)
-            if getValue(projectile, "delay") <= 0 then
-                projectile.state = SHELL_STATE.ACTIVE
-                return
-            end
-
+        if InputPressed(CfgGetValue("KEYBIND_GENERAL_CANCEL")) and STATES.quicksalvo.enabled then
+            projectile.state = SHELL_STATE.NONE
             return true
-        end,
-        onTick = function(projectile)
-            if projectile.state ~= SHELL_STATE.QUEUED then
-                return
-            end
+        end
 
-            local destination = projectile._initial.requested_destination
-            local heading = projectile._initial.attack.heading
-            local pitch = projectile._initial.attack.pitch
-            local deviation = projectile._initial.deviation
+        local wait = helpers.getValue(projectile, "wait")
+        if STATES.quicksalvo.enabled and wait then
+            return
+        end
 
-            ProjectileUtil.drawSalvoMarker(destination, {
+        local delay = helpers.getValue(projectile, "delay")
+        helpers.setValue(projectile, false, "wait")
+        helpers.setValue(projectile, delay - dt, "delay")
+        if helpers.getValue(projectile, "delay") <= 0 then
+            projectile.state = SHELL_STATE.ACTIVE
+            return
+        end
+
+        return true
+    end,
+    onTick = function(projectile)
+        if projectile.state ~= SHELL_STATE.QUEUED then
+            return
+        end
+
+        local destination = projectile._initial.requested_destination
+        local heading = projectile._initial.attack.heading
+        local pitch = projectile._initial.attack.pitch
+        local deviation = projectile._initial.deviation
+
+        ProjectileUtil.drawSalvoMarker(destination, {
+            display = STATES.quicksalvo.markers,
+            deviation = deviation,
+            heading = heading,
+            pitch = pitch,
+        })
+    end,
+    onDraw = function(projectile, props, helpers)
+        local delay = helpers.getValue(projectile, "delay")
+
+        if STATES.tactical.enabled and projectile.state == SHELL_STATE.QUEUED then
+            ProjectileUtil.drawSalvoInfo(props, projectile._initial.requested_destination, delay, {
                 display = STATES.quicksalvo.markers,
-                deviation = deviation,
-                heading = heading,
-                pitch = pitch,
+                wait = delay,
             })
-        end,
-        onDraw = function(projectile, props)
-            if STATES.tactical.enabled and projectile.state == SHELL_STATE.QUEUED then
-                ProjectileUtil.drawSalvoInfo(
-                    props,
-                    projectile._initial.requested_destination,
-                    getValue(projectile, "delay"),
-                    {
-                        display = STATES.quicksalvo.markers,
-                        wait = getValue(projectile, "wait"),
-                    }
-                )
-            end
-        end,
-    }
-end
+        end
+    end,
+}
 
 ProjectileBehaviour.HasTerminalBallistics = function()
     local MAX_KINETIC_ENERGY = 5000
@@ -296,14 +276,15 @@ ProjectileBehaviour.HasTerminalBallistics = function()
         projectile.state = SHELL_STATE.DETONATED
     end
 
+    ---@type ProjectileBehaviourDefinition
     return {
         id = "HasTerminalBallistics",
         requires = { "HasPhysics", "HasBallistics" },
 
-        onInit = function(projectile)
-            projectile._cache.terminal_ballistics = {}
+        onInit = function(projectile, _, helpers)
+            helpers.initBehaviourCache(projectile)
         end,
-        onUpdate = function(projectile, props)
+        onUpdate = function(projectile, props, helpers)
             if projectile.state ~= SHELL_STATE.ACTIVE then
                 return
             end
@@ -337,13 +318,14 @@ ProjectileBehaviour.HasTerminalBallistics = function()
                 return
             end
 
-            local cache = projectile._cache.terminal_ballistics
-            if cache.kinetic_energy == nil then
-                cache.kinetic_energy = FdClamp(
+            local kinetic_energy = helpers.getValue(projectile, "kinetic_energy")
+            if kinetic_energy == nil then
+                kinetic_energy = FdClamp(
                     (props.weight * math.pow(math.abs(VecLength(projectile.velocity)), 2)) / 1000,
                     0,
                     MAX_KINETIC_ENERGY
                 )
+                helpers.setValue(projectile, kinetic_energy, "kinetic_energy")
             end
 
             local trigger_detonation = false
@@ -384,7 +366,7 @@ ProjectileBehaviour.HasTerminalBallistics = function()
 
                 local pen_values = getPenetrationValues(props, material)
 
-                if cache.kinetic_energy < pen_values.minimum_energy then
+                if kinetic_energy < pen_values.minimum_energy then
                     FdLog("Material '" .. material .. "' triggered detonation. (energy below threshold)")
                     detonate(projectile, props, hit_positions[index])
                     return
@@ -397,7 +379,11 @@ ProjectileBehaviour.HasTerminalBallistics = function()
                 end
 
                 FdLog("Material '" .. material .. "' was too weak to trigger detonation.")
-                cache.kinetic_energy = cache.kinetic_energy * (1 - FdClamp(pen_values.absorb_percentage, 0, 1))
+                helpers.setValue(
+                    projectile,
+                    kinetic_energy * (1 - FdClamp(pen_values.absorb_percentage, 0, 1)),
+                    "kinetic_energy"
+                )
                 MakeHole(hit_positions[index], radius + 1, radius + 0.5, radius, false)
             end
 
