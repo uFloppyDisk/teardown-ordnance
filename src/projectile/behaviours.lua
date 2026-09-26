@@ -270,13 +270,171 @@ ProjectileBehaviour.IsQueueable = function()
     }
 end
 
+ProjectileBehaviour.HasTerminalBallistics = function()
+    local MAX_KINETIC_ENERGY = 5000
+    local MAX_RAYCAST_DEPTH = 6
+
+    --- Pull penetration values for material, default if not found
+    ---@param props ProjectileProps
+    ---@param material Material
+    ---@return ProjectilePenetration
+    local function getPenetrationValues(props, material)
+        local values = props.penetration[material]
+        if values == nil then
+            FdLog("Material not found in penetration table. Defaulting...")
+            values = props.penetration["default"] or PROJECTILE_PENETRATION_DEFAULT_MATERIAL
+        end
+
+        return values
+    end
+
+    ---@param projectile Projectile
+    ---@param props ProjectileProps
+    ---@param pos TVec
+    local function detonate(projectile, props, pos)
+        ProjectileUtil.detonate(pos, props.explosive_yield, props.hole_sizes)
+        projectile.state = SHELL_STATE.DETONATED
+    end
+
+    return {
+        id = "HasTerminalBallistics",
+        requires = { "HasPhysics", "HasBallistics" },
+
+        onInit = function(projectile)
+            projectile._cache.terminal_ballistics = {}
+        end,
+        onUpdate = function(projectile, props)
+            if projectile.state ~= SHELL_STATE.ACTIVE then
+                return
+            end
+
+            local pos = projectile._cache.previous_transform.pos
+            local pos_new = projectile.transform.pos
+            local pos_delta = VecSub(pos_new, pos)
+            local distance = VecLength(pos_delta)
+            if distance <= 0 then
+                return
+            end
+
+            local direction = VecNormalize(pos_delta)
+
+            -- Hit detection and ballistics system
+            QueryRequire("large")
+            QueryRequire("physical")
+            local hit, hit_distance, _, shape_initial = QueryRaycast(pos, direction, distance)
+
+            if not hit then
+                return
+            end
+
+            local hit_pos = VecAdd(pos, VecScale(direction, hit_distance))
+            local radius = props.sprite.width / 2
+
+            FdAddToDebugTable(DEBUG_POSITIONS, { hit_pos, COLOUR["white"] })
+
+            if not CfgGetValue("G_SIMULATE_BALLISTICS") then
+                detonate(projectile, props, hit_pos)
+                return
+            end
+
+            local cache = projectile._cache.terminal_ballistics
+            if cache.kinetic_energy == nil then
+                cache.kinetic_energy = FdClamp(
+                    (props.weight * math.pow(math.abs(VecLength(projectile.velocity)), 2)) / 1000,
+                    0,
+                    MAX_KINETIC_ENERGY
+                )
+            end
+
+            local trigger_detonation = false
+            local material_initial = GetShapeMaterialAtPosition(shape_initial, hit_pos)
+            FdLog("Initial material is '" .. material_initial .. "'")
+
+            -- Perform recursive check for materials encountered during this tick
+            local hit_materials, hit_positions, reached_max_depth = FdGetMaterialsInRaycastRecursive(
+                pos,
+                pos_new,
+                { hit_pos },
+                radius,
+                { material_initial },
+                { shape_initial },
+                MAX_RAYCAST_DEPTH
+            )
+
+            local position_detonation
+            if hit_positions ~= nil then
+                position_detonation = hit_positions[#hit_positions]
+            else
+                position_detonation = hit_pos
+                trigger_detonation = true
+            end
+
+            if reached_max_depth or trigger_detonation then
+                detonate(projectile, props, position_detonation)
+                return
+            end
+
+            -- Iterate over all materials found in recursive QueryRaycast and determine outcome based on penetration values
+            for index, material in pairs(hit_materials) do
+                if trigger_detonation then
+                    break
+                end
+
+                FdLog("Material at index " .. index .. " is '" .. material .. "'")
+
+                local pen_values = getPenetrationValues(props, material)
+
+                if cache.kinetic_energy < pen_values.minimum_energy then
+                    FdLog("Material '" .. material .. "' triggered detonation. (energy below threshold)")
+                    detonate(projectile, props, hit_positions[index])
+                    return
+                end
+
+                if math.random() < pen_values.chance_to_terminate then
+                    FdLog("Material '" .. material .. "' triggered detonation. (Unlucky roll)")
+                    detonate(projectile, props, hit_positions[index])
+                    return
+                end
+
+                FdLog("Material '" .. material .. "' was too weak to trigger detonation.")
+                cache.kinetic_energy = cache.kinetic_energy * (1 - FdClamp(pen_values.absorb_percentage, 0, 1))
+                MakeHole(hit_positions[index], radius + 1, radius + 0.5, radius, false)
+            end
+
+            -- QueryRaycast in the opposite direction to check if bottom material is impenetrable. Fixes fringe QueryRejectShape edge case.
+            local direction_reverse = VecScale(direction, -1)
+            hit, hit_distance, _, shape_initial = QueryRaycast(pos_new, direction_reverse, distance, 0)
+
+            if not hit then
+                return
+            end
+
+            local position_initial_hit = VecAdd(pos_new, VecScale(direction_reverse, hit_distance))
+            local bottom_material = GetShapeMaterialAtPosition(shape_initial, position_initial_hit)
+            FdLog("Bottom material detected as '" .. bottom_material .. "'")
+
+            if bottom_material ~= "rock" and bottom_material ~= "none" then
+                return
+            end
+
+            if #hit_positions == 1 then
+                detonate(projectile, props, hit_positions[1])
+                return
+            end
+
+            FdLog("Bottom material is impenetrable")
+            detonate(projectile, props, position_initial_hit)
+        end,
+    }
+end
+
 ---@type ProjectileBehaviour[]
 PROJECTILE_DEFAULT_BEHAVIOURS = {
     ProjectileBehaviour.Expires,
     ProjectileBehaviour.HasPhysics,
     ProjectileBehaviour.HasBallistics,
     ProjectileBehaviour.IsQueueable,
-    ProjectileBehaviour.HasImpactFuze,
+    ProjectileBehaviour.HasTerminalBallistics,
     ProjectileBehaviour.HasSprite,
     ProjectileBehaviour.HasSounds,
 }

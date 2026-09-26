@@ -29,6 +29,11 @@
 ---@field delay number
 ---@field [string] any
 ---
+---@class ProjectilePenetration
+---@field absorb_percentage? number Percentage of kinetic energy to absorb.\nEx: 0.10 -> [1000ke * (1 - 0.10) = 900ke]
+---@field minimum_energy? number Minimum amount of kinetic energy for shell to continue through material
+---@field chance_to_terminate? number Percentage chance for shell to terminate (i.e detonate) regardless of minimum_energy
+---
 ---@class (exact) ProtoProjectile
 ---@field _initial ProjectileInitialValues
 ---@field _cache ProjectileCache
@@ -44,11 +49,13 @@
 ---@class ProjectileProps
 ---@field munition_class string Ordnance class, calibre, or weapon system
 ---@field munition_type string Munition variant. Ex. "High Explosive"
+---@field weight? number Projectile weight in kilograms
 ---@field muzzle_velocity? number Muzzle velocity or top speed during ascent in m/s
 ---@field sprite? ProjectileSprite
 ---@field sounds? ProjectileSoundManifest
 ---@field explosive_yield? number Size of projectile explosion if applicable [0, 4]
 ---@field hole_sizes? ProjectileMakeHoleSizes
+---@field penetration? { [Material]: ProjectilePenetration }
 ---
 ---@class (exact) ProjectileBehaviourLifecycleFunctions
 ---@field afterInit? ProjectileAfterInitFn
@@ -99,3 +106,19 @@
 ---
 ---@alias ProjectileBehaviourGenerator fun(props: ProjectileProps): ProjectileBehaviourDefinition
 ---@alias ProjectileBehaviour ProjectileBehaviourDefinition|ProjectileBehaviourGenerator
+---
+---@alias Material
+---| "brick"
+---| "concrete"
+---| "default"
+---| "dirt"
+---| "foliage"
+---| "glass"
+---| "heavymetal"
+---| "masonry"
+---| "metal"
+---| "plaster"
+---| "plastic"
+---| "rock"
+---| "snow"
+---| "wood"
