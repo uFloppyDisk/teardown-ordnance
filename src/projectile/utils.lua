@@ -231,6 +231,15 @@ end
 ---@param owner_name string
 ---@return ProjectileHelpers
 function CreateProjectileHelpers(owner_name)
+    local function getCache(projectile, cache_key)
+        local cache = projectile._cache[cache_key]
+        if cache == nil then
+            error(string.format("Cache '%s' is not registered.", cache_key))
+        end
+
+        return cache
+    end
+
     return {
         registerSharedCache = function(projectile, cache_key)
             if projectile._cache[cache_key] ~= nil then
@@ -250,20 +259,12 @@ function CreateProjectileHelpers(owner_name)
             return true
         end,
         getSharedValue = function(projectile, cache_key, ...)
-            local cache = projectile._cache[cache_key]
-            if cache == nil then
-                error(string.format("Cache '%s' is not registered.", cache_key))
-                return nil
-            end
+            local cache = getCache(projectile, cache_key)
 
             return FdTableDeepGet(cache, ...)
         end,
         setSharedValue = function(projectile, cache_key, value, ...)
-            local cache = projectile._cache[cache_key]
-            if cache == nil then
-                error(string.format("Cache '%s' is not registered.", cache_key))
-                return nil
-            end
+            local cache = getCache(projectile, cache_key)
 
             return FdTableDeepSet(cache, value, ...)
         end,
