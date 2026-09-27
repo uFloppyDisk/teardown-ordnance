@@ -8,4 +8,5 @@
 #include "src/projectile/main.lua"
 
 #include "src/projectile/munitions/155mm_high_explosive.lua"
+#include "src/projectile/munitions/155mm_bunkerbuster.lua"
 #include "src/projectile/munitions/60mm_parachuted_flare.lua"
