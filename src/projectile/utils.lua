@@ -227,12 +227,12 @@ function ProjectileUtil.drawSalvoInfo(props, world_pos, delay_seconds, options)
     UiPop()
 end
 
----comment
----@param behaviour_name string
----@return ProjectileBehaviourHelpers
-function CreateProjectileBehaviourHelpers(behaviour_name)
-    local helpers = {
-        registerProjectileCache = function(projectile, cache_key)
+---Create projectile helpers
+---@param owner_name string
+---@return ProjectileHelpers
+function CreateProjectileHelpers(owner_name)
+    return {
+        registerSharedCache = function(projectile, cache_key)
             if projectile._cache[cache_key] ~= nil then
                 local existing_cache_owner = projectile._cache[cache_key]._owner
                 error(
@@ -245,45 +245,74 @@ function CreateProjectileBehaviourHelpers(behaviour_name)
             end
 
             projectile._cache[cache_key] = {
-                _owner = behaviour_name,
+                _owner = owner_name,
             }
+            return true
         end,
-        getProjectileCache = function(projectile, cache_key, ...)
+        getSharedValue = function(projectile, cache_key, ...)
             local cache = projectile._cache[cache_key]
-            if not FdAssertTableKeys(cache, ...) then
-                local path = { ... }
-                error(
-                    string.format(
-                        "Projectile cache '%s' does not contain value with key '%s'",
-                        cache_key,
-                        table.concat(path, ".")
-                    )
-                )
+            if cache == nil then
+                error(string.format("Cache '%s' is not registered.", cache_key))
+                return nil
             end
 
             return FdTableDeepGet(cache, ...)
         end,
-        setProjectileCache = function(projectile, cache_key, value, ...)
+        setSharedValue = function(projectile, cache_key, value, ...)
             local cache = projectile._cache[cache_key]
-            return FdTableDeepSet(cache, value, ...)
-        end,
-        initBehaviourCache = function(projectile)
-            projectile._cache._behaviours[behaviour_name] = {}
-        end,
-        getValue = function(projectile, ...)
-            local cache = projectile._cache._behaviours[behaviour_name]
-            -- if not FdAssertTableKeys(cache, ...) then
-            --     local path = { ... }
-            --     error(string.format("Behaviour cache does not contain value with key '%s'", table.concat(path, ".")))
-            -- end
+            if cache == nil then
+                error(string.format("Cache '%s' is not registered.", cache_key))
+                return nil
+            end
 
-            return FdTableDeepGet(cache, ...)
-        end,
-        setValue = function(projectile, value, ...)
-            local cache = projectile._cache._behaviours[behaviour_name]
             return FdTableDeepSet(cache, value, ...)
         end,
     }
+end
+
+---Create helpers scoped to a projectile.
+---@return ProjectileThisHelpers
+function CreateProjectileThisHelpers(owner_name)
+    ---@type ProjectileThisHelpers
+    ---@diagnostic disable-next-line:assign-type-mismatch
+    local helpers = CreateProjectileHelpers(owner_name)
+
+    helpers.getValue = function(projectile, ...)
+        local cache = projectile._cache._this
+
+        return FdTableDeepGet(cache, ...)
+    end
+
+    helpers.setValue = function(projectile, value, ...)
+        local cache = projectile._cache._this
+        return FdTableDeepSet(cache, value, ...)
+    end
+
+    return helpers
+end
+
+---Create helpers scoped to a behaviour.
+---@param behaviour_name string
+---@return ProjectileBehaviourHelpers
+function CreateProjectileBehaviourHelpers(behaviour_name)
+    ---@type ProjectileBehaviourHelpers
+    ---@diagnostic disable-next-line:assign-type-mismatch
+    local helpers = CreateProjectileHelpers(behaviour_name)
+
+    helpers.initBehaviourCache = function(projectile)
+        projectile._cache._behaviours[behaviour_name] = {}
+    end
+
+    helpers.getValue = function(projectile, ...)
+        local cache = projectile._cache._behaviours[behaviour_name]
+
+        return FdTableDeepGet(cache, ...)
+    end
+
+    helpers.setValue = function(projectile, value, ...)
+        local cache = projectile._cache._behaviours[behaviour_name]
+        return FdTableDeepSet(cache, value, ...)
+    end
 
     return helpers
 end

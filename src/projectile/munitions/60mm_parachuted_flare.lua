@@ -1,6 +1,7 @@
 local FLARE_TIME_TO_LIVE = 30
 local FLARE_COLOUR = { 1, 1, 1 }
 local FLARE_TRIGGER_SOUND_VOLUME = 90
+local FLARE_CACHE_KEY = "flare"
 
 local FLARE_INTENSITY_BASE = 1000
 local FLARE_INTENSITY_DECAY_TIME = 0.15
@@ -72,46 +73,47 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
                 fire = LoadSound("MOD/assets/snd/60mm_fire.ogg", 100),
             },
         },
-        beforeInit = function(projectile)
+        beforeInit = function(projectile, _, helpers)
             projectile._initial.requested_destination = VecAdd(projectile._initial.requested_destination, Vec(0, 40, 0))
-            projectile._cache.flare = {
-                state = FLARE_STATE.PRIMED,
-                ttl = FLARE_TIME_TO_LIVE,
-                intensity = FLARE_INTENSITY_BASE,
-                smoke = {
-                    spread = Vec(),
-                },
-            }
+            helpers.registerSharedCache(projectile, FLARE_CACHE_KEY)
+            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_STATE.PRIMED, "state")
+            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_TIME_TO_LIVE, "ttl")
+            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_INTENSITY_BASE, "intensity")
+            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, Vec(), "smoke", "spread")
 
             FdAddToDebugTable(DEBUG_POSITIONS, { projectile._initial.requested_destination, FdGetRGBA(COLOUR["red"]) })
         end,
         afterInit = function(projectile)
             FdAddToDebugTable(DEBUG_POSITIONS, { projectile.destination, FdGetRGBA(COLOUR["yellow"]) })
         end,
-        onUpdate = function(projectile, _, dt)
-            if projectile._cache.flare.state == FLARE_STATE.PRIMED then
+        onUpdate = function(projectile, _, helpers, dt)
+            local cache = helpers.getSharedValue(projectile, FLARE_CACHE_KEY)
+
+            if cache.state == FLARE_STATE.PRIMED then
                 local current_distance = VecLength(VecSub(projectile.transform.pos, projectile.destination))
                 if current_distance < 10 then
-                    projectile._cache.flare.state = FLARE_STATE.LIT
+                    cache.state = FLARE_STATE.LIT
                     PlaySound(FLARE_SOUND_POP, projectile.transform.pos, FLARE_TRIGGER_SOUND_VOLUME)
                 end
             end
 
-            if projectile._cache.flare.state == FLARE_STATE.LIT then
+            if cache.state == FLARE_STATE.LIT then
                 projectile.velocity = G_VEC_WIND
-                projectile._cache.flare.ttl = projectile._cache.flare.ttl - dt
-                if projectile._cache.flare.ttl < 0 then
-                    projectile._cache.flare.state = FLARE_STATE.EXTINGUISHED
+                cache.ttl = cache.ttl - dt
+                if cache.ttl < 0 then
+                    cache.state = FLARE_STATE.EXTINGUISHED
                     projectile.state = SHELL_STATE.DETONATED
                 end
             end
         end,
-        onTick = function(projectile, props)
-            if projectile._cache.flare.state ~= FLARE_STATE.LIT then
+        onTick = function(projectile, props, helpers)
+            local cache = helpers.getSharedValue(projectile, FLARE_CACHE_KEY)
+
+            if cache.state ~= FLARE_STATE.LIT then
                 return
             end
 
-            local ttl_ratio = projectile._cache.flare.ttl / FLARE_TIME_TO_LIVE
+            local ttl_ratio = cache.ttl / FLARE_TIME_TO_LIVE
 
             local per_tick_position = ProjectileUtil.calculatePerTickPosition(
                 projectile.transform.pos,
@@ -120,12 +122,12 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
                 projectile._cache.update_time
             )
 
-            local intensity = projectile._cache.flare.intensity
+            local intensity = cache.intensity
 
             do
                 intensity = FdClamp(
                     (
-                        projectile._cache.flare.intensity
+                        cache.intensity
                         + (math.random(FLARE_INTENSITY_STEP_MIN, FLARE_INTENSITY_STEP_MAX) * math.random(-1, 1))
                     ),
                     FLARE_INTENSITY_RANGE_MIN,
@@ -145,7 +147,7 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
                 intensity = intensity * (ttl_ratio / FLARE_INTENSITY_DECAY_TIME)
             end
 
-            projectile._cache.flare.intensity = intensity
+            cache.intensity = intensity
             PointLight(per_tick_position, FLARE_COLOUR[1], FLARE_COLOUR[2], FLARE_COLOUR[3], intensity)
 
             -- Smoke effects
@@ -176,19 +178,19 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
 
             local particle_origin =
                 VecAdd(per_tick_position, Vec(0, (props.sprite.width * props.sprite.aspect_ratio), 0))
-            projectile._cache.flare.smoke.spread[1] = FdClamp(
-                projectile._cache.flare.smoke.spread[1] + (SMOKE_PLUME_SPREAD_OFFSET * math.random(-1, 1)),
+            cache.smoke.spread[1] = FdClamp(
+                cache.smoke.spread[1] + (SMOKE_PLUME_SPREAD_OFFSET * math.random(-1, 1)),
                 -SMOKE_PLUME_SPREAD_RANGE,
                 SMOKE_PLUME_SPREAD_RANGE
             )
-            projectile._cache.flare.smoke.spread[3] = FdClamp(
-                projectile._cache.flare.smoke.spread[3] + (SMOKE_PLUME_SPREAD_OFFSET * math.random(-1, 1)),
+            cache.smoke.spread[3] = FdClamp(
+                cache.smoke.spread[3] + (SMOKE_PLUME_SPREAD_OFFSET * math.random(-1, 1)),
                 -SMOKE_PLUME_SPREAD_RANGE,
                 SMOKE_PLUME_SPREAD_RANGE
             )
 
             SpawnParticle(
-                VecAdd(particle_origin, projectile._cache.flare.smoke.spread),
+                VecAdd(particle_origin, cache.smoke.spread),
                 SMOKE_PLUME_VELOCITY,
                 SMOKE_PLUME_LIFETIME_BASE + (SMOKE_PLUME_LIFETIME_MULT * ttl_ratio)
             )

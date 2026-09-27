@@ -27,13 +27,20 @@
 ---
 ---@class ProjectileCache
 ---@field _behaviours { [string]: table }
+---@field _this { [string]: table }
 ---@field delay number
 ---@field [string] any
 ---
----@class ProjectileBehaviourHelpers
----@field registerProjectileCache fun(projectile: ProtoProjectile, cache_key: string)
----@field getProjectileCache fun(projectile: ProtoProjectile, cache_key: string, ...: string): any
----@field setProjectileCache fun(projectile: ProtoProjectile, cache_key: string, value: any, ...: string): boolean
+---@class ProjectileHelpers
+---@field registerSharedCache fun(projectile: ProtoProjectile, cache_key: string): boolean
+---@field getSharedValue fun(projectile: ProtoProjectile, cache_key: string, ...: string): any
+---@field setSharedValue fun(projectile: ProtoProjectile, cache_key: string, value: any, ...: string): boolean
+---
+---@class ProjectileThisHelpers : ProjectileHelpers
+---@field getValue fun(projectile: ProtoProjectile, ...: string): any
+---@field setValue fun(projectile: ProtoProjectile, value: any, ...: string): boolean
+---
+---@class ProjectileBehaviourHelpers : ProjectileHelpers
 ---@field initBehaviourCache fun(projectile: ProtoProjectile)
 ---@field getValue fun(projectile: ProtoProjectile, ...: string): any
 ---@field setValue fun(projectile: ProtoProjectile, value: any, ...: string): boolean
@@ -111,19 +118,19 @@
 ---@field onTick? ProjectileDefinitionTickFn
 ---@field onUpdate? ProjectileDefinitionUpdateFn
 ---
----@alias ProjectileDefinitionInitFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
----@alias ProjectileDefinitionBeforeInitFn fun(projectile: ProtoProjectile, props: ProjectileProps): boolean? Skip next?
+---@alias ProjectileDefinitionInitFn fun(projectile: Projectile, props: ProjectileProps, helpers: ProjectileThisHelpers): boolean? Skip next?
+---@alias ProjectileDefinitionBeforeInitFn fun(projectile: ProtoProjectile, props: ProjectileProps, helpers: ProjectileThisHelpers): boolean? Skip next?
 ---@alias ProjectileDefinitionAfterInitFn ProjectileDefinitionInitFn
 ---
----@alias ProjectileDefinitionTickFn fun(projectile: Projectile, props: ProjectileProps, dt: number): boolean? Skip next?
+---@alias ProjectileDefinitionTickFn fun(projectile: Projectile, props: ProjectileProps, helpers: ProjectileThisHelpers, dt: number): boolean? Skip next?
 ---@alias ProjectileDefinitionBeforeTickFn ProjectileDefinitionTickFn
 ---@alias ProjectileDefinitionAfterTickFn ProjectileDefinitionTickFn
 ---
----@alias ProjectileDefinitionUpdateFn fun(projectile: Projectile, props: ProjectileProps, dt: number): boolean? Skip next?
+---@alias ProjectileDefinitionUpdateFn fun(projectile: Projectile, props: ProjectileProps, helpers: ProjectileThisHelpers, dt: number): boolean? Skip next?
 ---@alias ProjectileDefinitionBeforeUpdateFn ProjectileDefinitionUpdateFn
 ---@alias ProjectileDefinitionAfterUpdateFn ProjectileDefinitionUpdateFn
 ---
----@alias ProjectileDefinitionDrawFn fun(projectile: Projectile, props: ProjectileProps): boolean? Skip next?
+---@alias ProjectileDefinitionDrawFn fun(projectile: Projectile, props: ProjectileProps, helpers: ProjectileThisHelpers): boolean? Skip next?
 ---
 ---@alias ProjectileHandlerKey
 ---| '"afterInit"'

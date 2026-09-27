@@ -134,11 +134,11 @@ local function generateHandlerId(type_name, hook_name)
     return type_name .. ":" .. hook_name
 end
 
----Bind a behaviour's scoped helpers to one of its lifecycle handlers.
+---Bind scoped helpers to a lifecycle handler.
 ---@param handler function
----@param helpers ProjectileBehaviourHelpers
+---@param helpers ProjectileThisHelpers|ProjectileBehaviourHelpers
 ---@return function
-local function createBehaviourHandler(handler, helpers)
+local function createScopedHandler(handler, helpers)
     return function(projectile, props, ...)
         return handler(projectile, props, helpers, ...)
     end
@@ -243,17 +243,18 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
                     hooks_by_type[name] = {}
                 end
 
-                table.insert(hooks_by_type[name], createBehaviourHandler(handler, helpers))
+                table.insert(hooks_by_type[name], createScopedHandler(handler, helpers))
             end
         end
     end
 
+    local projectile_helpers = CreateProjectileThisHelpers(type_name)
     for _, name in ipairs(HOOK_TYPES) do
         if def[name] then
             if hooks_by_type[name] == nil then
                 hooks_by_type[name] = {}
             end
-            table.insert(hooks_by_type[name], def[name])
+            table.insert(hooks_by_type[name], createScopedHandler(def[name], projectile_helpers))
         end
     end
 
@@ -321,6 +322,7 @@ function Projectiles.init(type_name, initial_values)
         _initial = initial_values,
         _cache = {
             _behaviours = {},
+            _this = {},
         },
         type = type_name,
     }
