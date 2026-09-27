@@ -40,12 +40,12 @@ ProjectileBehaviour.HasPhysics = {
 ProjectileBehaviour.Expires = {
     id = "Expires",
 
-    afterUpdate = function(projectile)
+    afterUpdate = function(projectile, props)
         if projectile.state ~= SHELL_STATE.ACTIVE then
             return
         end
 
-        if projectile.age > PROJECTILE_MAX_AGE then
+        if projectile.age > (props.max_age or PROJECTILE_MAX_AGE) then
             DebugPrint("Projectile expired due to age")
             projectile.state = SHELL_STATE.NONE
         end
@@ -410,6 +410,79 @@ ProjectileBehaviour.HasTerminalBallistics = function()
 
             FdLog("Bottom material is impenetrable")
             detonate(projectile, props, position_initial_hit)
+        end,
+    }
+end
+
+ProjectileBehaviour.DeploysSubmunitions = function(props)
+    local id = "DeploysSubmunitions"
+
+    local manifest = props.submunitions
+    if manifest == nil then
+        error(string.format("%s requires a submunition manifest", id))
+    end
+
+    ---@type ProjectileBehaviourDefinition
+    return {
+        id = id,
+        requires = { "HasPhysics", "HasBallistics" },
+
+        onInit = function(projectile, _, helpers)
+            helpers.initBehaviourCache(projectile)
+            helpers.setValue(projectile, false, "deployed")
+        end,
+        onUpdate = function(projectile, projectile_props, helpers)
+            if projectile.state ~= SHELL_STATE.ACTIVE or helpers.getValue(projectile, "deployed") then
+                return
+            end
+
+            local distance_to_destination = VecLength(VecSub(projectile.transform.pos, projectile.destination))
+            if distance_to_destination > manifest.trigger_height then
+                return
+            end
+
+            helpers.setValue(projectile, true, "deployed")
+
+            if manifest.trigger_sound ~= nil then
+                PlaySound(manifest.trigger_sound, projectile.transform.pos, manifest.trigger_sound_volume or 90)
+            end
+
+            ParticleReset()
+            ParticleRadius(manifest.particle_radius or 2)
+            ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
+            ParticleStretch(0)
+
+            local particle_origin = VecCopy(projectile.transform.pos)
+            if projectile_props.sprite ~= nil then
+                particle_origin = VecAdd(
+                    particle_origin,
+                    Vec(0, projectile_props.sprite.width * projectile_props.sprite.aspect_ratio, 0)
+                )
+            end
+            SpawnParticle(particle_origin, G_VEC_WIND, 20)
+
+            local count = manifest.count
+            if manifest.count_config_key ~= nil then
+                count = CfgGetValue(manifest.count_config_key) or count
+            end
+
+            for _ = 1, count do
+                local yaw = math.random() * 360
+                local pitch = FdMapToRange(math.random(), 0, 1, manifest.spread_pitch_min, manifest.spread_pitch_max)
+                local rotation = QuatEuler(0, yaw, pitch)
+                local transform = Transform(VecCopy(projectile.transform.pos), rotation)
+                local spread_speed =
+                    FdMapToRange(math.random(), 0, 1, manifest.spread_velocity_min, manifest.spread_velocity_max)
+                local spread_velocity = TransformToParentVec(transform, Vec(spread_speed, 0, 0))
+                local velocity = VecAdd(VecCopy(projectile.velocity), spread_velocity)
+
+                Projectiles.spawn(manifest.projectile_type, {
+                    transform = transform,
+                    velocity = velocity,
+                })
+            end
+
+            projectile.state = SHELL_STATE.DETONATED
         end,
     }
 end

@@ -284,6 +284,10 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
         end)
     end
 
+    if def.selectable == false then
+        return
+    end
+
     local props = def.props
 
     -- Insert projectile info into legacy shell picker for the time being
@@ -312,6 +316,7 @@ end
 ---comment
 ---@param type_name string
 ---@param initial_values ProjectileInitialValues
+---@return Projectile?
 function Projectiles.init(type_name, initial_values)
     if __PROJECTILES_TYPES[type_name] == nil then
         error(string.format("Cannot instantiate a projectile of type '%s'; Does not exist", type_name))
@@ -325,6 +330,8 @@ function Projectiles.init(type_name, initial_values)
             _this = {},
         },
         type = type_name,
+        transform = initial_values.transform and TransformCopy(initial_values.transform) or nil,
+        velocity = initial_values.velocity and VecCopy(initial_values.velocity) or nil,
     }
 
     local props = Projectiles.getProjectileProps(projectile)
@@ -351,6 +358,25 @@ function Projectiles.init(type_name, initial_values)
     end
 
     table.insert(__PROJECTILES, projectile)
+    return projectile
+end
+
+---Spawn a projectile from explicit world-space kinematics.
+---@param type_name string
+---@param spawn_values ProjectileSpawnValues
+---@return Projectile?
+function Projectiles.spawn(type_name, spawn_values)
+    return Projectiles.init(type_name, {
+        attack = {
+            heading = 0,
+            pitch = 0,
+        },
+        requested_destination = VecCopy(spawn_values.transform.pos),
+        state = spawn_values.state or SHELL_STATE.ACTIVE,
+        timeToDestination = 0,
+        transform = TransformCopy(spawn_values.transform),
+        velocity = VecCopy(spawn_values.velocity),
+    })
 end
 
 function Projectiles.tick(projectile, dt)

@@ -24,6 +24,13 @@
 ---@field state? SHELL_STATE Initial shell state
 ---@field delay? number Accumulated delay before projectile is active
 ---@field timeToDestination number Time in seconds to reach destination
+---@field transform? TTransform Initial world transform. Primarily used when spawning projectiles from other projectiles.
+---@field velocity? TVec Initial world velocity. Primarily used when spawning projectiles from other projectiles.
+---
+---@class (exact) ProjectileSpawnValues
+---@field transform TTransform Initial world transform
+---@field velocity TVec Initial world velocity
+---@field state? SHELL_STATE Initial shell state
 ---
 ---@class ProjectileCache
 ---@field _behaviours { [string]: table }
@@ -50,6 +57,19 @@
 ---@field minimum_energy? number Minimum amount of kinetic energy for shell to continue through material
 ---@field chance_to_terminate? number Percentage chance for shell to terminate (i.e detonate) regardless of minimum_energy
 ---
+---@class (exact) ProjectileSubmunitionManifest
+---@field projectile_type string Projectile type to spawn on deployment
+---@field count number Default number of submunitions to deploy
+---@field count_config_key? string Config value that overrides count
+---@field trigger_height number Distance from the destination at which to deploy
+---@field trigger_sound? number
+---@field trigger_sound_volume? number
+---@field particle_radius? number
+---@field spread_velocity_min number Minimum radial deployment velocity in m/s
+---@field spread_velocity_max number Maximum radial deployment velocity in m/s
+---@field spread_pitch_min number Minimum radial deployment pitch in degrees
+---@field spread_pitch_max number Maximum radial deployment pitch in degrees
+---
 ---@class (exact) ProtoProjectile
 ---@field _initial ProjectileInitialValues
 ---@field _cache ProjectileCache
@@ -72,6 +92,8 @@
 ---@field explosive_yield? number Size of projectile explosion if applicable [0, 4]
 ---@field hole_sizes? ProjectileMakeHoleSizes
 ---@field penetration? { [Material]: ProjectilePenetration }
+---@field max_age? number Maximum projectile lifetime in seconds
+---@field submunitions? ProjectileSubmunitionManifest
 ---
 ---@class (exact) ProjectileBehaviourLifecycleFunctions
 ---@field afterInit? ProjectileAfterInitFn
@@ -91,6 +113,7 @@
 ---
 ---@class (exact) ProjectileDefinition : ProjectileDefinitionLifecycleFunctions
 ---@field props ProjectileProps
+---@field selectable? boolean Whether to add the projectile to the shell picker
 
 ---@alias ProjectileInitFn fun(projectile: Projectile, props: ProjectileProps, helpers: ProjectileBehaviourHelpers): boolean? Skip next?
 ---@alias ProjectileBeforeInitFn fun(projectile: ProtoProjectile, props: ProjectileProps, helpers: ProjectileBehaviourHelpers): boolean? Skip next?

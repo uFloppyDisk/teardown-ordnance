@@ -449,9 +449,17 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function update(delta)
-    for index, projectile in ipairs(Projectiles.getProjectiles()) do
-        Projectiles.update(projectile, delta)
+    local projectiles = Projectiles.getProjectiles()
+    local projectile_count = #projectiles
 
+    -- Projectiles spawned during this update start updating on the next frame.
+    for index = 1, projectile_count do
+        Projectiles.update(projectiles[index], delta)
+    end
+
+    -- Remove in reverse so one removal cannot skip the next projectile.
+    for index = #projectiles, 1, -1 do
+        local projectile = projectiles[index]
         if projectile.state == SHELL_STATE.NONE or projectile.state == SHELL_STATE.DETONATED then
             Projectiles.removeProjectile(index)
         end
