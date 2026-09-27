@@ -3,8 +3,12 @@
 ---@param maximum number
 ---@return number
 function FdClamp(value, minimum, maximum)
-    if value < minimum then value = minimum end
-    if value > maximum then value = maximum end
+    if value < minimum then
+        value = minimum
+    end
+    if value > maximum then
+        value = maximum
+    end
 
     return value
 end
@@ -130,14 +134,18 @@ end
 ---@param target table
 ---@param value any
 function FdAddToDebugTable(target, value)
-    if not G_DEV then return end
+    if not G_DEV then
+        return
+    end
 
     table.insert(target, value)
 end
 
 ---@vararg any
 function FdLog(...)
-    if not G_DEV then return end
+    if not G_DEV then
+        return
+    end
 
     DebugPrint(table.concat(arg, " "))
 end
@@ -145,7 +153,9 @@ end
 ---@param name string
 ---@param variable table|number|string|boolean|nil String representation of Teardown mod variable. Ex. 'savegame.mod.variable'
 function FdWatch(name, variable)
-    if not G_DEV then return end
+    if not G_DEV then
+        return
+    end
 
     ---@cast variable string
     DebugWatch(name, variable)
@@ -187,9 +197,15 @@ end
 function FdVecEqual(vec, vec2)
     local vecToCompare = VecCopy(vec)
 
-    if vecToCompare[1] ~= vec2[1] then return false end
-    if vecToCompare[2] ~= vec2[2] then return false end
-    if vecToCompare[3] ~= vec2[3] then return false end
+    if vecToCompare[1] ~= vec2[1] then
+        return false
+    end
+    if vecToCompare[2] ~= vec2[2] then
+        return false
+    end
+    if vecToCompare[3] ~= vec2[3] then
+        return false
+    end
 
     return true
 end
@@ -242,7 +258,9 @@ end
 ---@return table world_position, boolean hit, number distance
 function FdGetMousePosInWorld(x, y, set_distance)
     local dist = 200
-    if set_distance ~= nil then dist = set_distance end
+    if set_distance ~= nil then
+        dist = set_distance
+    end
 
     local camera_transform = GetCameraTransform()
     local direction = UiPixelToWorld(x, y)
@@ -267,7 +285,9 @@ end
 ---@param colour TColour
 function FdDrawCircle(position, radius, points, colour)
     position = position or Vec(0, 0, 0)
-    if not (radius > 0) then return end
+    if not (radius > 0) then
+        return
+    end
 
     points = points or 16
     colour = colour or FdGetRGBA(COLOUR["red"], 0.8)
@@ -296,7 +316,7 @@ function FdDrawCircle(position, radius, points, colour)
         point_x = new_point_x
         point_z = new_point_z
         iter = iter + 1
-    until (theta > math.pi * 2)
+    until theta > math.pi * 2
 end
 
 ---@param transform table
@@ -304,7 +324,9 @@ end
 ---@param colour TColour
 ---@return table|nil
 function FdDrawHeading(transform, length, colour)
-    if not (length > 0) then return end
+    if not (length > 0) then
+        return
+    end
 
     colour = colour or FdGetRGBA(COLOUR["red"], 0.8)
 
@@ -356,7 +378,9 @@ end
 
 function FdDrawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_salvo)
     telemetry = telemetry or {
-        Vec(0, 0, 0), 0, 90
+        Vec(0, 0, 0),
+        0,
+        90,
     }
     radius = math.abs(radius)
     colour = colour or COLOUR["yellow_dark"]
@@ -370,13 +394,15 @@ function FdDrawShellImpactGizmo(telemetry, radius, points, colour, lines, quick_
     if telemetry[3] >= isopleth_cull_start then
         lines = math.ceil(FdMapToRange(telemetry[3], isopleth_cull_start, 90, 1, 0) * lines)
     end
-    local pos_pitch_end, pos_heading_end = FdDrawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour,
-        lines, quick_salvo)
+    local pos_pitch_end, pos_heading_end =
+        FdDrawPitchHeadingLine(transform_aim_shell_both, telemetry[3], 2.25, colour, lines, quick_salvo)
 
     local transform_aim_shell_heading = Transform(telemetry[1], QuatEuler(0, telemetry[2], 0))
 
     local length_heading = VecLength(VecSub(telemetry[1], pos_heading_end))
-    if radius > length_heading then length_heading = radius end
+    if radius > length_heading then
+        length_heading = radius
+    end
 
     if telemetry[3] < 90 then
         FdDrawHeading(transform_aim_shell_heading, length_heading, colour)
@@ -399,7 +425,9 @@ end
 ---@param y? number
 ---@param align? table Align right/top, respectively. {boolean, boolean}
 function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
-    if static == nil then static = false end
+    if static == nil then
+        static = false
+    end
 
     local heading = math.abs(math.ceil((((STATES.selected_attack_heading + 270) % 360) * -1) + 359))
     local pitch = STATES.selected_attack_angle
@@ -407,10 +435,18 @@ function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
     -- displays static UI gizmo component and returns
     if static then
         -- TODO: Display compass on HUD with markers in relation to shell heading
-        if x == nil then x = 0 end
-        if y == nil then y = 0 end
-        if colour == nil then colour = { 0, 0, 0, 1 } end
-        if align == nil or type(align) ~= "table" then align = { false, false } end
+        if x == nil then
+            x = 0
+        end
+        if y == nil then
+            y = 0
+        end
+        if colour == nil then
+            colour = { 0, 0, 0, 1 }
+        end
+        if align == nil or type(align) ~= "table" then
+            align = { false, false }
+        end
 
         local length = 100
 
@@ -481,14 +517,14 @@ function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
 
         if pos_diff[1] > size_x or pos_diff[2] > size_y then
             if ui_pos_heading[1] < 0 then
-                UiAlign('right')
+                UiAlign("right")
                 offset_x = -offset_x
             end
         else
             offset_y = -offset_y + size_y
 
             offset_x = 0
-            UiAlign('center')
+            UiAlign("center")
         end
 
         UiTranslate(ui_pos_heading[1] + offset_x, ui_pos_heading[2] + offset_y)
@@ -497,7 +533,7 @@ function FdDrawUIShellImpactGizmo(static, colour, x, y, align)
         local offset_extra = FdMapToRange(ui_pos_root[3], 25, 150, 0, 7)
         UiTranslate(0, 25 + offset_extra)
 
-        UiAlign('center')
+        UiAlign("center")
         UiText(heading .. "°", true)
     end
     UiPop()
@@ -508,7 +544,9 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
     local pitch = FdRound(attack[1])
     local heading = FdRound(attack[2])
 
-    if pitch == 90 then return end
+    if pitch == 90 then
+        return
+    end
 
     size = size or 100
     offset = offset or { 0, 0 }
@@ -557,7 +595,7 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
 
         UiTranslate(length_base / 2, 0)
 
-        UiAlign('center')
+        UiAlign("center")
         UiPush()
         UiTranslate(0, 7)
         UiColor(0, 0, 0, 0.125)
@@ -597,7 +635,7 @@ function FdDrawUIAttackHUD(attack, size, offset, colour)
     do -- Hypotenuse
         local size_adj = size + 4
         UiPush()
-        UiAlign('bottom')
+        UiAlign("bottom")
         UiTranslate(size_hypo, size_hypo)
         UiRotate(STATES.selected_attack_angle)
 
@@ -626,7 +664,7 @@ end
 
 function FdObjectCopy(object)
     local copy
-    if type(object) == 'table' then
+    if type(object) == "table" then
         copy = {}
         for key, value in pairs(object) do
             copy[FdObjectCopy(key)] = FdObjectCopy(value)
@@ -648,9 +686,10 @@ function FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, m
         QueryRejectShape(shape)
     end
 
-    QueryRequire('large')
+    QueryRequire("large")
     QueryRequire("physical")
-    local hit, distance, _, shape = QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
+    local hit, distance, _, shape =
+        QueryRaycast(pos, VecNormalize(VecSub(pos_new, pos)), VecLength(VecSub(pos_new, pos)))
     if not hit then
         return materials, hit_pos, false
     end
@@ -659,7 +698,7 @@ function FdGetMaterialsInRaycastRecursive(pos, pos_new, hit_pos, shell_radius, m
 
     local position_hit = VecAdd(pos, VecScale(VecNormalize(VecSub(pos_new, pos)), distance))
     FdAddToDebugTable(DEBUG_POSITIONS, { position_hit, COLOUR["white"] })
-    local material = GetShapeMaterialAtPosition(shape, (position_hit))
+    local material = GetShapeMaterialAtPosition(shape, position_hit)
 
     table.insert(materials, material)
     table.insert(hit_pos, VecCopy(position_hit))
@@ -674,7 +713,9 @@ end
 ---@return string
 function FdGetEnumValue(enum, value)
     for k, v in pairs(enum) do
-        if (v == value) then return k end
+        if v == value then
+            return k
+        end
     end
 
     return "UNKNOWN"
@@ -731,7 +772,9 @@ function FdPlayDistantSound(sound_handle, options)
     local pitch = 1.0
 
     local _ = (function()
-        if options == nil then return end
+        if options == nil then
+            return
+        end
 
         if options.heading ~= nil then
             local length = VecLength(position)
