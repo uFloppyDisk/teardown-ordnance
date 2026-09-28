@@ -255,18 +255,18 @@ function CreateProjectileHelpers(owner_name)
 
             projectile._cache[cache_key] = {
                 _owner = owner_name,
+                value = nil,
             }
             return true
         end,
-        getSharedValue = function(projectile, cache_key, ...)
-            local cache = getCache(projectile, cache_key)
-
-            return FdTableDeepGet(cache, ...)
+        getSharedCache = function(projectile, cache_key)
+            return getCache(projectile, cache_key)
         end,
-        setSharedValue = function(projectile, cache_key, value, ...)
+        setSharedCacheValue = function(projectile, cache_key, value)
             local cache = getCache(projectile, cache_key)
 
-            return FdTableDeepSet(cache, value, ...)
+            cache.value = value
+            return true
         end,
     }
 end
@@ -278,15 +278,30 @@ function CreateProjectileThisHelpers(owner_name)
     ---@diagnostic disable-next-line:assign-type-mismatch
     local helpers = CreateProjectileHelpers(owner_name)
 
-    helpers.getValue = function(projectile, ...)
+    helpers.getCache = function(projectile, key)
         local cache = projectile._cache._this
+        if cache[key] == nil then
+            projectile._cache._this[key] = {
+                value = nil,
+            }
+        end
 
-        return FdTableDeepGet(cache, ...)
+        return cache[key]
     end
 
-    helpers.setValue = function(projectile, value, ...)
-        local cache = projectile._cache._this
-        return FdTableDeepSet(cache, value, ...)
+    helpers.getCacheValue = function(projectile, key)
+        return helpers.getCache(projectile, key).value
+    end
+
+    helpers.setCacheValue = function(projectile, key, value)
+        if projectile._cache._this[key] == nil then
+            projectile._cache._this[key] = {
+                value = nil,
+            }
+        end
+
+        projectile._cache._this[key].value = value
+        return true
     end
 
     return helpers
@@ -304,15 +319,30 @@ function CreateProjectileBehaviourHelpers(behaviour_name)
         projectile._cache._behaviours[behaviour_name] = {}
     end
 
-    helpers.getValue = function(projectile, ...)
+    helpers.getCache = function(projectile, key)
         local cache = projectile._cache._behaviours[behaviour_name]
+        if cache[key] == nil then
+            projectile._cache._behaviours[behaviour_name][key] = {
+                value = nil,
+            }
+        end
 
-        return FdTableDeepGet(cache, ...)
+        return cache[key]
     end
 
-    helpers.setValue = function(projectile, value, ...)
-        local cache = projectile._cache._behaviours[behaviour_name]
-        return FdTableDeepSet(cache, value, ...)
+    helpers.getCacheValue = function(projectile, key)
+        return helpers.getCache(projectile, key).value
+    end
+
+    helpers.setCacheValue = function(projectile, key, value)
+        if projectile._cache._behaviours[behaviour_name][key] == nil then
+            projectile._cache._behaviours[behaviour_name][key] = {
+                value = nil,
+            }
+        end
+
+        projectile._cache._behaviours[behaviour_name][key].value = value
+        return true
     end
 
     return helpers

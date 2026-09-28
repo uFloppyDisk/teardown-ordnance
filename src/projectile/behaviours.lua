@@ -154,7 +154,7 @@ ProjectileBehaviour.HasSounds = function()
                     elected_whistle = elected_whistle[math.random(1, #elected_whistle)]
                 end
 
-                helpers.setValue(projectile, elected_whistle, "elected_whistle")
+                helpers.setCacheValue(projectile, "elected_whistle", elected_whistle)
                 DebugPrint(string.format("Elected whistle sound %d", elected_whistle))
             end
         end,
@@ -163,16 +163,17 @@ ProjectileBehaviour.HasSounds = function()
                 return
             end
 
-            if not helpers.getValue(projectile, "fire") and FdAssertTableKeys(props, "sounds", "fire") then
+            local cache_fire = helpers.getCache(projectile, "fire")
+            if not cache_fire.value and FdAssertTableKeys(props, "sounds", "fire") then
                 FdPlayDistantSound(props.sounds.fire, {
                     heading = projectile._initial.attack.heading,
                     use_random_pitch = true,
                 })
 
-                helpers.setValue(projectile, true, "fire")
+                cache_fire.value = true
             end
 
-            local elected_whistle = helpers.getValue(projectile, "elected_whistle")
+            local elected_whistle = helpers.getCacheValue(projectile, "elected_whistle")
             if elected_whistle and VecLength(projectile.velocity) > WHISTLE_MIN_VELOCITY then
                 local distance_ground = VecLength(VecSub(projectile.transform.pos, projectile.destination))
 
@@ -193,8 +194,8 @@ ProjectileBehaviour.IsQueueable = {
     onInit = function(projectile, _, helpers)
         helpers.initBehaviourCache(projectile)
 
-        helpers.setValue(projectile, true, "wait")
-        helpers.setValue(projectile, projectile._initial.delay, "delay")
+        helpers.setCacheValue(projectile, "wait", true)
+        helpers.setCacheValue(projectile, "delay", projectile._initial.delay)
     end,
     beforeTick = function(projectile, _, helpers, dt)
         if projectile.state ~= SHELL_STATE.QUEUED then
@@ -206,15 +207,15 @@ ProjectileBehaviour.IsQueueable = {
             return true
         end
 
-        local wait = helpers.getValue(projectile, "wait")
-        if STATES.quicksalvo.enabled and wait then
+        local cache_wait = helpers.getCache(projectile, "wait")
+        if STATES.quicksalvo.enabled and cache_wait.value then
             return
         end
 
-        local delay = helpers.getValue(projectile, "delay")
-        helpers.setValue(projectile, false, "wait")
-        helpers.setValue(projectile, delay - dt, "delay")
-        if helpers.getValue(projectile, "delay") <= 0 then
+        local cache_delay = helpers.getCache(projectile, "delay")
+        cache_wait.value = false
+        cache_delay.value = cache_delay.value - dt
+        if cache_delay.value <= 0 then
             projectile.state = SHELL_STATE.ACTIVE
             return
         end
@@ -239,7 +240,7 @@ ProjectileBehaviour.IsQueueable = {
         })
     end,
     onDraw = function(projectile, props, helpers)
-        local delay = helpers.getValue(projectile, "delay")
+        local delay = helpers.getCacheValue(projectile, "delay")
 
         if STATES.tactical.enabled and projectile.state == SHELL_STATE.QUEUED then
             ProjectileUtil.drawSalvoInfo(props, projectile._initial.requested_destination, delay, {
@@ -318,14 +319,13 @@ ProjectileBehaviour.HasTerminalBallistics = function()
                 return
             end
 
-            local kinetic_energy = helpers.getValue(projectile, "kinetic_energy")
-            if kinetic_energy == nil then
-                kinetic_energy = FdClamp(
+            local cache_kinetic_energy = helpers.getCache(projectile, "kinetic_energy")
+            if cache_kinetic_energy.value == nil then
+                cache_kinetic_energy.value = FdClamp(
                     (props.weight * math.pow(math.abs(VecLength(projectile.velocity)), 2)) / 1000,
                     0,
                     MAX_KINETIC_ENERGY
                 )
-                helpers.setValue(projectile, kinetic_energy, "kinetic_energy")
             end
 
             local trigger_detonation = false
@@ -366,7 +366,7 @@ ProjectileBehaviour.HasTerminalBallistics = function()
 
                 local pen_values = getPenetrationValues(props, material)
 
-                if kinetic_energy < pen_values.minimum_energy then
+                if cache_kinetic_energy.value < pen_values.minimum_energy then
                     FdLog("Material '" .. material .. "' triggered detonation. (energy below threshold)")
                     detonate(projectile, props, hit_positions[index])
                     return
@@ -379,11 +379,8 @@ ProjectileBehaviour.HasTerminalBallistics = function()
                 end
 
                 FdLog("Material '" .. material .. "' was too weak to trigger detonation.")
-                helpers.setValue(
-                    projectile,
-                    kinetic_energy * (1 - FdClamp(pen_values.absorb_percentage, 0, 1)),
-                    "kinetic_energy"
-                )
+                cache_kinetic_energy.value = cache_kinetic_energy.value
+                    * (1 - FdClamp(pen_values.absorb_percentage, 0, 1))
                 MakeHole(hit_positions[index], radius + 1, radius + 0.5, radius, false)
             end
 
@@ -429,10 +426,11 @@ ProjectileBehaviour.DeploysSubmunitions = function(props)
 
         onInit = function(projectile, _, helpers)
             helpers.initBehaviourCache(projectile)
-            helpers.setValue(projectile, false, "deployed")
+            helpers.setCacheValue(projectile, "deployed", false)
         end,
         onUpdate = function(projectile, projectile_props, helpers)
-            if projectile.state ~= SHELL_STATE.ACTIVE or helpers.getValue(projectile, "deployed") then
+            local cache_deployed = helpers.getCache(projectile, "deployed")
+            if projectile.state ~= SHELL_STATE.ACTIVE or cache_deployed.value then
                 return
             end
 
@@ -441,7 +439,7 @@ ProjectileBehaviour.DeploysSubmunitions = function(props)
                 return
             end
 
-            helpers.setValue(projectile, true, "deployed")
+            cache_deployed.value = true
 
             if manifest.trigger_sound ~= nil then
                 PlaySound(manifest.trigger_sound, projectile.transform.pos, manifest.trigger_sound_volume or 90)

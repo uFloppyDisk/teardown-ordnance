@@ -46,12 +46,12 @@ Projectiles.defineProjectile("155mm_cluster_bomblet", {
                 false
             )
         end,
-        onUpdate = function(projectile)
+        onUpdate = function(projectile, _, helpers)
             if projectile.state ~= SHELL_STATE.ACTIVE then
                 return
             end
 
-            local position_previous = projectile._cache.previous_transform.pos
+            local position_previous = helpers.getSharedCache(projectile, "previous_transform", "value").pos
             local position_current = projectile.transform.pos
             local position_delta = VecSub(position_current, position_previous)
             local distance = VecLength(position_delta)

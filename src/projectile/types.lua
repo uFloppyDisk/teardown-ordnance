@@ -32,25 +32,31 @@
 ---@field velocity TVec Initial world velocity
 ---@field state? SHELL_STATE Initial shell state
 ---
+---@class ProjectileCacheObject
+---@field _owner? string
+---@field value any
+---
 ---@class ProjectileCache
----@field _behaviours { [string]: table }
----@field _this { [string]: table }
+---@field _behaviours { [string]: { [string]: ProjectileCacheObject } }
+---@field _this { [string]: ProjectileCacheObject }
 ---@field delay number
 ---@field [string] any
 ---
 ---@class ProjectileHelpers
----@field registerSharedCache fun(projectile: ProtoProjectile, cache_key: string): boolean
----@field getSharedValue fun(projectile: ProtoProjectile, cache_key: string, ...: string): any
----@field setSharedValue fun(projectile: ProtoProjectile, cache_key: string, value: any, ...: string): boolean
+---@field registerSharedCache fun(projectile: ProtoProjectile, key: string): boolean
+---@field getSharedCache fun(projectile: ProtoProjectile, key: string): ProjectileCacheObject
+---@field setSharedCacheValue fun(projectile: ProtoProjectile, key: string, value: any): boolean
 ---
 ---@class ProjectileThisHelpers : ProjectileHelpers
----@field getValue fun(projectile: ProtoProjectile, ...: string): any
----@field setValue fun(projectile: ProtoProjectile, value: any, ...: string): boolean
+---@field getCache fun(projectile: ProtoProjectile, key: string): ProjectileCacheObject
+---@field getCacheValue fun(projectile: ProtoProjectile, key: string): any
+---@field setCacheValue fun(projectile: ProtoProjectile, key: string, value: any): boolean
 ---
 ---@class ProjectileBehaviourHelpers : ProjectileHelpers
 ---@field initBehaviourCache fun(projectile: ProtoProjectile)
----@field getValue fun(projectile: ProtoProjectile, ...: string): any
----@field setValue fun(projectile: ProtoProjectile, value: any, ...: string): boolean
+---@field getCache fun(projectile: ProtoProjectile, key: string): ProjectileCacheObject
+---@field getCacheValue fun(projectile: ProtoProjectile, key: string): any
+---@field setCacheValue fun(projectile: ProtoProjectile, key: string, value: any): boolean
 ---
 ---@class ProjectilePenetration
 ---@field absorb_percentage? number Percentage of kinetic energy to absorb.\nEx: 0.10 -> [1000ke * (1 - 0.10) = 900ke]

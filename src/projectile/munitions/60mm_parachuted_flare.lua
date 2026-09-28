@@ -76,10 +76,14 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
         beforeInit = function(projectile, _, helpers)
             projectile._initial.requested_destination = VecAdd(projectile._initial.requested_destination, Vec(0, 40, 0))
             helpers.registerSharedCache(projectile, FLARE_CACHE_KEY)
-            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_STATE.PRIMED, "state")
-            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_TIME_TO_LIVE, "ttl")
-            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, FLARE_INTENSITY_BASE, "intensity")
-            helpers.setSharedValue(projectile, FLARE_CACHE_KEY, Vec(), "smoke", "spread")
+            helpers.setSharedCacheValue(projectile, FLARE_CACHE_KEY, {
+                state = FLARE_STATE.PRIMED,
+                ttl = FLARE_TIME_TO_LIVE,
+                intensity = FLARE_INTENSITY_BASE,
+                smoke = {
+                    spread = Vec(),
+                },
+            })
 
             FdAddToDebugTable(DEBUG_POSITIONS, { projectile._initial.requested_destination, FdGetRGBA(COLOUR["red"]) })
         end,
@@ -87,7 +91,7 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
             FdAddToDebugTable(DEBUG_POSITIONS, { projectile.destination, FdGetRGBA(COLOUR["yellow"]) })
         end,
         onUpdate = function(projectile, _, helpers, dt)
-            local cache = helpers.getSharedValue(projectile, FLARE_CACHE_KEY)
+            local cache = helpers.getSharedCache(projectile, FLARE_CACHE_KEY).value
 
             if cache.state == FLARE_STATE.PRIMED then
                 local current_distance = VecLength(VecSub(projectile.transform.pos, projectile.destination))
@@ -107,7 +111,7 @@ Projectiles.defineProjectile("60mm_parachuted_flare", {
             end
         end,
         onTick = function(projectile, props, helpers)
-            local cache = helpers.getSharedValue(projectile, FLARE_CACHE_KEY)
+            local cache = helpers.getSharedCache(projectile, FLARE_CACHE_KEY).value
 
             if cache.state ~= FLARE_STATE.LIT then
                 return
