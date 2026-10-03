@@ -295,12 +295,13 @@ function Projectiles.defineProjectile(type_name, behaviours, definitionGenerator
         local shell_value_index = shell_values_class_lookup[props.munition_class]
         if not shell_value_index then
             local munition_class = {
-                name = props.munition_class,
+                id = props.munition_class,
+                name = "(BETA) " .. props.munition_class,
                 variants = {},
             }
 
             table.insert(SHELL_VALUES, munition_class)
-            shell_values_class_lookup[munition_class.name] = #SHELL_VALUES
+            shell_values_class_lookup[munition_class.id] = #SHELL_VALUES
         end
 
         local variant = {
