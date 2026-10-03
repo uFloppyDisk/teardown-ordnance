@@ -109,10 +109,215 @@ ProjectileBehaviour.HasImpactFuze = {
         if hit then
             local pos = detonate_position --[[@as TVec]]
             ProjectileUtil.detonate(pos, props.explosive_yield, props.hole_sizes)
+            projectile.transform.pos = VecCopy(pos)
             projectile.state = SHELL_STATE.DETONATED
         end
     end,
 }
+
+ProjectileBehaviour.HasFragmentation = function()
+    local PHYSICAL_FRAG_SPAWN_CHANCE = CfgGetValue("PHYSICAL_FRAGMENTATION_SPAWN_CHANCE")
+    local PHYSICAL_FRAG_TTL = 40
+    local PHYSICAL_FRAG_ORIGIN_LERP = 0.5
+    local PHYSICAL_FRAG_BBR_LUMINOSITY_BASE = 0.25
+    local PHYSICAL_FRAG_VELOCITY_BASE = 100
+    local PHYSICAL_FRAG_VELOCITY_VARI = 150
+
+    ---@param shapes number[]
+    ---@param colour TColour|nil
+    local function setLightColourInShapes(shapes, colour)
+        colour = colour or { 0, 0, 0, 0 }
+        for _, shape in ipairs(shapes) do
+            SetShapeEmissiveScale(shape, colour[4])
+            for _, light in ipairs(GetShapeLights(shape)) do
+                SetLightColor(light, FdGetUnpackedRGBA(colour))
+            end
+        end
+    end
+
+    ---@param shapes number[]
+    ---@param kelvin number
+    ---@param luminosity? number
+    ---@return boolean
+    local function setShapesBlackbodyRadiation(shapes, kelvin, luminosity)
+        local bbr = BLACKBODY[kelvin]
+        if not bbr then
+            setLightColourInShapes(shapes, nil)
+            return false
+        end
+
+        setLightColourInShapes(shapes, FdGetRGBA(bbr, luminosity or 1))
+        return true
+    end
+
+    ---@param source_pos TVec
+    ---@param source_dist number
+    ---@param check_dist number
+    ---@param shape number
+    ---@return TVec
+    local function solveFragOrigin(source_pos, source_dist, check_dist, shape)
+        source_pos = VecCopy(source_pos)
+        QueryRequire("large")
+        local _, distance = QueryRaycast(VecAdd(VecCopy(source_pos), Vec(0, check_dist, 0)), Vec(0, -1, 0), check_dist)
+
+        local dist_diff = FdRound(distance, 4) - source_dist
+        FdLog("Diff 1/2: " .. source_dist .. " / " .. distance)
+        FdLog("Diff: " .. dist_diff)
+
+        if dist_diff ~= 0 then
+            FdLog("Using differential calculation")
+            return VecAdd(source_pos, Vec(0, source_dist + (check_dist - (dist_diff * 0.95)), 0))
+        end
+
+        FdLog("Using shape bounds calculation")
+        local bounds_min, bounds_max = GetShapeBounds(shape)
+        local bounds_size = VecSub(bounds_max, bounds_min)
+        return VecAdd(source_pos, Vec(0, math.abs(bounds_size[2]), 0))
+    end
+
+    local function createFragment(projectile, pos, frag_size, frag_dist, rotation, halt)
+        local function checkHit(candidate_rotation)
+            local transform = Transform(pos, candidate_rotation)
+            local position_new = TransformToParentPoint(transform, Vec((frag_dist - 5) + (math.random() * 10), 0, 0))
+            local transform_new = Transform(position_new, transform.rot)
+            local delta = VecSub(position_new, pos)
+            local hit, hit_distance = QueryRaycast(pos, VecNormalize(delta), VecLength(delta))
+            if not hit then
+                return false, transform_new
+            end
+
+            local new_rotation = QuatRotateQuat(QuatCopy(candidate_rotation), QuatEuler(0, 0, 180))
+            local hit_pos = VecAdd(pos, VecScale(VecNormalize(delta), hit_distance))
+
+            if hit_distance < 1 and not halt then
+                if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+                    FdAddToDebugTable(DEBUG_POSITIONS, { hit_pos, FdGetRGBA(COLOUR["red"], 0.2) })
+                    FRAG_STATS[4] = FRAG_STATS[4] + 1
+                end
+                return createFragment(projectile, VecCopy(pos), frag_size, frag_dist, new_rotation, true)
+            end
+
+            if math.random() < 0.66 then
+                ParticleReset()
+                SpawnParticle(hit_pos, Vec(-0.15, 0, 0.05), 3 - (2.5 * math.random()))
+            end
+
+            local rand_frag_size = frag_size * (1.0 - (math.random() * 0.50))
+            MakeHole(hit_pos, rand_frag_size * 3, rand_frag_size * 2, rand_frag_size)
+
+            if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+                local point_colour = halt and COLOUR["yellow"] or COLOUR["white"]
+                FdAddToDebugTable(DEBUG_POSITIONS, { hit_pos, point_colour })
+                FdAddToDebugTable(DEBUG_LINES, { pos, hit_pos, FdGetRGBA(COLOUR["white"], 0.5) })
+                FRAG_STATS[2] = FRAG_STATS[2] + 1
+            end
+            return true, transform_new
+        end
+
+        FRAG_STATS[1] = FRAG_STATS[1] + 1
+        rotation = rotation or QuatEuler(0, 360 * math.random(), (179 * math.random()) - 89.5)
+        local hit_final, line_end = checkHit(rotation)
+        if hit_final then
+            return true, line_end
+        end
+
+        if CfgGetValue("G_SPAWN_PHYSICAL_FRAGMENTATION") and math.random() < PHYSICAL_FRAG_SPAWN_CHANCE then
+            local frag_variant = math.ceil(math.random() * 3)
+            ---@type ManagedBodyWithTtl
+            local frag = {
+                valid = true,
+                created_at = ELAPSED_TIME,
+                type = "frag",
+                handle = Spawn(
+                    "MOD/assets/vox/frag" .. frag_variant .. ".xml",
+                    Transform(VecLerp(projectile.transform.pos, line_end.pos, PHYSICAL_FRAG_ORIGIN_LERP), line_end.rot)
+                )[1],
+                shouldHandle = true,
+                ttl = PHYSICAL_FRAG_TTL,
+                kelvin = math.random(10, 27) * 100,
+            }
+            table.insert(BODIES, frag)
+
+            SetBodyVelocity(
+                frag.handle,
+                VecScale(
+                    VecNormalize(TransformToParentVec(line_end, Vec(1, 0, 0))),
+                    math.random() * PHYSICAL_FRAG_VELOCITY_VARI + PHYSICAL_FRAG_VELOCITY_BASE
+                )
+            )
+            SetBodyAngularVelocity(frag.handle, Vec(math.random() * 30, math.random() * 30, 0))
+
+            local is_emissive =
+                setShapesBlackbodyRadiation(GetBodyShapes(frag.handle), frag.kelvin, PHYSICAL_FRAG_BBR_LUMINOSITY_BASE)
+            if not is_emissive then
+                frag.kelvin = nil
+            end
+        end
+
+        if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+            FdAddToDebugTable(DEBUG_LINES, { pos, line_end.pos, FdGetRGBA(COLOUR["red"], 0.1) })
+            FRAG_STATS[3] = FRAG_STATS[3] + 1
+        end
+        return false, line_end
+    end
+
+    return {
+        id = "HasFragmentation",
+        requires = { "HasPhysics" },
+
+        onInit = function(projectile, _, helpers)
+            helpers.initBehaviourCache(projectile)
+            helpers.setCacheValue(projectile, "is_fragmented", false)
+        end,
+        afterUpdate = function(projectile, props, helpers)
+            local is_fragmented = helpers.getCache(projectile, "is_fragmented")
+            if projectile.state ~= SHELL_STATE.DETONATED or is_fragmented.value then
+                return
+            end
+            is_fragmented.value = true
+
+            if (props.explosive_yield or 0) < 0.5 or not CfgGetValue("G_SIMULATE_FRAGMENTATION") then
+                return
+            end
+
+            local frag_amount = CfgGetValue("SHELL_FRAGMENTATION_AMOUNT") or 250
+            local frag_size = (CfgGetValue("SHELL_FRAGMENTATION_SIZE") or 20) / 100
+            local frag_distance = props.hole_sizes.soft / 2
+            local pos = projectile.transform.pos
+
+            if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+                FdWatch("Frag Size", frag_size)
+                FdWatch("Frag Dist", frag_distance)
+            end
+
+            local check_dist = 0.5
+            QueryRequire("large")
+            local hit, distance, _, shape = QueryRaycast(pos, Vec(0, 1, 0), check_dist)
+            local frag_origin = hit and solveFragOrigin(pos, distance, check_dist, shape) or pos
+
+            for _ = 1, frag_amount do
+                createFragment(projectile, frag_origin, frag_size, frag_distance)
+            end
+
+            if CfgGetValue("G_FRAGMENTATION_DEBUG") then
+                FdLog("--- FRAGMENTATION STATS ---")
+                FdLog(FRAG_STATS[2] .. " - hit")
+                FdLog(FRAG_STATS[3] .. " - missed")
+                FdLog(FRAG_STATS[4] .. " - redirected")
+                FdLog("-------------")
+                FdLog(
+                    "TOTAL: "
+                        .. FRAG_STATS[1]
+                        .. " - "
+                        .. FRAG_STATS[4]
+                        .. " redirected = "
+                        .. (FRAG_STATS[1] - FRAG_STATS[4])
+                        .. ")"
+                )
+            end
+        end,
+    }
+end
 
 ProjectileBehaviour.HasSprite = {
     id = "HasSprite",
@@ -274,6 +479,7 @@ ProjectileBehaviour.HasTerminalBallistics = function()
     ---@param pos TVec
     local function detonate(projectile, props, pos)
         ProjectileUtil.detonate(pos, props.explosive_yield, props.hole_sizes)
+        projectile.transform.pos = VecCopy(pos)
         projectile.state = SHELL_STATE.DETONATED
     end
 
@@ -492,6 +698,7 @@ PROJECTILE_DEFAULT_BEHAVIOURS = {
     ProjectileBehaviour.HasBallistics,
     ProjectileBehaviour.IsQueueable,
     ProjectileBehaviour.HasTerminalBallistics,
+    ProjectileBehaviour.HasFragmentation,
     ProjectileBehaviour.HasSprite,
     ProjectileBehaviour.HasSounds,
 }
