@@ -31,6 +31,7 @@
 ---@field transform TTransform Initial world transform
 ---@field velocity TVec Initial world velocity
 ---@field state? SHELL_STATE Initial shell state
+---@field attack? ProjectileAttack Attack direction inherited by the spawned projectile
 ---
 ---@class ProjectileCacheObject
 ---@field _owner? string
@@ -71,6 +72,8 @@
 ---@field trigger_sound? number
 ---@field trigger_sound_volume? number
 ---@field particle_radius? number
+---@field delay_between_spawns? number Delay between each submunition spawn in seconds
+---@field spawn_offset_radius? number Maximum horizontal distance from the deployment point to spawn at
 ---@field spread_velocity_min number Minimum radial deployment velocity in m/s
 ---@field spread_velocity_max number Maximum radial deployment velocity in m/s
 ---@field spread_pitch_min number Minimum radial deployment pitch in degrees

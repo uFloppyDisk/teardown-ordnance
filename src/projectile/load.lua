@@ -13,3 +13,4 @@
 #include "src/projectile/munitions/155mm_cluster.lua"
 #include "src/projectile/munitions/60mm_high_explosive.lua"
 #include "src/projectile/munitions/60mm_parachuted_flare.lua"
+#include "src/projectile/munitions/mlrs_m31a1.lua"

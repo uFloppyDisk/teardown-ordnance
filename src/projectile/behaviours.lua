@@ -625,6 +625,63 @@ ProjectileBehaviour.DeploysSubmunitions = function(props)
         error(string.format("%s requires a submunition manifest", id))
     end
 
+    ---@param projectile Projectile
+    ---@param helpers ProjectileBehaviourHelpers
+    local function triggerDeployment(projectile, helpers)
+        helpers.setCacheValue(projectile, "deployed", true)
+        helpers.setCacheValue(projectile, "deployment_age", 0)
+        helpers.setCacheValue(projectile, "deployment_origin", VecCopy(projectile.transform.pos))
+        helpers.setCacheValue(projectile, "deployment_velocity", VecCopy(projectile.velocity))
+
+        local count = manifest.count
+        if manifest.count_config_key ~= nil then
+            count = CfgGetValue(manifest.count_config_key) or count
+        end
+        helpers.setCacheValue(projectile, "count", count)
+
+        if manifest.trigger_sound ~= nil then
+            PlaySound(manifest.trigger_sound, projectile.transform.pos, manifest.trigger_sound_volume or 90)
+        end
+
+        ParticleReset()
+        ParticleRadius(manifest.particle_radius or 2)
+        ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
+        ParticleStretch(0)
+
+        local particle_origin = VecCopy(projectile.transform.pos)
+        if props.sprite ~= nil then
+            particle_origin = VecAdd(particle_origin, Vec(0, props.sprite.width * props.sprite.aspect_ratio, 0))
+        end
+        SpawnParticle(particle_origin, G_VEC_WIND, 20)
+    end
+
+    ---@param projectile Projectile
+    ---@param helpers ProjectileBehaviourHelpers
+    local function spawnSubmunition(projectile, helpers)
+        local yaw = math.random() * 360
+        local pitch = FdMapToRange(math.random(), 0, 1, manifest.spread_pitch_min, manifest.spread_pitch_max)
+        local rotation = QuatEuler(0, yaw, pitch)
+
+        local origin = VecCopy(helpers.getCacheValue(projectile, "deployment_origin"))
+        if (manifest.spawn_offset_radius or 0) > 0 then
+            local offset_transform = Transform(origin, QuatEuler(0, yaw, 0))
+            local offset_distance = math.random() * manifest.spawn_offset_radius
+            origin = TransformToParentPoint(offset_transform, Vec(offset_distance, 0, 0))
+        end
+
+        local transform = Transform(origin, rotation)
+        local spread_speed =
+            FdMapToRange(math.random(), 0, 1, manifest.spread_velocity_min, manifest.spread_velocity_max)
+        local spread_velocity = TransformToParentVec(transform, Vec(spread_speed, 0, 0))
+        local velocity = VecAdd(VecCopy(helpers.getCacheValue(projectile, "deployment_velocity")), spread_velocity)
+
+        Projectiles.spawn(manifest.projectile_type, {
+            transform = transform,
+            velocity = velocity,
+            attack = projectile._initial.attack,
+        })
+    end
+
     ---@type ProjectileBehaviourDefinition
     return {
         id = id,
@@ -633,60 +690,46 @@ ProjectileBehaviour.DeploysSubmunitions = function(props)
         onInit = function(projectile, _, helpers)
             helpers.initBehaviourCache(projectile)
             helpers.setCacheValue(projectile, "deployed", false)
+            helpers.setCacheValue(projectile, "spawned_count", 0)
         end,
-        onUpdate = function(projectile, projectile_props, helpers)
+        onUpdate = function(projectile, _, helpers, dt)
+            if projectile.state ~= SHELL_STATE.ACTIVE then
+                return
+            end
+
             local cache_deployed = helpers.getCache(projectile, "deployed")
-            if projectile.state ~= SHELL_STATE.ACTIVE or cache_deployed.value then
+            if not cache_deployed.value then
+                local distance_to_destination = VecLength(VecSub(projectile.transform.pos, projectile.destination))
+                if distance_to_destination > manifest.trigger_height then
+                    return
+                end
+
+                triggerDeployment(projectile, helpers)
+            end
+
+            -- Keep the carrier at its deployment point while staggered submunitions are released.
+            projectile.transform.pos = VecCopy(helpers.getCacheValue(projectile, "deployment_origin"))
+            projectile.velocity = Vec()
+
+            local cache_deployment_age = helpers.getCache(projectile, "deployment_age")
+            local cache_spawned_count = helpers.getCache(projectile, "spawned_count")
+            local count = helpers.getCacheValue(projectile, "count")
+            local delay_between_spawns = manifest.delay_between_spawns or 0
+
+            while
+                cache_spawned_count.value < count
+                and cache_deployment_age.value >= cache_spawned_count.value * delay_between_spawns
+            do
+                spawnSubmunition(projectile, helpers)
+                cache_spawned_count.value = cache_spawned_count.value + 1
+            end
+
+            if cache_spawned_count.value >= count then
+                projectile.state = SHELL_STATE.DETONATED
                 return
             end
 
-            local distance_to_destination = VecLength(VecSub(projectile.transform.pos, projectile.destination))
-            if distance_to_destination > manifest.trigger_height then
-                return
-            end
-
-            cache_deployed.value = true
-
-            if manifest.trigger_sound ~= nil then
-                PlaySound(manifest.trigger_sound, projectile.transform.pos, manifest.trigger_sound_volume or 90)
-            end
-
-            ParticleReset()
-            ParticleRadius(manifest.particle_radius or 2)
-            ParticleAlpha(1.0, 0.0, "smooth", 0.05, 0.9)
-            ParticleStretch(0)
-
-            local particle_origin = VecCopy(projectile.transform.pos)
-            if projectile_props.sprite ~= nil then
-                particle_origin = VecAdd(
-                    particle_origin,
-                    Vec(0, projectile_props.sprite.width * projectile_props.sprite.aspect_ratio, 0)
-                )
-            end
-            SpawnParticle(particle_origin, G_VEC_WIND, 20)
-
-            local count = manifest.count
-            if manifest.count_config_key ~= nil then
-                count = CfgGetValue(manifest.count_config_key) or count
-            end
-
-            for _ = 1, count do
-                local yaw = math.random() * 360
-                local pitch = FdMapToRange(math.random(), 0, 1, manifest.spread_pitch_min, manifest.spread_pitch_max)
-                local rotation = QuatEuler(0, yaw, pitch)
-                local transform = Transform(VecCopy(projectile.transform.pos), rotation)
-                local spread_speed =
-                    FdMapToRange(math.random(), 0, 1, manifest.spread_velocity_min, manifest.spread_velocity_max)
-                local spread_velocity = TransformToParentVec(transform, Vec(spread_speed, 0, 0))
-                local velocity = VecAdd(VecCopy(projectile.velocity), spread_velocity)
-
-                Projectiles.spawn(manifest.projectile_type, {
-                    transform = transform,
-                    velocity = velocity,
-                })
-            end
-
-            projectile.state = SHELL_STATE.DETONATED
+            cache_deployment_age.value = cache_deployment_age.value + dt
         end,
     }
 end

@@ -368,7 +368,7 @@ end
 ---@return Projectile?
 function Projectiles.spawn(type_name, spawn_values)
     return Projectiles.init(type_name, {
-        attack = {
+        attack = spawn_values.attack or {
             heading = 0,
             pitch = 0,
         },
